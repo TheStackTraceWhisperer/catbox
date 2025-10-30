@@ -66,7 +66,8 @@ public class OutboxEventPublisher {
         logger.debug("Publishing event: type={}, aggregateId={}, payload={}",
             event.getEventType(), event.getAggregateId(), event.getPayload());
         
-        // Simulate some processing time
+        // Simulate some processing time (for demo purposes only)
+        // In production, remove this or replace with actual message broker call
         try {
             Thread.sleep(100);
         } catch (InterruptedException e) {
