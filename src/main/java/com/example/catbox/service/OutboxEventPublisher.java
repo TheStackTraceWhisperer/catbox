@@ -6,80 +6,84 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
 
+/**
+ * High-performance outbox poller that claims events using SELECT FOR UPDATE SKIP LOCKED.
+ * Supports multi-node deployment with concurrent processing.
+ */
 @Service
 public class OutboxEventPublisher {
 
     private static final Logger logger = LoggerFactory.getLogger(OutboxEventPublisher.class);
+    private static final int BATCH_SIZE = 100;
+    private static final int CLAIM_TIMEOUT_MINUTES = 5;
 
     private final OutboxEventRepository outboxEventRepository;
+    private final OutboxEventProcessor eventProcessor;
 
-    public OutboxEventPublisher(OutboxEventRepository outboxEventRepository) {
+    public OutboxEventPublisher(OutboxEventRepository outboxEventRepository,
+                               OutboxEventProcessor eventProcessor) {
         this.outboxEventRepository = outboxEventRepository;
+        this.eventProcessor = eventProcessor;
     }
 
     /**
-     * Scheduled task to process pending outbox events.
-     * Runs every 5 seconds to publish events to external systems.
+     * Polls for pending events every 2 seconds.
+     * Uses REQUIRES_NEW to claim events in a separate transaction with row-level locks.
      */
-    @Scheduled(fixedDelay = 5000, initialDelay = 10000)
-    @Transactional
-    public void publishPendingEvents() {
-        List<OutboxEvent> pendingEvents = outboxEventRepository.findByStatusOrderByCreatedAtAsc("PENDING");
+    @Scheduled(fixedDelay = 2000, initialDelay = 10000)
+    public void pollAndProcessEvents() {
+        // Claim events in a new transaction
+        List<OutboxEvent> claimedEvents = claimEvents();
         
-        if (!pendingEvents.isEmpty()) {
-            logger.info("Processing {} pending outbox events", pendingEvents.size());
-        }
-        
-        for (OutboxEvent event : pendingEvents) {
-            try {
-                // Simulate publishing to external message broker (Kafka, RabbitMQ, etc.)
-                publishEvent(event);
-                
-                // Mark as processed
-                event.setStatus("PROCESSED");
-                event.setProcessedAt(LocalDateTime.now());
-                outboxEventRepository.save(event);
-                
-                logger.info("Successfully published event: {} for aggregate: {}/{}",
-                    event.getEventType(), event.getAggregateType(), event.getAggregateId());
-                
-            } catch (Exception e) {
-                logger.error("Failed to publish event: {}", event.getId(), e);
-                event.setStatus("FAILED");
-                outboxEventRepository.save(event);
+        if (!claimedEvents.isEmpty()) {
+            logger.info("Claimed {} events for processing", claimedEvents.size());
+            
+            // Process each event in a virtual thread with its own transaction
+            for (OutboxEvent event : claimedEvents) {
+                Thread.ofVirtual().start(() -> {
+                    try {
+                        eventProcessor.processEvent(event);
+                    } catch (Exception e) {
+                        logger.error("Unexpected error processing event {}", event.getId(), e);
+                    }
+                });
             }
         }
     }
 
     /**
-     * Simulate publishing event to external system.
-     * In a real implementation, this would publish to Kafka, RabbitMQ, etc.
+     * Claims events using SELECT FOR UPDATE SKIP LOCKED.
+     * This allows multiple nodes to process different events concurrently.
      */
-    private void publishEvent(OutboxEvent event) {
-        // This is where you would integrate with your message broker
-        // For example: kafkaTemplate.send(topic, event.getPayload());
-        logger.debug("Publishing event: type={}, aggregateId={}, payload={}",
-            event.getEventType(), event.getAggregateId(), event.getPayload());
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public List<OutboxEvent> claimEvents() {
+        LocalDateTime now = LocalDateTime.now();
+        List<OutboxEvent> events = outboxEventRepository.claimPendingEvents(now, BATCH_SIZE);
         
-        // Simulate some processing time (for demo purposes only)
-        // In production, remove this or replace with actual message broker call
-        try {
-            Thread.sleep(100);
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
+        // Update inProgressUntil to claim these events
+        LocalDateTime claimUntil = now.plusMinutes(CLAIM_TIMEOUT_MINUTES);
+        for (OutboxEvent event : events) {
+            event.setInProgressUntil(claimUntil);
         }
+        
+        if (!events.isEmpty()) {
+            outboxEventRepository.saveAll(events);
+        }
+        
+        return events;
     }
 
     public List<OutboxEvent> getAllEvents() {
-        return outboxEventRepository.findAll();
+        return outboxEventRepository.findAllByOrderByCreatedAtAsc();
     }
 
     public List<OutboxEvent> getPendingEvents() {
-        return outboxEventRepository.findByStatusOrderByCreatedAtAsc("PENDING");
+        return outboxEventRepository.findBySentAtIsNullOrderByCreatedAtAsc();
     }
 }

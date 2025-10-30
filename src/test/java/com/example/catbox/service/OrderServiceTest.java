@@ -44,14 +44,14 @@ class OrderServiceTest {
         assertThat(createdOrder.getCreatedAt()).isNotNull();
 
         // Verify outbox event was created
-        List<OutboxEvent> outboxEvents = outboxEventRepository.findByStatusOrderByCreatedAtAsc("PENDING");
+        List<OutboxEvent> outboxEvents = outboxEventRepository.findBySentAtIsNullOrderByCreatedAtAsc();
         assertThat(outboxEvents).isNotEmpty();
         
         OutboxEvent event = outboxEvents.get(0);
         assertThat(event.getAggregateType()).isEqualTo("Order");
         assertThat(event.getAggregateId()).isEqualTo(createdOrder.getId().toString());
         assertThat(event.getEventType()).isEqualTo("OrderCreated");
-        assertThat(event.getStatus()).isEqualTo("PENDING");
+        assertThat(event.getSentAt()).isNull();
         assertThat(event.getPayload()).contains("John Doe");
     }
 
@@ -68,7 +68,7 @@ class OrderServiceTest {
         assertThat(updatedOrder.getStatus()).isEqualTo("COMPLETED");
 
         // Verify outbox events (one for creation, one for status change)
-        List<OutboxEvent> outboxEvents = outboxEventRepository.findByStatusOrderByCreatedAtAsc("PENDING");
+        List<OutboxEvent> outboxEvents = outboxEventRepository.findBySentAtIsNullOrderByCreatedAtAsc();
         assertThat(outboxEvents).hasSizeGreaterThanOrEqualTo(2);
         
         OutboxEvent statusChangeEvent = outboxEvents.stream()

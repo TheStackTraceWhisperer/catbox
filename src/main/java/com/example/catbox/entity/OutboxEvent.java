@@ -27,17 +27,14 @@ public class OutboxEvent {
     private LocalDateTime createdAt;
 
     @Column
-    private LocalDateTime processedAt;
+    private LocalDateTime sentAt;
 
-    @Column(nullable = false)
-    private String status; // PENDING, PROCESSED, FAILED
+    @Column
+    private LocalDateTime inProgressUntil;
 
     @PrePersist
     protected void onCreate() {
         createdAt = LocalDateTime.now();
-        if (status == null) {
-            status = "PENDING";
-        }
     }
 
     // Constructors
@@ -49,7 +46,6 @@ public class OutboxEvent {
         this.aggregateId = aggregateId;
         this.eventType = eventType;
         this.payload = payload;
-        this.status = "PENDING";
     }
 
     // Getters and Setters
@@ -101,19 +97,19 @@ public class OutboxEvent {
         this.createdAt = createdAt;
     }
 
-    public LocalDateTime getProcessedAt() {
-        return processedAt;
+    public LocalDateTime getSentAt() {
+        return sentAt;
     }
 
-    public void setProcessedAt(LocalDateTime processedAt) {
-        this.processedAt = processedAt;
+    public void setSentAt(LocalDateTime sentAt) {
+        this.sentAt = sentAt;
     }
 
-    public String getStatus() {
-        return status;
+    public LocalDateTime getInProgressUntil() {
+        return inProgressUntil;
     }
 
-    public void setStatus(String status) {
-        this.status = status;
+    public void setInProgressUntil(LocalDateTime inProgressUntil) {
+        this.inProgressUntil = inProgressUntil;
     }
 }
