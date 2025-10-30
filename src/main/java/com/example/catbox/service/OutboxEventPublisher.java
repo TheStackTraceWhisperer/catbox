@@ -44,15 +44,17 @@ public class OutboxEventPublisher {
         if (!claimedEvents.isEmpty()) {
             logger.info("Claimed {} events for processing", claimedEvents.size());
             
-            // Process each event in a virtual thread with its own transaction
+            // Process each event in a separate thread with its own transaction
+            // Note: Using regular threads for Java 17 compatibility
+            // Switch to Thread.ofVirtual().start() when using Java 21+
             for (OutboxEvent event : claimedEvents) {
-                Thread.ofVirtual().start(() -> {
+                new Thread(() -> {
                     try {
                         eventProcessor.processEvent(event);
                     } catch (Exception e) {
                         logger.error("Unexpected error processing event {}", event.getId(), e);
                     }
-                });
+                }).start();
             }
         }
     }
