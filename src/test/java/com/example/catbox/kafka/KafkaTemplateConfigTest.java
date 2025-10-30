@@ -9,8 +9,8 @@ import org.springframework.test.context.TestPropertySource;
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
- * Basic unit test for Kafka template configuration.
- * This verifies the Kafka configuration beans are properly wired.
+ * Integration test for Kafka template configuration.
+ * This verifies the Kafka configuration beans are properly wired within the Spring context.
  */
 @SpringBootTest
 @TestPropertySource(properties = {

@@ -55,12 +55,10 @@ class KafkaIntegrationTest {
         consumerProps.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
         consumerProps.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
 
-        DefaultKafkaConsumerFactory<String, String> consumerFactory = 
-            new DefaultKafkaConsumerFactory<>(consumerProps);
+        DefaultKafkaConsumerFactory<String, String> consumerFactory = new DefaultKafkaConsumerFactory<>(consumerProps);
         
         ContainerProperties containerProps = new ContainerProperties(TEST_TOPIC);
-        KafkaMessageListenerContainer<String, String> container = 
-            new KafkaMessageListenerContainer<>(consumerFactory, containerProps);
+        KafkaMessageListenerContainer<String, String> container = new KafkaMessageListenerContainer<>(consumerFactory, containerProps);
 
         BlockingQueue<ConsumerRecord<String, String>> records = new LinkedBlockingQueue<>();
         container.setupMessageListener((MessageListener<String, String>) records::add);
