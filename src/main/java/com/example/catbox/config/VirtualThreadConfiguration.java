@@ -1,15 +1,17 @@
 package com.example.catbox.config;
 
+import org.springframework.boot.autoconfigure.task.TaskExecutionAutoConfiguration;
+import org.springframework.boot.web.embedded.tomcat.TomcatProtocolHandlerCustomizer;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.task.AsyncTaskExecutor;
+import org.springframework.core.task.support.TaskExecutorAdapter;
 
-// Virtual threads require Java 21+
-// This configuration is disabled for Java 17 compatibility
+import java.util.concurrent.Executors;
+
 @Configuration
 public class VirtualThreadConfiguration {
-    // Virtual thread configuration commented out for Java 17
-    // Uncomment when using Java 21+
-    
-    /*
+
     @Bean(TaskExecutionAutoConfiguration.APPLICATION_TASK_EXECUTOR_BEAN_NAME)
     public AsyncTaskExecutor asyncTaskExecutor() {
         return new TaskExecutorAdapter(Executors.newVirtualThreadPerTaskExecutor());
@@ -21,5 +23,4 @@ public class VirtualThreadConfiguration {
             protocolHandler.setExecutor(Executors.newVirtualThreadPerTaskExecutor());
         };
     }
-    */
 }
