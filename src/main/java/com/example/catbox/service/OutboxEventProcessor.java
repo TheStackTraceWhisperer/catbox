@@ -1,9 +1,13 @@
 package com.example.catbox.service;
 
+import com.example.catbox.config.DynamicKafkaTemplateFactory;
+import com.example.catbox.config.OutboxRoutingConfig;
 import com.example.catbox.entity.OutboxEvent;
 import com.example.catbox.repository.OutboxEventRepository;
+import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
@@ -15,15 +19,14 @@ import java.time.LocalDateTime;
  * Each event is processed in its own transaction (REQUIRES_NEW).
  */
 @Service
+@RequiredArgsConstructor
 public class OutboxEventProcessor {
 
     private static final Logger logger = LoggerFactory.getLogger(OutboxEventProcessor.class);
 
     private final OutboxEventRepository outboxEventRepository;
-
-    public OutboxEventProcessor(OutboxEventRepository outboxEventRepository) {
-        this.outboxEventRepository = outboxEventRepository;
-    }
+    private final DynamicKafkaTemplateFactory kafkaTemplateFactory;
+    private final OutboxRoutingConfig routingConfig;
 
     /**
      * Process a single event in a new transaction.
@@ -32,10 +35,10 @@ public class OutboxEventProcessor {
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void processEvent(OutboxEvent event) {
         try {
-            // Publish to Kafka/message broker
+            // Publish to Kafka using our dynamic, routing factory
             publishToKafka(event);
             
-            // Mark as sent in a new transaction
+            // Mark as sent
             event.setSentAt(LocalDateTime.now());
             event.setInProgressUntil(null); // Clear the claim
             outboxEventRepository.save(event);
@@ -45,27 +48,41 @@ public class OutboxEventProcessor {
                 
         } catch (Exception e) {
             logger.error("Failed to publish event: {}. Will retry on next poll.", event.getId(), e);
-            // Don't update sentAt - leave inProgressUntil to expire and retry
-            // In case of Kafka send success but DB update failure, 
-            // at-least-once delivery with idempotent consumers handles duplicates
+            // On failure, the transaction rolls back.
+            // The 'inProgressUntil' lease remains, and the poller will retry
+            // after the lease expires.
         }
     }
 
     /**
-     * Simulate publishing to Kafka.
-     * In production, replace with actual Kafka producer call.
+     * Publishes the event to the correct Kafka cluster based on routing rules.
      */
     private void publishToKafka(OutboxEvent event) {
-        // Example: kafkaTemplate.send(topic, event.getPayload()).get();
-        logger.debug("Publishing to Kafka: type={}, aggregateId={}, payload={}",
-            event.getEventType(), event.getAggregateId(), event.getPayload());
-        
-        // Simulate network call (for demo purposes only)
+        // 1. Find the route for this event
+        String clusterKey = routingConfig.getRules().get(event.getEventType());
+        if (clusterKey == null) {
+            // Fatal error: No route defined for this event type.
+            // Throwing an exception will cause a retry, giving time to fix config.
+            throw new IllegalStateException("No Kafka route found for eventType: " + event.getEventType());
+        }
+
+        // 2. Get the dynamic KafkaTemplate
+        KafkaTemplate<String, String> template = kafkaTemplateFactory.getTemplate(clusterKey);
+
+        String topic = event.getEventType();
+        String key = event.getAggregateId(); // Guarantees ordering per aggregate
+        String payload = event.getPayload();
+
+        logger.debug("Publishing to cluster '{}', topic '{}', key '{}'", clusterKey, topic, key);
+
+        // 3. Send the message
+        // We use .get() to make the send synchronous and blocking.
+        // This is ideal here because we are on a virtual thread and
+        // we *want* to block until we get a success/failure response.
         try {
-            Thread.sleep(100);
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-            throw new RuntimeException("Kafka send interrupted", e);
+            template.send(topic, key, payload).get(); // .get() will throw if the send fails
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to send message to Kafka", e);
         }
     }
 }
