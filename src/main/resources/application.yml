@@ -26,6 +26,43 @@ spring:
     virtual:
       enabled: true
 
+  # --- Kafka Configuration ---
+  kafka:
+    clusters:
+      # --- Cluster A ---
+      cluster-a:
+        bootstrap-servers: localhost:9092
+        producer:
+          key-serializer: org.apache.kafka.common.serialization.StringSerializer
+          value-serializer: org.apache.kafka.common.serialization.StringSerializer
+          properties:
+            linger.ms: 10
+            acks: all
+      # --- Cluster B ---
+      cluster-b:
+        bootstrap-servers: localhost:9093
+        producer:
+          key-serializer: org.apache.kafka.common.serialization.StringSerializer
+          value-serializer: org.apache.kafka.common.serialization.StringSerializer
+          properties:
+            linger.ms: 10
+            acks: all
+
+# --- Routing and Factory Configuration ---
+outbox:
+  routing:
+    rules:
+      # map: eventType -> cluster-key
+      OrderCreated: cluster-a
+      OrderStatusChanged: cluster-a
+      # e.g., InventoryEvent: cluster-b
+
+  kafka:
+    factory:
+      # Timeouts for the dynamic factory
+      idle-eviction-time-minutes: 30
+      eviction-check-ms: 300000 # 5 minutes
+
 server:
   port: 8080
 
