@@ -57,7 +57,7 @@ public class OutboxEventProcessor {
     /**
      * Publishes the event to the correct Kafka cluster based on routing rules.
      */
-    private void publishToKafka(OutboxEvent event) throws Exception {
+    private void publishToKafka(OutboxEvent event) {
         // 1. Find the route for this event
         String clusterKey = routingConfig.getRules().get(event.getEventType());
         if (clusterKey == null) {
@@ -79,6 +79,10 @@ public class OutboxEventProcessor {
         // We use .get() to make the send synchronous and blocking.
         // This is ideal here because we are on a virtual thread and
         // we *want* to block until we get a success/failure response.
-        template.send(topic, key, payload).get(); // .get() will throw if the send fails
+        try {
+            template.send(topic, key, payload).get(); // .get() will throw if the send fails
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to send message to Kafka", e);
+        }
     }
 }

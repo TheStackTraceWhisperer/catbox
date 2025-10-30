@@ -1,6 +1,8 @@
 package com.example.catbox.config;
 
 import org.apache.kafka.clients.producer.ProducerConfig;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.kafka.KafkaProperties;
 import org.springframework.context.annotation.Configuration;
@@ -24,6 +26,8 @@ import java.util.concurrent.TimeUnit;
  */
 @Configuration
 public class DynamicKafkaTemplateFactory {
+
+    private static final Logger logger = LoggerFactory.getLogger(DynamicKafkaTemplateFactory.class);
 
     private final KafkaClustersConfig clustersConfig;
     private final Map<String, KafkaTemplate<String, String>> templateCache = new ConcurrentHashMap<>();
@@ -89,7 +93,7 @@ public class DynamicKafkaTemplateFactory {
                 evictIdleTemplates();
             } catch (Exception e) {
                 // Log but don't let exceptions kill the scheduler
-                System.err.println("Error during template eviction: " + e.getMessage());
+                logger.error("Error during template eviction", e);
             }
         }, evictionCheckMs, evictionCheckMs, TimeUnit.MILLISECONDS);
     }
@@ -109,7 +113,7 @@ public class DynamicKafkaTemplateFactory {
                     try {
                         template.destroy();
                     } catch (Exception e) {
-                        System.err.println("Error destroying template: " + e.getMessage());
+                        logger.error("Error destroying template for cluster: {}", clusterKey, e);
                     }
                 }
                 return true;
@@ -138,7 +142,7 @@ public class DynamicKafkaTemplateFactory {
             try {
                 template.destroy();
             } catch (Exception e) {
-                System.err.println("Error destroying template: " + e.getMessage());
+                logger.error("Error destroying template during shutdown", e);
             }
         });
         templateCache.clear();
