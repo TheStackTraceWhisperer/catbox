@@ -5,8 +5,13 @@ spring:
   # Docker Compose Profile
   docker:
     compose:
+      # Set enabled to true to enable Spring Boot's automatic Docker Compose lifecycle management
+      # When enabled, Spring Boot will start/stop the services defined in compose.yaml
+      # lifecycle-management: none disables automatic lifecycle management
+      # Use 'docker compose up -d' manually to start services when needed
       enabled: false
       file: compose.yaml
+      lifecycle-management: none
 
   # Default datasource (H2) - Inherited from application.yml
   # Default JPA (H2) - Inherited from application.yml
