@@ -2,16 +2,8 @@ spring:
   application:
     name: catbox
 
-  datasource:
-    url: jdbc:h2:mem:catboxdb
-    driver-class-name: org.h2.Driver
-    username: sa
-    password: 
-
-  h2:
-    console:
-      enabled: true
-      path: /h2-console
+  # Remove explicit default datasource to avoid H2 in default profile; let tests configure via Testcontainers
+  datasource: { }
 
   jpa:
     hibernate:
@@ -20,7 +12,6 @@ spring:
     properties:
       hibernate:
         format_sql: true
-        dialect: org.hibernate.dialect.H2Dialect
 
   threads:
     virtual:

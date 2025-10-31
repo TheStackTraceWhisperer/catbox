@@ -64,13 +64,6 @@
             <optional>true</optional>
         </dependency>
 
-        <!-- H2 Database for demo -->
-        <dependency>
-            <groupId>com.h2database</groupId>
-            <artifactId>h2</artifactId>
-            <scope>runtime</scope>
-        </dependency>
-
         <!-- MS SQL Server Driver for Azure SQL -->
         <dependency>
             <groupId>com.microsoft.sqlserver</groupId>
@@ -115,6 +108,13 @@
         <dependency>
             <groupId>org.testcontainers</groupId>
             <artifactId>junit-jupiter</artifactId>
+            <scope>test</scope>
+        </dependency>
+
+        <!-- Testcontainers: SQL Server -->
+        <dependency>
+            <groupId>org.testcontainers</groupId>
+            <artifactId>mssqlserver</artifactId>
             <scope>test</scope>
         </dependency>
     </dependencies>

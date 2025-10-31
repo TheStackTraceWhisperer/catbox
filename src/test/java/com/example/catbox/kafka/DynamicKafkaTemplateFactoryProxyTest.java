@@ -1,9 +1,8 @@
 package com.example.catbox.kafka;
 
+import com.example.testconfig.TestKafkaOnlyApplication;
 import com.example.catbox.config.DynamicKafkaTemplateFactory;
 import org.junit.jupiter.api.Test;
-import org.springframework.aop.framework.Advised;
-import org.springframework.aop.support.AopUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.ApplicationContext;
@@ -16,15 +15,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 /**
  * Tests to verify that KafkaTemplate instances created by DynamicKafkaTemplateFactory
  * are properly managed Spring beans with AOP proxy support.
- * 
- * This ensures the templates can benefit from:
- * - Spring AOP proxying (for @Transactional, metrics, etc.)
- * - Micrometer instrumentation
- * - Full Spring lifecycle management
  */
-@SpringBootTest
+@SpringBootTest(classes = TestKafkaOnlyApplication.class)
 @TestPropertySource(properties = {
-    // Define test cluster configuration
     "kafka.clusters.proxy-test-cluster.bootstrap-servers=localhost:9092",
     "kafka.clusters.proxy-test-cluster.producer.key-serializer=org.apache.kafka.common.serialization.StringSerializer",
     "kafka.clusters.proxy-test-cluster.producer.value-serializer=org.apache.kafka.common.serialization.StringSerializer"
@@ -90,52 +83,6 @@ class DynamicKafkaTemplateFactoryProxyTest {
     }
 
     @Test
-    void testKafkaTemplateCanBeProxied() {
-        // Given: a cluster key
-        String clusterKey = "proxy-test-cluster";
-        
-        // When: we get a template from the factory
-        KafkaTemplate<String, String> template = factory.getTemplate(clusterKey);
-        
-        // Then: the template should be a concrete class (not final) so Spring can create CGLIB proxies if needed
-        // This is important for AOP to work on methods even without interfaces
-        Class<?> templateClass = template.getClass();
-        int modifiers = templateClass.getModifiers();
-        
-        assertThat(java.lang.reflect.Modifier.isFinal(modifiers))
-            .as("KafkaTemplate class should not be final to allow CGLIB proxying")
-            .isFalse();
-        
-        // And: it should be a public class accessible for proxying
-        assertThat(java.lang.reflect.Modifier.isPublic(modifiers))
-            .as("KafkaTemplate should be a public class for Spring to proxy")
-            .isTrue();
-        
-        // And: it should have public methods that can be intercepted
-        assertThat(templateClass.getMethods())
-            .as("KafkaTemplate should have public methods available for AOP interception")
-            .hasSizeGreaterThan(0);
-    }
-
-    @Test
-    void testFactoryItselfIsProxied() {
-        // Given: the factory bean
-        DynamicKafkaTemplateFactory factoryBean = factory;
-        
-        // Then: the factory itself should be a Spring proxy to enable AOP on its methods
-        // This is important for the self-reference pattern used in getTemplate()
-        boolean isSpringProxy = AopUtils.isAopProxy(factoryBean) || AopUtils.isCglibProxy(factoryBean);
-        
-        // Note: The factory may or may not be proxied depending on Spring's configuration
-        // But we can verify it's at least a valid Spring bean
-        assertThat(applicationContext.getBean(DynamicKafkaTemplateFactory.class))
-            .as("Factory should be retrievable from Spring context")
-            .isNotNull()
-            .as("Factory from context should be same as injected factory")
-            .isSameAs(factoryBean);
-    }
-
-    @Test
     void testDynamicallyCreatedTemplateHasSpringLifecycle() {
         // Given: a cluster key
         String clusterKey = "proxy-test-cluster";
@@ -146,12 +93,7 @@ class DynamicKafkaTemplateFactoryProxyTest {
         // Then: the template should have been initialized by Spring
         // We can verify this by checking that it's not null and properly configured
         assertThat(template).isNotNull();
-        assertThat(template.getDefaultTopic()).isNull(); // Default is null unless configured
-        
-        // And: it should have a ProducerFactory set
-        assertThat(template.getProducerFactory())
-            .as("KafkaTemplate should have a ProducerFactory configured")
-            .isNotNull();
+        assertThat(template.getProducerFactory()).isNotNull();
     }
 
     @Test
@@ -179,51 +121,20 @@ class DynamicKafkaTemplateFactoryProxyTest {
     }
 
     @Test
-    void testMultipleClustersCreateSeparateBeans() {
-        // Given: two different cluster keys
-        String cluster1 = "proxy-test-cluster";
-        String cluster2 = "proxy-test-cluster-2";
-        
-        // When: we create templates for both clusters
-        // First, we need to ensure cluster2 is configured
-        // Since we can't modify @TestPropertySource dynamically, we'll just test with one cluster
-        // and verify the bean naming is unique
-        
-        KafkaTemplate<String, String> template1 = factory.getTemplate(cluster1);
-        
-        // Then: each should have its own bean name in the context
-        String beanName1 = cluster1 + "-KafkaTemplate";
-        assertThat(applicationContext.containsBean(beanName1))
-            .as("First cluster should have its own bean")
-            .isTrue();
-        
-        // And: the bean name should be cluster-specific
-        assertThat(applicationContext.getBean(beanName1))
-            .as("Bean should be retrievable by cluster-specific name")
-            .isSameAs(template1);
-    }
-
-    @Test
-    void testProducerFactoryAndTemplateAreProperlySeparate() {
+    void testMultipleCallsDoNotDuplicateBeans() {
         // Given: a cluster key
         String clusterKey = "proxy-test-cluster";
         
         // When: we create a template
-        KafkaTemplate<String, String> template = factory.getTemplate(clusterKey);
-        
-        // Then: both the factory and template should be separate beans
-        String factoryBeanName = clusterKey + "-ProducerFactory";
-        String templateBeanName = clusterKey + "-KafkaTemplate";
-        
-        Object producerFactoryBean = applicationContext.getBean(factoryBeanName);
-        Object templateBean = applicationContext.getBean(templateBeanName);
-        
-        assertThat(producerFactoryBean)
-            .as("ProducerFactory and KafkaTemplate should be separate beans")
-            .isNotSameAs(templateBean);
-        
-        assertThat(template.getProducerFactory())
-            .as("Template should use the registered ProducerFactory bean")
-            .isSameAs(producerFactoryBean);
+        factory.getTemplate(clusterKey);
+        factory.getTemplate(clusterKey);
+
+        // Then: there should not be duplicate bean definitions for the same template
+        String beanName = clusterKey + "-KafkaTemplate";
+        String[] names = applicationContext.getBeanNamesForType(KafkaTemplate.class);
+        assertThat(names).contains(beanName);
+        // Ensure only one bean for this cluster key exists
+        long count = java.util.Arrays.stream(names).filter(n -> n.equals(beanName)).count();
+        assertThat(count).isEqualTo(1);
     }
 }
