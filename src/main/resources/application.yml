@@ -81,12 +81,11 @@ management:
       enabled: true
     readinessState:
       enabled: true
-  metrics:
-    export:
-      prometheus:
-        enabled: true
 
 logging:
+  structured:
+    format:
+      console: ecs
   level:
     com.example.catbox: INFO
     org.springframework.web: INFO
