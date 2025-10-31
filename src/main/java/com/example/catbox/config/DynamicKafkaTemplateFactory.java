@@ -185,9 +185,13 @@ public class DynamicKafkaTemplateFactory implements ApplicationContextAware {
                 singletonRegistry.destroySingleton(factoryBeanName);
             }
 
-            // Remove the bean definitions
-            registry.removeBeanDefinition(templateBeanName);
-            registry.removeBeanDefinition(factoryBeanName);
+            // Remove the bean definitions if they exist
+            if (registry.containsBeanDefinition(templateBeanName)) {
+                registry.removeBeanDefinition(templateBeanName);
+            }
+            if (registry.containsBeanDefinition(factoryBeanName)) {
+                registry.removeBeanDefinition(factoryBeanName);
+            }
 
             log.info("Successfully destroyed and unregistered beans for cluster: {}", clusterKey);
         } catch (Exception e) {
