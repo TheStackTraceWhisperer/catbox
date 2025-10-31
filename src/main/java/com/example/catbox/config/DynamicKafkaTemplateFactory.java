@@ -36,6 +36,7 @@ public class DynamicKafkaTemplateFactory implements ApplicationContextAware {
 
     private final KafkaClustersConfig clustersConfig;
     private ConfigurableApplicationContext applicationContext;
+    private DynamicKafkaTemplateFactory self; // The proxied version of this bean
 
     // This is our thread-safe cache: Map<ClusterKey, KafkaTemplate>
     private final Map<String, KafkaTemplate<String, String>> templateCache = new ConcurrentHashMap<>();
@@ -60,9 +61,16 @@ public class DynamicKafkaTemplateFactory implements ApplicationContextAware {
      * @return A thread-safe, Spring-managed KafkaTemplate bean.
      */
     public KafkaTemplate<String, String> getTemplate(String clusterKey) {
+        // Lazy initialization of self-reference to avoid circular dependency during bean creation
+        if (self == null) {
+            self = applicationContext.getBean(DynamicKafkaTemplateFactory.class);
+        }
+        
+        // We call the proxied 'self' reference, not 'this'.
+        // This ensures any AOP on createAndRegisterTemplate() is triggered.
         // computeIfAbsent is atomic and ensures createAndRegisterTemplate
         // is called only once per key, eliminating the need for manual locking.
-        KafkaTemplate<String, String> template = templateCache.computeIfAbsent(clusterKey, this::createAndRegisterTemplate);
+        KafkaTemplate<String, String> template = templateCache.computeIfAbsent(clusterKey, self::createAndRegisterTemplate);
 
         // Update last access time *after* successful retrieval/creation
         lastAccessTime.put(clusterKey, System.currentTimeMillis());
@@ -179,13 +187,15 @@ public class DynamicKafkaTemplateFactory implements ApplicationContextAware {
             String templateBeanName = clusterKey + "-KafkaTemplate";
             String factoryBeanName = clusterKey + "-ProducerFactory";
 
-            // Destroy the singleton instances (cast to access destroySingleton)
-            if (beanFactory instanceof org.springframework.beans.factory.support.DefaultSingletonBeanRegistry singletonRegistry) {
-                singletonRegistry.destroySingleton(templateBeanName);
-                singletonRegistry.destroySingleton(factoryBeanName);
+            // Destroy the singleton instances
+            if (beanFactory.containsSingleton(templateBeanName)) {
+                ((org.springframework.beans.factory.support.DefaultSingletonBeanRegistry) beanFactory).destroySingleton(templateBeanName);
+            }
+            if (beanFactory.containsSingleton(factoryBeanName)) {
+                ((org.springframework.beans.factory.support.DefaultSingletonBeanRegistry) beanFactory).destroySingleton(factoryBeanName);
             }
 
-            // Remove the bean definitions if they exist
+            // Remove the bean definitions
             if (registry.containsBeanDefinition(templateBeanName)) {
                 registry.removeBeanDefinition(templateBeanName);
             }
