@@ -178,7 +178,7 @@
             "uid": "prometheus"
           },
           "editorMode": "code",
-          "expr": "100 * (1 - avg(rate(process_cpu_usage{application=\"catbox\"}[1m])))",
+          "expr": "100 * avg(rate(process_cpu_usage{application=\"catbox\"}[1m]))",
           "legendFormat": "CPU Usage",
           "range": true,
           "refId": "A"
@@ -567,7 +567,11 @@
   ],
   "refresh": "5s",
   "schemaVersion": 39,
-  "tags": ["catbox", "spring-boot", "java"],
+  "tags": [
+    "catbox",
+    "spring-boot",
+    "java"
+  ],
   "templating": {
     "list": []
   },

@@ -34,7 +34,7 @@ spring:
 
   threads:
     virtual:
-      enabled: false  # Set to true when using Java 21+
+      enabled: true  # Enable virtual threads in Java 21+
 
   # Kafka configuration
   kafka:

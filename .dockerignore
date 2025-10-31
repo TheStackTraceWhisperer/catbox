@@ -1,9 +1,0 @@
-target/
-.git/
-.github/
-*.md
-.gitignore
-.dockerignore
-monitoring/
-compose.yaml
-*.log

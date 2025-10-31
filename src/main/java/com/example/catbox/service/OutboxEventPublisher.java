@@ -11,8 +11,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 /**
  * High-performance outbox poller that claims events using SELECT FOR UPDATE SKIP LOCKED.
@@ -27,13 +25,11 @@ public class OutboxEventPublisher {
 
     private final OutboxEventRepository outboxEventRepository;
     private final OutboxEventProcessor eventProcessor;
-    private final ExecutorService executorService;
 
     public OutboxEventPublisher(OutboxEventRepository outboxEventRepository,
                                OutboxEventProcessor eventProcessor) {
         this.outboxEventRepository = outboxEventRepository;
         this.eventProcessor = eventProcessor;
-        this.executorService = Executors.newCachedThreadPool();
     }
 
     /**
@@ -48,9 +44,9 @@ public class OutboxEventPublisher {
         if (!claimedEvents.isEmpty()) {
             logger.info("Claimed {} events for processing", claimedEvents.size());
             
-            // Process each event in a separate thread with its own transaction
+            // Process each event in a virtual thread with its own transaction
             for (OutboxEvent event : claimedEvents) {
-                executorService.submit(() -> {
+                Thread.ofVirtual().start(() -> {
                     try {
                         eventProcessor.processEvent(event);
                     } catch (Exception e) {
