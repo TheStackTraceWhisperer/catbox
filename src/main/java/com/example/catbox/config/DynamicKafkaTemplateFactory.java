@@ -3,6 +3,7 @@ package com.example.catbox.config;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.kafka.common.config.SslConfigs;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.beans.factory.config.BeanDefinition;
@@ -10,6 +11,9 @@ import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
 import org.springframework.beans.factory.support.BeanDefinitionBuilder;
 import org.springframework.beans.factory.support.BeanDefinitionRegistry;
 import org.springframework.boot.autoconfigure.kafka.KafkaProperties;
+import org.springframework.boot.autoconfigure.kafka.SslBundleSslEngineFactory;
+import org.springframework.boot.ssl.SslBundle;
+import org.springframework.boot.ssl.SslBundles;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.context.ConfigurableApplicationContext;
@@ -17,6 +21,7 @@ import org.springframework.kafka.core.DefaultKafkaProducerFactory;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -35,6 +40,7 @@ import java.util.concurrent.TimeUnit;
 public class DynamicKafkaTemplateFactory implements ApplicationContextAware {
 
     private final KafkaClustersConfig clustersConfig;
+    private final SslBundles sslBundles;
     private ConfigurableApplicationContext applicationContext;
     private DynamicKafkaTemplateFactory self; // The proxied version of this bean
 
@@ -111,6 +117,7 @@ public class DynamicKafkaTemplateFactory implements ApplicationContextAware {
 
     /**
      * Finds the KafkaProperties for the cluster and builds the producer config map.
+     * This now includes logic to manually apply SSL Bundles.
      */
     private Map<String, Object> getProducerProperties(String clusterKey) {
         KafkaProperties props = clustersConfig.getClusters().get(clusterKey);
@@ -118,7 +125,25 @@ public class DynamicKafkaTemplateFactory implements ApplicationContextAware {
             // This is a fatal configuration error
             throw new IllegalArgumentException("No Kafka cluster configuration found for key: " + clusterKey);
         }
-        return props.buildProducerProperties(null);
+
+        // 1. Build the standard properties from application.yml
+        Map<String, Object> producerProps = props.buildProducerProperties(null);
+
+        // 2. Manually apply SSL Bundle if configured
+        String bundleName = props.getSsl().getBundle();
+        if (StringUtils.hasText(bundleName)) {
+            log.debug("Applying SSL Bundle '{}' to cluster '{}'", bundleName, clusterKey);
+
+            // Get the Spring-managed SslBundle
+            SslBundle bundle = sslBundles.getBundle(bundleName);
+
+            // Add the "magic" properties that SslBundleSslEngineFactory looks for.
+            // This is what Spring Boot auto-configuration does behind the scenes.
+            producerProps.put(SslConfigs.SSL_ENGINE_FACTORY_CLASS_CONFIG, SslBundleSslEngineFactory.class.getName());
+            producerProps.put(SslBundle.class.getName(), bundle);
+        }
+
+        return producerProps;
     }
 
     /**
