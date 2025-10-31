@@ -44,13 +44,19 @@ class OrderServiceTest {
         assertThat(createdOrder.getStatus()).isEqualTo("PENDING");
         assertThat(createdOrder.getCreatedAt()).isNotNull();
 
-        // Verify outbox event was created
+        // Verify an outbox event for THIS order was created (robust to pre-existing events)
         List<OutboxEvent> outboxEvents = outboxEventRepository.findBySentAtIsNullOrderByCreatedAtAsc();
         assertThat(outboxEvents).isNotEmpty();
 
-        OutboxEvent event = outboxEvents.get(0);
+        String expectedAggregateId = createdOrder.getId().toString();
+        OutboxEvent event = outboxEvents.stream()
+                .filter(e -> "OrderCreated".equals(e.getEventType()))
+                .filter(e -> expectedAggregateId.equals(e.getAggregateId()))
+                .findFirst()
+                .orElseThrow(() -> new AssertionError("OrderCreated event for aggregateId=" + expectedAggregateId + " not found"));
+
         assertThat(event.getAggregateType()).isEqualTo("Order");
-        assertThat(event.getAggregateId()).isEqualTo(createdOrder.getId().toString());
+        assertThat(event.getAggregateId()).isEqualTo(expectedAggregateId);
         assertThat(event.getEventType()).isEqualTo("OrderCreated");
         assertThat(event.getSentAt()).isNull();
         assertThat(event.getPayload()).contains("John Doe");
@@ -68,16 +74,18 @@ class OrderServiceTest {
         // Then
         assertThat(updatedOrder.getStatus()).isEqualTo("COMPLETED");
 
-        // Verify outbox events (one for creation, one for status change)
+        // Verify outbox events contain a status change for THIS order (robust to pre-existing events)
         List<OutboxEvent> outboxEvents = outboxEventRepository.findBySentAtIsNullOrderByCreatedAtAsc();
-        assertThat(outboxEvents).hasSizeGreaterThanOrEqualTo(2);
+        assertThat(outboxEvents).isNotEmpty();
 
+        String expectedAggregateId = createdOrder.getId().toString();
         OutboxEvent statusChangeEvent = outboxEvents.stream()
                 .filter(e -> "OrderStatusChanged".equals(e.getEventType()))
+                .filter(e -> expectedAggregateId.equals(e.getAggregateId()))
                 .findFirst()
-                .orElseThrow();
+                .orElseThrow(() -> new AssertionError("OrderStatusChanged event for aggregateId=" + expectedAggregateId + " not found"));
 
-        assertThat(statusChangeEvent.getAggregateId()).isEqualTo(createdOrder.getId().toString());
+        assertThat(statusChangeEvent.getAggregateId()).isEqualTo(expectedAggregateId);
         assertThat(statusChangeEvent.getPayload()).contains("COMPLETED");
     }
 
