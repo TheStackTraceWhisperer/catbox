@@ -134,11 +134,15 @@ public class DynamicKafkaTemplateFactory implements ApplicationContextAware {
         if (StringUtils.hasText(bundleName)) {
             log.debug("Applying SSL Bundle '{}' to cluster '{}'", bundleName, clusterKey);
 
-            // Get the Spring-managed SslBundle
+            // Get the Spring-managed SslBundle. If the bundle doesn't exist,
+            // this will throw NoSuchSslBundleException which is intentional
+            // as it indicates a configuration error that should fail fast.
             SslBundle bundle = sslBundles.getBundle(bundleName);
 
-            // Add the "magic" properties that SslBundleSslEngineFactory looks for.
-            // This is what Spring Boot auto-configuration does behind the scenes.
+            // Configure the producer to use SslBundleSslEngineFactory.
+            // These two properties work together: the factory class tells Kafka
+            // to use Spring's SSL bundle implementation, and the bundle instance
+            // provides the actual SSL/TLS configuration (certificates, keys, etc.).
             producerProps.put(SslConfigs.SSL_ENGINE_FACTORY_CLASS_CONFIG, SslBundleSslEngineFactory.class.getName());
             producerProps.put(SslBundle.class.getName(), bundle);
         }
