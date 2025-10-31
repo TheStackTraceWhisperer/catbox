@@ -217,7 +217,7 @@ Connection details:
 
 ### Polling Strategy
 
-The `OutboxEventPublisher` service runs every **2 seconds**:
+The `OutboxEventPoller` service runs every **2 seconds**:
 
 1. **Claim Events** (REQUIRES_NEW transaction):
    - Query: `SELECT FOR UPDATE SKIP LOCKED`
@@ -227,13 +227,13 @@ The `OutboxEventPublisher` service runs every **2 seconds**:
 
 2. **Process Events** (Virtual Threads):
    - Each event spawns a virtual thread
-   - `OutboxEventProcessor` runs in REQUIRES_NEW transaction
+   - `OutboxEventPublisher` runs in REQUIRES_NEW transaction
    - Publishes to Kafka/message broker
    - Sets `sentAt = now` on success
 
 ### Production Integration
 
-Replace the simulated Kafka call in `OutboxEventProcessor.publishToKafka()`:
+Replace the simulated Kafka call in `OutboxEventPublisher.publishToKafka()`:
 
 ```java
 // Current (demo):
@@ -314,8 +314,8 @@ docker compose down
 │   │   │   │   └── OutboxEventRepository.java  # Outbox repository
 │   │   │   └── service/
 │   │   │       ├── OrderService.java            # Order business logic
-│   │   │       ├── OutboxEventPublisher.java    # Poller (claims events)
-│   │   │       └── OutboxEventProcessor.java    # Processor (publishes events)
+│   │   │       ├── OutboxEventPoller.java       # Poller (claims events)
+│   │   │       └── OutboxEventPublisher.java    # Publisher (publishes events)
 │   │   └── resources/
 │   │       ├── application.yml                 # Default configuration (H2)
 │   │       └── application-docker.yml          # Docker Compose profile (Azure SQL)

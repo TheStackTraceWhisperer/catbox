@@ -109,6 +109,19 @@ services:
       retries: 3
       start_period: 30s
 
+  # Promtail - ship Docker logs to Loki, parse ECS JSON
+  promtail:
+    image: grafana/promtail:latest
+    container_name: catbox-promtail
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
+      - ./monitoring/loki/promtail-config.yml:/etc/promtail/config.yml:ro
+    command: -config.file=/etc/promtail/config.yml
+    depends_on:
+      loki:
+        condition: service_healthy
+
 volumes:
   azuresql-data:
     driver: local

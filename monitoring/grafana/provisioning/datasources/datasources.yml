@@ -18,3 +18,9 @@ datasources:
     editable: true
     jsonData:
       maxLines: 1000
+      derivedFields:
+        - name: traceID
+          matcherRegex: '"trace.id":"([a-f0-9\-]+)"'
+          # Example: point to Tempo if added later; keep disabled unless Tempo is present
+          url: ''
+          urlDisplayLabel: 'Trace'

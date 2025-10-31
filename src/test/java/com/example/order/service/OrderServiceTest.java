@@ -1,9 +1,10 @@
-package com.example.catbox.service;
+package com.example.order.service;
 
-import com.example.catbox.entity.Order;
+import com.example.catbox.CatboxApplication;
 import com.example.catbox.entity.OutboxEvent;
-import com.example.catbox.repository.OrderRepository;
 import com.example.catbox.repository.OutboxEventRepository;
+import com.example.order.entity.Order;
+import com.example.order.repository.OrderRepository;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -14,7 +15,7 @@ import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-@SpringBootTest
+@SpringBootTest(classes = CatboxApplication.class)
 @Transactional
 class OrderServiceTest {
 
@@ -46,7 +47,7 @@ class OrderServiceTest {
         // Verify outbox event was created
         List<OutboxEvent> outboxEvents = outboxEventRepository.findBySentAtIsNullOrderByCreatedAtAsc();
         assertThat(outboxEvents).isNotEmpty();
-        
+
         OutboxEvent event = outboxEvents.get(0);
         assertThat(event.getAggregateType()).isEqualTo("Order");
         assertThat(event.getAggregateId()).isEqualTo(createdOrder.getId().toString());
@@ -70,12 +71,12 @@ class OrderServiceTest {
         // Verify outbox events (one for creation, one for status change)
         List<OutboxEvent> outboxEvents = outboxEventRepository.findBySentAtIsNullOrderByCreatedAtAsc();
         assertThat(outboxEvents).hasSizeGreaterThanOrEqualTo(2);
-        
+
         OutboxEvent statusChangeEvent = outboxEvents.stream()
-            .filter(e -> "OrderStatusChanged".equals(e.getEventType()))
-            .findFirst()
-            .orElseThrow();
-        
+                .filter(e -> "OrderStatusChanged".equals(e.getEventType()))
+                .findFirst()
+                .orElseThrow();
+
         assertThat(statusChangeEvent.getAggregateId()).isEqualTo(createdOrder.getId().toString());
         assertThat(statusChangeEvent.getPayload()).contains("COMPLETED");
     }

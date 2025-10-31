@@ -1,89 +1,89 @@
 package com.example.catbox.service;
 
+import com.example.catbox.config.DynamicKafkaTemplateFactory;
+import com.example.catbox.config.OutboxRoutingConfig;
+import com.example.catbox.config.OutboxProcessingConfig;
 import com.example.catbox.entity.OutboxEvent;
 import com.example.catbox.repository.OutboxEventRepository;
+import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.util.List;
 
 /**
- * High-performance outbox poller that claims events using SELECT FOR UPDATE SKIP LOCKED.
- * Supports multi-node deployment with concurrent processing.
+ * Publishes individual outbox events to Kafka using virtual threads.
+ * Each event is published in its own transaction (REQUIRES_NEW).
  */
 @Service
+@RequiredArgsConstructor
 public class OutboxEventPublisher {
 
     private static final Logger logger = LoggerFactory.getLogger(OutboxEventPublisher.class);
-    private static final int BATCH_SIZE = 100;
-    private static final int CLAIM_TIMEOUT_MINUTES = 5;
 
     private final OutboxEventRepository outboxEventRepository;
-    private final OutboxEventProcessor eventProcessor;
-
-    public OutboxEventPublisher(OutboxEventRepository outboxEventRepository,
-                               OutboxEventProcessor eventProcessor) {
-        this.outboxEventRepository = outboxEventRepository;
-        this.eventProcessor = eventProcessor;
-    }
+    private final DynamicKafkaTemplateFactory kafkaTemplateFactory;
+    private final OutboxRoutingConfig routingConfig;
+    private final OutboxProcessingConfig processingConfig;
 
     /**
-     * Polls for pending events every 2 seconds.
-     * Uses REQUIRES_NEW to claim events in a separate transaction with row-level locks.
-     */
-    @Scheduled(fixedDelay = 2000, initialDelay = 10000)
-    public void pollAndProcessEvents() {
-        // Claim events in a new transaction
-        List<OutboxEvent> claimedEvents = claimEvents();
-        
-        if (!claimedEvents.isEmpty()) {
-            logger.info("Claimed {} events for processing", claimedEvents.size());
-            
-            // Process each event in a virtual thread with its own transaction
-            for (OutboxEvent event : claimedEvents) {
-                Thread.ofVirtual().start(() -> {
-                    try {
-                        eventProcessor.processEvent(event);
-                    } catch (Exception e) {
-                        logger.error("Unexpected error processing event {}", event.getId(), e);
-                    }
-                });
-            }
-        }
-    }
-
-    /**
-     * Claims events using SELECT FOR UPDATE SKIP LOCKED.
-     * This allows multiple nodes to process different events concurrently.
+     * Publish a single event in a new transaction.
+     * This method is called from a virtual thread.
      */
     @Transactional(propagation = Propagation.REQUIRES_NEW)
-    public List<OutboxEvent> claimEvents() {
-        LocalDateTime now = LocalDateTime.now();
-        List<OutboxEvent> events = outboxEventRepository.claimPendingEvents(now, BATCH_SIZE);
-        
-        // Update inProgressUntil to claim these events
-        LocalDateTime claimUntil = now.plusMinutes(CLAIM_TIMEOUT_MINUTES);
-        for (OutboxEvent event : events) {
-            event.setInProgressUntil(claimUntil);
+    public void publishEvent(OutboxEvent event) {
+        try {
+            // Publish to Kafka using our dynamic, routing factory
+            publishToKafka(event);
+
+            // Mark as sent
+            event.setSentAt(LocalDateTime.now());
+            event.setInProgressUntil(null); // Clear the claim
+            outboxEventRepository.save(event);
+
+            logger.info("Successfully published event: {} for aggregate: {}/{}",
+                event.getEventType(), event.getAggregateType(), event.getAggregateId());
+
+        } catch (Exception e) {
+            logger.error(
+                "Failed to publish event: {}. Will retry after ~{} ms when claim expires.",
+                event.getId(), processingConfig.getClaimTimeoutMs(), e
+            );
+            // On failure, the transaction rolls back.
+            // The 'inProgressUntil' lease remains, and the poller will retry when the claim timeout elapses.
         }
-        
-        if (!events.isEmpty()) {
-            outboxEventRepository.saveAll(events);
-        }
-        
-        return events;
     }
 
-    public List<OutboxEvent> getAllEvents() {
-        return outboxEventRepository.findAllByOrderByCreatedAtAsc();
-    }
+    /**
+     * Publishes the event to the correct Kafka cluster based on routing rules.
+     */
+    private void publishToKafka(OutboxEvent event) {
+        // 1. Find the route for this event
+        String clusterKey = routingConfig.getRules().get(event.getEventType());
+        if (clusterKey == null) {
+            // Fatal error: No route defined for this event type.
+            // Throwing an exception will cause a retry, giving time to fix config.
+            throw new IllegalStateException("No Kafka route found for eventType: " + event.getEventType());
+        }
 
-    public List<OutboxEvent> getPendingEvents() {
-        return outboxEventRepository.findBySentAtIsNullOrderByCreatedAtAsc();
+        // 2. Get the dynamic KafkaTemplate
+        KafkaTemplate<String, String> template = kafkaTemplateFactory.getTemplate(clusterKey);
+
+        String topic = event.getEventType();
+        String key = event.getAggregateId(); // Guarantees ordering per aggregate
+        String payload = event.getPayload();
+
+        logger.debug("Publishing to cluster '{}' , topic '{}' , key '{}'", clusterKey, topic, key);
+
+        // 3. Send the message
+        try {
+            template.send(topic, key, payload).get(); // .get() will throw if the send fails
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to send message to Kafka", e);
+        }
     }
 }

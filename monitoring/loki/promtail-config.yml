@@ -1,0 +1,63 @@
+server:
+  http_listen_port: 9080
+  grpc_listen_port: 0
+
+positions:
+  filename: /tmp/positions.yaml
+
+clients:
+  - url: http://loki:3100/loki/api/v1/push
+
+scrape_configs:
+  - job_name: docker
+    docker_sd_configs:
+      - host: unix:///var/run/docker.sock
+        refresh_interval: 5s
+    relabel_configs:
+      # Drop promtail's own logs to prevent loops
+      - source_labels: ['__meta_docker_container_name']
+        regex: '/catbox-promtail'
+        action: drop
+      - source_labels: ['__meta_docker_container_name']
+        regex: '/(.*)'
+        target_label: container
+      - source_labels: ['__meta_docker_container_label_com_docker_compose_service']
+        target_label: compose_service
+      - source_labels: ['__meta_docker_container_label_com_docker_compose_project']
+        target_label: compose_project
+      - source_labels: ['__meta_docker_container_label_com_docker_compose_container-number']
+        target_label: compose_container_number
+      - source_labels: ['__meta_docker_container_log_stream']
+        target_label: stream
+      # Promtail will set __path__ automatically for docker_sd; keep it explicit and ensure host logs are mounted
+      - source_labels: ['__meta_docker_container_log_path']
+        target_label: __path__
+
+    pipeline_stages:
+      # Parse ECS JSON if present; non-JSON lines are left as-is
+      - json:
+          expressions:
+            ts: '@timestamp'
+            level: 'log.level'
+            message: message
+            logger: 'log.logger'
+            thread: 'process.thread.name'
+            service: 'service.name'
+            event_dataset: 'event.dataset'
+            trace_id: 'trace.id'
+            span_id: 'span.id'
+            error_type: 'error.type'
+            error_message: 'error.message'
+      - timestamp:
+          source: ts
+          layout: RFC3339
+      - labels:
+          level:
+          logger:
+          thread:
+          service:
+          event_dataset:
+          trace_id:
+          span_id:
+          error_type:
+      # Keep original line; don't force output to 'message' so non-JSON logs remain readable
