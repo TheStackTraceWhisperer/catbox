@@ -62,8 +62,13 @@ public class DynamicKafkaTemplateFactory implements ApplicationContextAware {
      */
     public KafkaTemplate<String, String> getTemplate(String clusterKey) {
         // Lazy initialization of self-reference to avoid circular dependency during bean creation
+        // Double-checked locking for thread-safe initialization
         if (self == null) {
-            self = applicationContext.getBean(DynamicKafkaTemplateFactory.class);
+            synchronized (this) {
+                if (self == null) {
+                    self = applicationContext.getBean(DynamicKafkaTemplateFactory.class);
+                }
+            }
         }
         
         // We call the proxied 'self' reference, not 'this'.
@@ -188,12 +193,8 @@ public class DynamicKafkaTemplateFactory implements ApplicationContextAware {
             String factoryBeanName = clusterKey + "-ProducerFactory";
 
             // Destroy the singleton instances
-            if (beanFactory.containsSingleton(templateBeanName)) {
-                ((org.springframework.beans.factory.support.DefaultSingletonBeanRegistry) beanFactory).destroySingleton(templateBeanName);
-            }
-            if (beanFactory.containsSingleton(factoryBeanName)) {
-                ((org.springframework.beans.factory.support.DefaultSingletonBeanRegistry) beanFactory).destroySingleton(factoryBeanName);
-            }
+            destroySingletonIfExists(beanFactory, templateBeanName);
+            destroySingletonIfExists(beanFactory, factoryBeanName);
 
             // Remove the bean definitions
             if (registry.containsBeanDefinition(templateBeanName)) {
@@ -206,6 +207,16 @@ public class DynamicKafkaTemplateFactory implements ApplicationContextAware {
             log.info("Successfully destroyed and unregistered beans for cluster: {}", clusterKey);
         } catch (Exception e) {
             log.error("Error while destroying beans for cluster: {}", clusterKey, e);
+        }
+    }
+
+    /**
+     * Helper method to destroy a singleton bean if it exists.
+     * Casts to DefaultSingletonBeanRegistry to access destroySingleton method.
+     */
+    private void destroySingletonIfExists(ConfigurableListableBeanFactory beanFactory, String beanName) {
+        if (beanFactory.containsSingleton(beanName)) {
+            ((org.springframework.beans.factory.support.DefaultSingletonBeanRegistry) beanFactory).destroySingleton(beanName);
         }
     }
 }
