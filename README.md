@@ -97,6 +97,46 @@ docker compose down
 mvn clean install
 ```
 
+## Code Formatting
+
+The project uses [Spotless Maven Plugin](https://github.com/diffplug/spotless) with [Google Java Format](https://github.com/google/google-java-format) to maintain consistent code style.
+
+### Check Formatting
+
+To check if your code follows the formatting rules:
+
+```bash
+mvn spotless:check
+```
+
+### Apply Formatting
+
+To automatically format your code according to Google Java Style:
+
+```bash
+mvn spotless:apply
+```
+
+### IDE Integration
+
+The formatting is automatically checked during the `verify` phase of the Maven build. To ensure your code is always formatted:
+
+1. Run `mvn spotless:apply` before committing changes
+2. Configure your IDE to use Google Java Style:
+   - **IntelliJ IDEA**: Install the "google-java-format" plugin
+   - **Eclipse**: Import the [Google Style XML](https://github.com/google/styleguide/blob/gh-pages/eclipse-java-google-style.xml)
+
+### Formatting Configuration
+
+- **Plugin Version**: 2.44.5
+- **Google Java Format Version**: 1.27.0
+- **Style**: GOOGLE (default)
+- **Features**:
+  - Automatic import organization
+  - Removal of unused imports
+  - Long string reflowing
+  - 2-space indentation (Google style)
+
 ## Running the Application
 
 ## API Endpoints
