@@ -5,10 +5,13 @@ spring:
   # Docker Compose Profile - Azure SQL Edge and Kafka
   docker:
     compose:
-      # Set to true to enable Spring Boot's automatic Docker Compose lifecycle management
+      # Set enabled to true to enable Spring Boot's automatic Docker Compose lifecycle management
       # When enabled, Spring Boot will start/stop the services defined in compose.yaml
+      # lifecycle-management: none disables automatic lifecycle management
+      # Use 'docker compose up -d' manually to start services when needed
       enabled: false
       file: compose.yaml
+      lifecycle-management: none
 
   # Note: The 'default' H2, JPA, and threads config is inherited from application.yml
 
