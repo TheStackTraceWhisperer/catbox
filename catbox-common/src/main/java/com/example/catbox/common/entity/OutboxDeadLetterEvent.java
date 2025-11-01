@@ -3,13 +3,20 @@ package com.example.catbox.common.entity;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
 
+/**
+ * Entity representing events that have been moved to the dead-letter queue
+ * after exceeding the maximum number of permanent failure retries.
+ */
 @Entity
-@Table(name = "outbox_events")
-public class OutboxEvent {
+@Table(name = "outbox_dead_letter_events")
+public class OutboxDeadLetterEvent {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
+    @Column(nullable = false)
+    private Long originalEventId;
 
     @Column(nullable = false)
     private String aggregateType;
@@ -26,32 +33,29 @@ public class OutboxEvent {
     @Column(nullable = false)
     private LocalDateTime createdAt;
 
-    @Column
-    private LocalDateTime sentAt;
+    @Column(nullable = false)
+    private LocalDateTime failedAt;
 
-    @Column
-    private LocalDateTime inProgressUntil;
-
-    @Column
-    private Integer permanentFailureCount = 0;
-
-    @Column(columnDefinition = "TEXT")
-    private String lastError;
+    @Column(nullable = false, columnDefinition = "TEXT")
+    private String finalError;
 
     @PrePersist
     protected void onCreate() {
-        createdAt = LocalDateTime.now();
+        failedAt = LocalDateTime.now();
     }
 
     // Constructors
-    public OutboxEvent() {
+    public OutboxDeadLetterEvent() {
     }
 
-    public OutboxEvent(String aggregateType, String aggregateId, String eventType, String payload) {
-        this.aggregateType = aggregateType;
-        this.aggregateId = aggregateId;
-        this.eventType = eventType;
-        this.payload = payload;
+    public OutboxDeadLetterEvent(OutboxEvent event, String finalError) {
+        this.originalEventId = event.getId();
+        this.aggregateType = event.getAggregateType();
+        this.aggregateId = event.getAggregateId();
+        this.eventType = event.getEventType();
+        this.payload = event.getPayload();
+        this.createdAt = event.getCreatedAt();
+        this.finalError = finalError;
     }
 
     // Getters and Setters
@@ -61,6 +65,14 @@ public class OutboxEvent {
 
     public void setId(Long id) {
         this.id = id;
+    }
+
+    public Long getOriginalEventId() {
+        return originalEventId;
+    }
+
+    public void setOriginalEventId(Long originalEventId) {
+        this.originalEventId = originalEventId;
     }
 
     public String getAggregateType() {
@@ -103,35 +115,19 @@ public class OutboxEvent {
         this.createdAt = createdAt;
     }
 
-    public LocalDateTime getSentAt() {
-        return sentAt;
+    public LocalDateTime getFailedAt() {
+        return failedAt;
     }
 
-    public void setSentAt(LocalDateTime sentAt) {
-        this.sentAt = sentAt;
+    public void setFailedAt(LocalDateTime failedAt) {
+        this.failedAt = failedAt;
     }
 
-    public LocalDateTime getInProgressUntil() {
-        return inProgressUntil;
+    public String getFinalError() {
+        return finalError;
     }
 
-    public void setInProgressUntil(LocalDateTime inProgressUntil) {
-        this.inProgressUntil = inProgressUntil;
-    }
-
-    public Integer getPermanentFailureCount() {
-        return permanentFailureCount;
-    }
-
-    public void setPermanentFailureCount(Integer permanentFailureCount) {
-        this.permanentFailureCount = permanentFailureCount;
-    }
-
-    public String getLastError() {
-        return lastError;
-    }
-
-    public void setLastError(String lastError) {
-        this.lastError = lastError;
+    public void setFinalError(String finalError) {
+        this.finalError = finalError;
     }
 }
