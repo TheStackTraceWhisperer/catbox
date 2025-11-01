@@ -23,7 +23,7 @@ public class OutboxEventClaimer {
     private final OutboxProcessingConfig processingConfig;
 
     /**
-     * Claims events using SELECT FOR UPDATE SKIP LOCKED in a new transaction.
+     * Claims events using SELECT TOP ... WITH (UPDLOCK, READPAST, ROWLOCK) in a new transaction.
      */
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public List<OutboxEvent> claimEvents() {
