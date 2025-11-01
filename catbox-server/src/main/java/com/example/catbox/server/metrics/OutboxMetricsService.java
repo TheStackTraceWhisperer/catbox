@@ -5,6 +5,7 @@ import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.Gauge;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Timer;
+import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -42,7 +43,7 @@ public class OutboxMetricsService {
     /**
      * Initialize metrics on bean construction.
      */
-    @jakarta.annotation.PostConstruct
+    @PostConstruct
     public void initializeMetrics() {
         // Gauge: Number of pending events
         Gauge.builder("outbox.events.pending", pendingEventsCount, AtomicLong::get)
