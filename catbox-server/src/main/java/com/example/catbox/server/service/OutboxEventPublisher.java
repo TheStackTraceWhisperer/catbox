@@ -38,9 +38,7 @@ public class OutboxEventPublisher {
      */
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void publishEvent(OutboxEvent event) {
-        LocalDateTime claimTime = event.getInProgressUntil() != null ? 
-                event.getInProgressUntil().minusNanos(processingConfig.getClaimTimeoutMs() * 1_000_000L) : 
-                LocalDateTime.now();
+        LocalDateTime claimTime = calculateEventClaimTime(event);
         
         try {
             // Publish to Kafka using our dynamic, routing factory
@@ -59,17 +57,28 @@ public class OutboxEventPublisher {
             metricsService.recordProcessingDuration(claimTime);
 
         } catch (Exception e) {
+            // Record failure metric first to ensure it's tracked even if logging fails
+            metricsService.recordPublishFailure();
+            
             logger.error(
                 "Failed to publish event: {}. Will retry after ~{} ms when claim expires.",
                 event.getId(), processingConfig.getClaimTimeoutMs(), e
             );
             
-            // Record failure metric
-            metricsService.recordPublishFailure();
-            
             // On failure, the transaction rolls back.
             // The 'inProgressUntil' lease remains, and the poller will retry when the claim timeout elapses.
         }
+    }
+
+    /**
+     * Calculates when the event was originally claimed for processing.
+     * Uses the inProgressUntil timestamp minus the claim timeout to determine the claim time.
+     */
+    private LocalDateTime calculateEventClaimTime(OutboxEvent event) {
+        if (event.getInProgressUntil() != null) {
+            return event.getInProgressUntil().minusNanos(processingConfig.getClaimTimeoutMs() * 1_000_000L);
+        }
+        return LocalDateTime.now();
     }
 
     /**
