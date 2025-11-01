@@ -3,6 +3,7 @@ package com.example.catbox.server.service;
 import com.example.catbox.server.config.DynamicKafkaTemplateFactory;
 import com.example.catbox.server.config.OutboxRoutingConfig;
 import com.example.catbox.server.config.OutboxProcessingConfig;
+import com.example.catbox.server.metrics.OutboxMetricsService;
 import com.example.catbox.common.entity.OutboxEvent;
 import com.example.catbox.common.repository.OutboxEventRepository;
 import lombok.RequiredArgsConstructor;
@@ -29,6 +30,7 @@ public class OutboxEventPublisher {
     private final DynamicKafkaTemplateFactory kafkaTemplateFactory;
     private final OutboxRoutingConfig routingConfig;
     private final OutboxProcessingConfig processingConfig;
+    private final OutboxMetricsService metricsService;
 
     /**
      * Publish a single event in a new transaction.
@@ -36,6 +38,10 @@ public class OutboxEventPublisher {
      */
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void publishEvent(OutboxEvent event) {
+        LocalDateTime claimTime = event.getInProgressUntil() != null ? 
+                event.getInProgressUntil().minusNanos(processingConfig.getClaimTimeoutMs() * 1_000_000L) : 
+                LocalDateTime.now();
+        
         try {
             // Publish to Kafka using our dynamic, routing factory
             publishToKafka(event);
@@ -48,11 +54,19 @@ public class OutboxEventPublisher {
             logger.info("Successfully published event: {} for aggregate: {}/{}",
                 event.getEventType(), event.getAggregateType(), event.getAggregateId());
 
+            // Record metrics
+            metricsService.recordPublishSuccess();
+            metricsService.recordProcessingDuration(claimTime);
+
         } catch (Exception e) {
             logger.error(
                 "Failed to publish event: {}. Will retry after ~{} ms when claim expires.",
                 event.getId(), processingConfig.getClaimTimeoutMs(), e
             );
+            
+            // Record failure metric
+            metricsService.recordPublishFailure();
+            
             // On failure, the transaction rolls back.
             // The 'inProgressUntil' lease remains, and the poller will retry when the claim timeout elapses.
         }
