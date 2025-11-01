@@ -31,7 +31,7 @@ spring:
   # here, as it conflicts with the dynamic cluster map.
 
 server:
-  port: 8080
+  port: 8081
 
 # Logging is inherited from application.yml
 
