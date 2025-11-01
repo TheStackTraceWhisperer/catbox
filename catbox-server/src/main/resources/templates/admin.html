@@ -86,7 +86,7 @@
                                 <label for="size" class="form-label">Page Size</label>
                                 <select class="form-select" id="size" name="size">
                                     <option value="10">10</option>
-                                    <option value="20" selected>20</option>
+                                    <option value="20">20</option>
                                     <option value="50">50</option>
                                     <option value="100">100</option>
                                 </select>
@@ -150,11 +150,11 @@
                                     <button 
                                         th:if="${event.sentAt != null}"
                                         class="btn btn-sm btn-warning"
-                                        hx-post="'/api/outbox-events/' + ${event.id} + '/mark-unsent'"
+                                        th:hx-post="@{'/api/outbox-events/' + ${event.id} + '/mark-unsent'}"
                                         hx-target="closest tr"
                                         hx-swap="outerHTML"
                                         hx-confirm="Mark this event as unsent?"
-                                        onclick="setTimeout(() => window.location.reload(), 500)">
+                                        hx-on::after-request="window.location.reload()">
                                         Mark Unsent
                                     </button>
                                 </td>
