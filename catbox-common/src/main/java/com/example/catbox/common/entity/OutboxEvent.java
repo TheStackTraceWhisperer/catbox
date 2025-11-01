@@ -52,6 +52,7 @@ public class OutboxEvent {
         this.aggregateId = aggregateId;
         this.eventType = eventType;
         this.payload = payload;
+        this.permanentFailureCount = 0;
     }
 
     // Getters and Setters

@@ -64,8 +64,8 @@ public class OutboxProcessingConfig {
         permanentExceptionSet.addAll(permanentFailureExceptions);
     }
 
-    // Public getter for the Set
+    // Public getter for the Set - returns unmodifiable view for thread safety
     public Set<String> getPermanentExceptionSet() {
-        return permanentExceptionSet;
+        return Set.copyOf(permanentExceptionSet);
     }
 }
