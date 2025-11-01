@@ -4,6 +4,7 @@ import com.example.catbox.client.CatboxClientAutoConfiguration;
 import com.example.catbox.common.entity.OutboxEvent;
 import com.example.catbox.common.repository.OutboxEventRepository;
 import com.example.order.OrderServiceApplication;
+import com.example.order.dto.CreateOrderRequest;
 import com.example.order.entity.Order;
 import com.example.order.repository.OrderRepository;
 import org.junit.jupiter.api.Test;
@@ -53,10 +54,10 @@ class OrderServiceTest {
     @Test
     void testCreateOrder_CreatesOrderAndOutboxEvent() {
         // Given
-        Order order = new Order("John Doe", "Laptop", new BigDecimal("999.99"));
+        CreateOrderRequest request = new CreateOrderRequest("John Doe", "Laptop", new BigDecimal("999.99"));
 
         // When
-        Order createdOrder = orderService.createOrder(order);
+        Order createdOrder = orderService.createOrder(request);
 
         // Then
         assertThat(createdOrder.getId()).isNotNull();
@@ -87,8 +88,8 @@ class OrderServiceTest {
     @Test
     void testUpdateOrderStatus_CreatesOutboxEvent() {
         // Given
-        Order order = new Order("Jane Smith", "Mouse", new BigDecimal("29.99"));
-        Order createdOrder = orderService.createOrder(order);
+        CreateOrderRequest request = new CreateOrderRequest("Jane Smith", "Mouse", new BigDecimal("29.99"));
+        Order createdOrder = orderService.createOrder(request);
 
         // When
         Order updatedOrder = orderService.updateOrderStatus(createdOrder.getId(), "COMPLETED");
@@ -114,8 +115,8 @@ class OrderServiceTest {
     @Test
     void testGetAllOrders() {
         // Given
-        orderService.createOrder(new Order("Alice", "Keyboard", new BigDecimal("49.99")));
-        orderService.createOrder(new Order("Bob", "Monitor", new BigDecimal("299.99")));
+        orderService.createOrder(new CreateOrderRequest("Alice", "Keyboard", new BigDecimal("49.99")));
+        orderService.createOrder(new CreateOrderRequest("Bob", "Monitor", new BigDecimal("299.99")));
 
         // When
         List<Order> orders = orderService.getAllOrders();

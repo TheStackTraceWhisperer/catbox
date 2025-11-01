@@ -1,5 +1,7 @@
 package com.example.order.controller;
 
+import com.example.order.dto.CreateOrderRequest;
+import com.example.order.dto.UpdateStatusRequest;
 import com.example.order.entity.Order;
 import com.example.order.service.OrderService;
 import lombok.RequiredArgsConstructor;
@@ -8,7 +10,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.Map;
 
 @RestController
 @RequestMapping("/api")
@@ -18,8 +19,8 @@ public class OrderController {
     private final OrderService orderService;
 
     @PostMapping("/orders")
-    public ResponseEntity<Order> createOrder(@RequestBody Order order) {
-        Order createdOrder = orderService.createOrder(order);
+    public ResponseEntity<Order> createOrder(@RequestBody CreateOrderRequest request) {
+        Order createdOrder = orderService.createOrder(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(createdOrder);
     }
 
@@ -38,8 +39,8 @@ public class OrderController {
     @PatchMapping("/orders/{id}/status")
     public ResponseEntity<Order> updateOrderStatus(
             @PathVariable Long id,
-            @RequestBody Map<String, String> statusUpdate) {
-        String newStatus = statusUpdate.get("status");
+            @RequestBody UpdateStatusRequest request) {
+        String newStatus = request.status();
         if (newStatus == null || newStatus.isBlank()) {
             return ResponseEntity.badRequest().build();
         }

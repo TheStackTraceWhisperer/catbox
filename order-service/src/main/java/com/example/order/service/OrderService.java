@@ -1,6 +1,7 @@
 package com.example.order.service;
 
 import com.example.catbox.client.OutboxClient;
+import com.example.order.dto.CreateOrderRequest;
 import com.example.order.entity.Order;
 import com.example.order.repository.OrderRepository;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -21,7 +22,14 @@ public class OrderService {
     private final ObjectMapper objectMapper;
 
     @Transactional
-    public Order createOrder(Order order) {
+    public Order createOrder(CreateOrderRequest request) {
+        // Mapping from DTO to Entity happens here
+        Order order = new Order(
+            request.customerName(),
+            request.productName(),
+            request.amount()
+        );
+        
         Order savedOrder = orderRepository.save(order);
         try {
             Map<String, Object> eventData = new HashMap<>();
