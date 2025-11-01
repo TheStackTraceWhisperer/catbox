@@ -32,9 +32,16 @@ public class OutboxEvent {
     @Column
     private LocalDateTime inProgressUntil;
 
+    @Column
+    private Integer permanentFailureCount = 0;
+
+    @Column(columnDefinition = "TEXT")
+    private String lastError;
+
     @PrePersist
     protected void onCreate() {
         createdAt = LocalDateTime.now();
+        permanentFailureCount = 0;
     }
 
     // Constructors
@@ -46,6 +53,7 @@ public class OutboxEvent {
         this.aggregateId = aggregateId;
         this.eventType = eventType;
         this.payload = payload;
+        this.permanentFailureCount = 0;
     }
 
     // Getters and Setters
@@ -111,5 +119,29 @@ public class OutboxEvent {
 
     public void setInProgressUntil(LocalDateTime inProgressUntil) {
         this.inProgressUntil = inProgressUntil;
+    }
+
+    public Integer getPermanentFailureCount() {
+        return permanentFailureCount;
+    }
+
+    public void setPermanentFailureCount(Integer permanentFailureCount) {
+        this.permanentFailureCount = permanentFailureCount;
+    }
+
+    public String getLastError() {
+        return lastError;
+    }
+
+    public void setLastError(String lastError) {
+        this.lastError = lastError;
+    }
+
+    // Helper method to increment permanent failure count
+    public void incrementPermanentFailureCount() {
+        if (this.permanentFailureCount == null) {
+            this.permanentFailureCount = 0;
+        }
+        this.permanentFailureCount++;
     }
 }

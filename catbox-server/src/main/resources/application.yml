@@ -59,6 +59,17 @@ outbox:
     batch-size: 100
     poll-fixed-delay-ms: 2000
     poll-initial-delay-ms: 10000
+    
+    # --- DEAD-LETTER CONFIG ---
+    max-permanent-retries: 5
+    permanent-failure-exceptions:
+      # This list will replace the defaults defined in OutboxProcessingConfig
+      - java.lang.IllegalStateException
+      - org.apache.kafka.common.errors.InvalidTopicException
+      - org.apache.kafka.common.errors.RecordTooLargeException
+      - org.apache.kafka.common.errors.SerializationException
+      - org.apache.kafka.common.errors.AuthenticationException
+      - org.apache.kafka.common.errors.AuthorizationException
 
 server:
   port: 8081
