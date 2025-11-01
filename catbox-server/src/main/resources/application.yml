@@ -61,7 +61,7 @@ outbox:
     poll-initial-delay-ms: 10000
 
 server:
-  port: 8080
+  port: 8081
 
 management:
   endpoints:

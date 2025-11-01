@@ -1,11 +1,11 @@
 # Catbox - Spring Boot WebMVC Application with Transactional Outbox Pattern
 
-A Spring Boot 3.5.7 WebMVC application demonstrating the transactional outbox pattern using Java 17+, Spring Data JPA, Spring Kafka, and Docker Compose.
+A Spring Boot 3.5.7 WebMVC application demonstrating the transactional outbox pattern using Java 21, Spring Data JPA, Spring Kafka, and Docker Compose.
 
 ## Features
 
 - **Spring Boot 3.5.7** with WebMVC
-- **Java 17+** (Java 21 with virtual threads recommended for production)
+- **Java 21** (with virtual threads for high-performance concurrent processing)
 - **Spring Data JPA** for database access
 - **Spring Kafka** for event publishing
 - **Transactional Outbox Pattern** for reliable event publishing
@@ -16,7 +16,12 @@ A Spring Boot 3.5.7 WebMVC application demonstrating the transactional outbox pa
 
 ## Architecture
 
-The application implements a **high-performance transactional outbox pattern** with multi-node support:
+This project demonstrates a transactional outbox pattern using a decoupled, multi-module architecture. The system is composed of two primary Spring Boot applications:
+
+* **`order-service` (Port 8080):** A business-facing service responsible for creating and updating orders. When it writes to its `orders` table, it also writes an `OutboxEvent` to a shared table in the *same transaction*, ensuring data consistency.
+* **`catbox-server` (Port 8081):** A standalone processor that polls the `outbox_events` table. It uses a `SELECT FOR UPDATE SKIP LOCKED` query (via `OutboxEventClaimer`) to safely claim events and publish them to Kafka using a dynamic, multi-cluster routing factory.
+
+This separation ensures that the business service (`order-service`) is lightweight and not burdened with event publishing logic, while the `catbox-server` can be scaled independently to handle event throughput.
 
 ### Phase 1: Order Submission (Atomic Transaction)
 
@@ -53,24 +58,16 @@ This design allows **horizontal scaling** across multiple nodes while maintainin
 
 ## Prerequisites
 
-- Java 17 or higher (Java 21+ recommended for virtual threads)
+- Java 21 or higher
 - Maven 3.6+
 - Docker and Docker Compose (optional, for running Azure SQL and Kafka)
 
 ## Quick Start
 
-### Option 1: Local Development (H2 Database)
+To run the system, you must start both applications (and the required Docker services).
 
-```bash
-mvn clean install
-mvn spring-boot:run
-```
+### Start Infrastructure
 
-The application will start on `http://localhost:8080` using H2 in-memory database.
-
-### Option 2: Docker Compose (Azure SQL + Kafka)
-
-1. Start the infrastructure:
 ```bash
 docker compose up -d
 ```
@@ -79,17 +76,23 @@ This starts:
 - Azure SQL Edge on port 1433
 - Kafka on port 9092
 
-2. Run the application with Azure SQL profile:
+### Run the order-service
+
+In one terminal:
 ```bash
-mvn spring-boot:run -Dspring-boot.run.profiles=azuresql
+# From the project root
+mvn spring-boot:run -pl order-service -Dspring-boot.run.profiles=azuresql
 ```
 
-Or set `spring.docker.compose.enabled=true` in `application-docker.yml` to auto-start services.
+### Run the catbox-server
 
-3. Stop the infrastructure:
+In a second terminal:
 ```bash
-docker compose down
+# From the project root
+mvn spring-boot:run -pl catbox-server -Dspring-boot.run.profiles=azuresql
 ```
+
+The `order-service` will be available at `http://localhost:8080` and the `catbox-server` will be available at `http://localhost:8081`.
 
 ## Building the Application
 
@@ -97,55 +100,25 @@ docker compose down
 mvn clean install
 ```
 
-## Running the Application
-
 ## API Endpoints
 
-### Create Order
-```bash
-POST /api/orders
-Content-Type: application/json
+### Order Service (http://localhost:8080)
 
-{
-  "customerName": "John Doe",
-  "productName": "Laptop",
-  "amount": 999.99
-}
-```
+* `POST /api/orders`: Create a new order.
+* `GET /api/orders`: Get all orders.
+* `GET /api/orders/{id}`: Get a single order by ID.
+* `PATCH /api/orders/{id}/status`: Update an order's status.
 
-### Get All Orders
-```bash
-GET /api/orders
-```
+### Catbox Server (http://localhost:8081)
 
-### Get Order by ID
-```bash
-GET /api/orders/{id}
-```
-
-### Update Order Status
-```bash
-PATCH /api/orders/{id}/status
-Content-Type: application/json
-
-{
-  "status": "COMPLETED"
-}
-```
-
-### Get All Outbox Events
-```bash
-GET /api/outbox-events
-```
-
-### Get Pending Outbox Events
-```bash
-GET /api/outbox-events/pending
-```
+* `GET /api/outbox-events`: Get all outbox events.
+* `GET /api/outbox-events/pending`: Get only unsent events.
+* `GET /api/outbox-events/search`: Paginated search for events.
+* `POST /api/outbox-events/{id}/mark-unsent`: Manually mark a sent event for reprocessing.
 
 ## Example Usage
 
-1. Create an order:
+1. Create an order (order-service on port 8080):
 ```bash
 curl -X POST http://localhost:8080/api/orders \
   -H "Content-Type: application/json" \
@@ -156,17 +129,17 @@ curl -X POST http://localhost:8080/api/orders \
   }'
 ```
 
-2. View all orders:
+2. View all orders (order-service on port 8080):
 ```bash
 curl http://localhost:8080/api/orders
 ```
 
-3. View outbox events:
+3. View outbox events (catbox-server on port 8081):
 ```bash
-curl http://localhost:8080/api/outbox-events
+curl http://localhost:8081/api/outbox-events
 ```
 
-4. Update order status:
+4. Update order status (order-service on port 8080):
 ```bash
 curl -X PATCH http://localhost:8080/api/orders/1/status \
   -H "Content-Type: application/json" \
@@ -203,15 +176,7 @@ Virtual threads are lightweight (thousands can run concurrently) and provide bet
 
 ## Database
 
-The application uses H2 in-memory database. You can access the H2 console at:
-```
-http://localhost:8080/h2-console
-```
-
-Connection details:
-- JDBC URL: `jdbc:h2:mem:catboxdb`
-- Username: `sa`
-- Password: (empty)
+The applications use Azure SQL Edge when running with Docker Compose. The `catbox-server` also supports H2 in-memory database for development/testing without the `azuresql` profile.
 
 ## Transactional Outbox Pattern
 
@@ -294,40 +259,14 @@ docker compose down
 ## Project Structure
 
 ```
-.
-├── compose.yaml                           # Docker Compose for Azure SQL & Kafka
-├── pom.xml                                # Maven configuration
-├── src/
-│   ├── main/
-│   │   ├── java/com/example/catbox/
-│   │   │   ├── CatboxApplication.java          # Main application class
-│   │   │   ├── config/
-│   │   │   │   ├── KafkaProducerConfig.java    # Kafka producer configuration
-│   │   │   │   └── VirtualThreadConfiguration.java  # Virtual threads config (Java 21+)
-│   │   │   ├── controller/
-│   │   │   │   └── OrderController.java        # REST API endpoints
-│   │   │   ├── entity/
-│   │   │   │   ├── Order.java                  # Order entity
-│   │   │   │   └── OutboxEvent.java            # Outbox event entity
-│   │   │   ├── repository/
-│   │   │   │   ├── OrderRepository.java        # Order repository
-│   │   │   │   └── OutboxEventRepository.java  # Outbox repository
-│   │   │   └── service/
-│   │   │       ├── OrderService.java            # Order business logic
-│   │   │       ├── OutboxEventPoller.java       # Poller (claims events)
-│   │   │       └── OutboxEventPublisher.java    # Publisher (publishes events)
-│   │   └── resources/
-│   │       ├── application.yml                 # Default configuration (H2)
-│   │       └── application-docker.yml          # Docker Compose profile (Azure SQL)
-│   └── test/
-│       └── java/com/example/catbox/
-│           ├── CatboxApplicationTests.java     # Context load test
-│           ├── kafka/
-│           │   ├── KafkaTemplateConfigTest.java    # Kafka config unit test
-│           │   └── KafkaIntegrationTest.java       # Kafka integration test
-│           └── service/
-│               └── OrderServiceTest.java       # Order service tests
-└── README.md
+catbox-parent
+├── catbox-common     # Shared code: OutboxEvent entity and repository
+├── catbox-client     # Simple client for creating events (used by order-service)
+├── catbox-server     # Standalone poller/publisher application (runs on 8081)
+├── order-service     # Business service application (runs on 8080)
+├── monitoring        # Prometheus, Grafana, and Loki configurations
+├── compose.yaml      # Docker Compose for infrastructure
+└── pom.xml           # Parent POM
 ```
 
 ## Docker Compose Setup
@@ -374,10 +313,16 @@ docker compose down -v
 
 ### Connecting to Azure SQL
 
-When running with docker-compose, use the `azuresql` profile:
+When running with docker-compose, use the `azuresql` profile for both services:
 
+**Order Service:**
 ```bash
-mvn spring-boot:run -Dspring-boot.run.profiles=azuresql
+mvn spring-boot:run -pl order-service -Dspring-boot.run.profiles=azuresql
+```
+
+**Catbox Server:**
+```bash
+mvn spring-boot:run -pl catbox-server -Dspring-boot.run.profiles=azuresql
 ```
 
 Or set in your IDE's run configuration:
@@ -385,9 +330,9 @@ Or set in your IDE's run configuration:
 Active profiles: azuresql
 ```
 
-The application will automatically use:
+Both applications will automatically use:
 - Database: Azure SQL Edge
-- Kafka: localhost:9092
+- Kafka: localhost:9092 (catbox-server only)
 
 ## License
 
