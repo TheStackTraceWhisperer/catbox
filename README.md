@@ -392,3 +392,49 @@ The application will automatically use:
 ## License
 
 This project is open source and available under the MIT License.
+## Observability & Metrics
+
+The application includes comprehensive custom metrics for monitoring the outbox pattern health and performance.
+
+### Custom Outbox Metrics
+
+All metrics are exposed via the Prometheus actuator endpoint at `/actuator/prometheus`.
+
+#### Gauges
+- **`outbox_events_pending`** - Number of pending events in the outbox (not yet sent)
+- **`outbox_events_oldest_age_seconds`** - Age of the oldest unsent event (in seconds)
+
+#### Counters
+- **`outbox_events_published_success_total`** - Total successful event publications
+- **`outbox_events_published_failure_total`** - Total failed event publications
+
+#### Histograms
+- **`outbox_events_processing_duration_seconds`** - Event processing duration from claim to publish (includes p50, p95, p99 percentiles)
+
+### Grafana Dashboard
+
+A pre-configured Grafana dashboard is available in `monitoring/grafana/dashboards/catbox-dashboard.json` with:
+- **Outbox Pending Events** gauge
+- **Oldest Unsent Event Age** gauge  
+- **Event Publishing Rate** (success/failure) timeseries
+- **Event Processing Duration** percentiles (p50, p95, p99)
+- **Total Events Published** counters
+
+### Accessing Metrics
+
+View metrics locally:
+```bash
+curl http://localhost:8080/actuator/prometheus | grep outbox_events
+```
+
+### Monitoring Recommendations
+
+**Set up alerts for:**
+- Pending event count > 100 (potential backlog)
+- Oldest event age > 300 seconds (5 minutes - processing delays)
+- Sustained increase in failure counter
+
+**Monitor trends:**
+- Publishing throughput over time
+- Processing duration percentiles
+- Success/failure ratios

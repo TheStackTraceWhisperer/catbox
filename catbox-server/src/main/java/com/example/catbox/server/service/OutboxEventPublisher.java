@@ -3,6 +3,7 @@ package com.example.catbox.server.service;
 import com.example.catbox.server.config.DynamicKafkaTemplateFactory;
 import com.example.catbox.server.config.OutboxRoutingConfig;
 import com.example.catbox.server.config.OutboxProcessingConfig;
+import com.example.catbox.server.metrics.OutboxMetricsService;
 import com.example.catbox.common.entity.OutboxEvent;
 import com.example.catbox.common.repository.OutboxEventRepository;
 import lombok.RequiredArgsConstructor;
@@ -32,6 +33,7 @@ public class OutboxEventPublisher {
     private final OutboxRoutingConfig routingConfig;
     private final OutboxProcessingConfig processingConfig;
     private final OutboxFailureHandler failureHandler;
+    private final OutboxMetricsService metricsService;
 
     /**
      * Publish a single event in a new transaction.
@@ -39,6 +41,8 @@ public class OutboxEventPublisher {
      */
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void publishEvent(OutboxEvent event) {
+        LocalDateTime claimTime = calculateEventClaimTime(event);
+        
         try {
             // Publish to Kafka using our dynamic, routing factory
             publishToKafka(event);
@@ -52,7 +56,14 @@ public class OutboxEventPublisher {
             logger.info("Successfully published event: {} for aggregate: {}/{}",
                 event.getEventType(), event.getAggregateType(), event.getAggregateId());
 
+            // Record metrics
+            metricsService.recordPublishSuccess();
+            metricsService.recordProcessingDuration(claimTime);
+
         } catch (Exception e) {
+            // Record failure metric first to ensure it's tracked even if logging fails
+            metricsService.recordPublishFailure();
+            
             // FAILURE: Differentiate error type
             if (isPermanentFailure(e)) {
                 // PERMANENT: Call the failure handler
@@ -69,6 +80,17 @@ public class OutboxEventPublisher {
                 );
             }
         }
+    }
+
+    /**
+     * Calculates when the event was originally claimed for processing.
+     * Uses the inProgressUntil timestamp minus the claim timeout to determine the claim time.
+     */
+    private LocalDateTime calculateEventClaimTime(OutboxEvent event) {
+        if (event.getInProgressUntil() != null) {
+            return event.getInProgressUntil().minusNanos(processingConfig.getClaimTimeoutMs() * 1_000_000L);
+        }
+        return LocalDateTime.now();
     }
 
     /**
