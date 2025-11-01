@@ -9,6 +9,7 @@ import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface OutboxEventRepository extends JpaRepository<OutboxEvent, Long>, JpaSpecificationExecutor<OutboxEvent> {
@@ -27,4 +28,9 @@ public interface OutboxEventRepository extends JpaRepository<OutboxEvent, Long>,
     List<OutboxEvent> findBySentAtIsNullOrderByCreatedAtAsc();
     
     List<OutboxEvent> findAllByOrderByCreatedAtAsc();
+    
+    // Metrics support methods
+    long countBySentAtIsNull();
+    
+    Optional<OutboxEvent> findFirstBySentAtIsNullOrderByCreatedAtAsc();
 }
