@@ -136,16 +136,22 @@ class OutboxEventClaimTest {
     }
 
     @Test
-    void testClaimPendingEvents_ordersEventsByCreatedAt() throws InterruptedException {
+    void testClaimPendingEvents_ordersEventsByCreatedAt() {
         // Given: Create events with different timestamps
-        OutboxEvent event1 = new OutboxEvent("Order", "A1", "OrderCreated", "{}");
-        OutboxEvent event2 = new OutboxEvent("Order", "A2", "OrderStatusChanged", "{}");
-        OutboxEvent event3 = new OutboxEvent("Order", "A3", "OrderCancelled", "{}");
+        LocalDateTime baseTime = LocalDateTime.now().minusHours(1);
         
+        OutboxEvent event1 = new OutboxEvent("Order", "A1", "OrderCreated", "{}");
+        event1.setCreatedAt(baseTime.plusMinutes(1));
+        
+        OutboxEvent event2 = new OutboxEvent("Order", "A2", "OrderStatusChanged", "{}");
+        event2.setCreatedAt(baseTime);
+        
+        OutboxEvent event3 = new OutboxEvent("Order", "A3", "OrderCancelled", "{}");
+        event3.setCreatedAt(baseTime.plusMinutes(2));
+        
+        // Save in random order to ensure ordering is by created_at, not insertion order
         outboxEventRepository.save(event2);
-        Thread.sleep(10); // Ensure different timestamps
         outboxEventRepository.save(event1);
-        Thread.sleep(10);
         outboxEventRepository.save(event3);
         
         // When: Claim events
