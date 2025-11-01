@@ -1,0 +1,184 @@
+@startuml
+allowmixing
+
+!define PastelRed F5C5C5
+!define PastelOrange F5D6C5
+!define PastelYellow F5E8C5
+!define PastelLime E8F5C5
+!define PastelGreen D6F5C5
+!define PastelMint C5F5D6
+!define PastelCyan C5F5E8
+!define PastelSkyBlue C5E8F5
+!define PastelBlue C5D6F5
+!define PastelViolet D6C5F5
+!define PastelMagenta E8C5F5
+!define PastelPink F5C5E8
+
+!define PastelRedLight F9EEEE
+!define PastelOrangeLight F9F1EE
+!define PastelYellowLight F6F9EE
+!define PastelLimeLight F1F9EE
+!define PastelGreenLight EEF9EE
+!define PastelMintLight EEF9F1
+!define PastelCyanLight EEF9F6
+!define PastelSkyBlueLight EEF1F9
+!define PastelBlueLight EEEEF9
+!define PastelVioletLight F1EEF9
+!define PastelMagentaLight F6EEF9
+!define PastelPinkLight F9EEF1
+
+!define PastelRedDark E49F9F
+!define PastelOrangeDark E4B49F
+!define PastelYellowDark D9E49F
+!define PastelLimeDark C3E49F
+!define PastelGreenDark AEE49F
+!define PastelMintDark 9FE4B4
+!define PastelCyanDark 9FE4D9
+!define PastelSkyBlueDark 9FC3E4
+!define PastelBlueDark 9FAEE4
+!define PastelVioletDark B49FE4
+!define PastelMagentaDark D99FE4
+!define PastelPinkDark E49FC3
+
+!define PastelRedDarker E66B6B
+!define PastelOrangeDarker E6A76B
+!define PastelYellowDarker DAE66B
+!define PastelLimeDarker A7E66B
+!define PastelGreenDarker 6BE66B
+!define PastelMintDarker 6BE6A7
+!define PastelCyanDarker 6BE6E6
+!define PastelSkyBlueDarker 6BA7E6
+!define PastelBlueDarker 6B6BE6
+!define PastelVioletDarker A76BE6
+!define PastelMagentaDarker E66BE6
+!define PastelPinkDarker E66BA7
+
+!define PastelRedDarkest DF3E3E
+!define PastelOrangeDarkest DF8E3E
+!define PastelYellowDarkest C5DF3E
+!define PastelLimeDarkest 8EDF3E
+!define PastelGreenDarkest 3EDF3E
+!define PastelMintDarkest 3EDF8E
+!define PastelCyanDarkest 3EDFDF
+!define PastelSkyBlueDarkest 3E8EDF
+!define PastelBlueDarkest 3E3EDF
+!define PastelVioletDarkest 8E3EDF
+!define PastelMagentaDarkest DF3EDF
+!define PastelPinkDarkest DF3E8E
+
+skinparam class {
+  FontStyle bold
+}
+
+skinparam class<<Server Layer>> {
+    BackgroundColor PastelBlueLight
+    BorderColor PastelBlueDarkest
+}
+
+skinparam class<<Client>> {
+    BackgroundColor PastelCyanLight
+    BorderColor PastelCyanDarkest
+}
+
+skinparam class<<Application>> {
+    BackgroundColor PastelGreenLight
+    BorderColor PastelGreenDarkest
+}
+
+skinparam database<<Table>> {
+    BackgroundColor PastelVioletLight
+    BorderColor PastelVioletDarkest
+}
+
+skinparam database<<Topic>> {
+    BackgroundColor PastelYellowLight
+    BorderColor PastelYellowDarkest
+}
+
+skinparam database<<Cluster 1>> {
+    BackgroundColor PastelOrangeLight
+    BorderColor PastelOrangeDarkest
+}
+
+skinparam database<<Cluster 2>> {
+    BackgroundColor PastelPinkLight
+    BorderColor PastelPinkDarkest
+}
+
+actor "User" as User
+actor "Developer" as Developer
+card "@Scheduled" as Timer
+
+database "Database" as shared {
+database "Outbox Event Table" as OutboxEventTable <<Table>>
+database "Order Table" as OrderTable <<Table>>
+}
+
+database "Topic B" as TopicB <<Cluster 2>> <<Topic>>
+database "Topic A" as TopicA <<Cluster 1>> <<Topic>>
+
+class "Outbox Controller" as OutboxController <<Server Layer>> <<@RestController>>
+class "Outbox Service" as OutboxService <<Server Layer>> <<@Service>>
+class "Outbox Event Repository" as OutboxEventRepository  <<Server Layer>> <<@Repository>>
+class "Outbox Event Claimer" as OutboxEventClaimer  <<Server Layer>> <<@Component>>
+class "Outbox Event Poller" as OutboxEventPoller  <<Server Layer>> <<@Component>>
+class "Outbox Event Publisher" as OutboxEventPublisher  <<Server Layer>> <<@Component>>
+class "Outbox Event Repository" as OutboxEventRepository  <<Server Layer>> <<@Repository>>
+
+class "Order Controller" as OrderController <<Application>> <<@RestController>>
+class "Order Service" as OrderService <<Application>> <<@Service>>
+class "Outbox Client Service" as OutboxClientService <<Client>> <<@Service>>
+
+card "Transaction Chain" as tc {
+  class "Order Repository" as OrderRepository <<Application>> <<@Repository>>
+  class "Outbox Client Repository" as OutboxClientRepository <<Client>> <<@Repository>>
+}
+
+' Outbox Service
+Timer --> OutboxEventPoller
+
+User --> OrderController
+User <.. OrderController
+
+Developer --> OutboxController
+Developer <.. OutboxController
+
+OutboxEventPoller --> OutboxEventClaimer
+OutboxEventPoller <.. OutboxEventClaimer
+OutboxEventPoller --> OutboxEventPublisher
+OutboxEventPoller <.. OutboxEventPublisher
+
+OutboxEventClaimer --> OutboxEventRepository
+OutboxEventClaimer <.. OutboxEventRepository
+
+OutboxEventRepository --> OutboxEventTable
+OutboxEventRepository <.. OutboxEventTable
+
+OutboxController --> OutboxService
+OutboxController <.. OutboxService
+
+OutboxService --> OutboxEventRepository
+OutboxService <.. OutboxEventRepository
+
+OutboxEventPublisher ---> TopicA
+OutboxEventPublisher <.. TopicA
+
+OutboxEventPublisher ---> TopicB
+OutboxEventPublisher <.. TopicB
+
+OrderController --> OrderService
+OrderController <.. OrderService
+OrderService --> OrderRepository
+OrderService <.. OrderRepository
+OrderRepository ---> OrderTable
+OrderRepository <... OrderTable
+
+OrderService --> OutboxClientService
+OrderService <.. OutboxClientService
+
+OutboxClientService --> OutboxClientRepository
+OutboxClientService <.. OutboxClientRepository
+OutboxClientRepository --> OutboxEventTable
+OutboxClientRepository <.. OutboxEventTable
+
+@enduml
