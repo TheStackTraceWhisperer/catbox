@@ -41,6 +41,7 @@ public class OutboxEvent {
     @PrePersist
     protected void onCreate() {
         createdAt = LocalDateTime.now();
+        permanentFailureCount = 0;
     }
 
     // Constructors
@@ -134,5 +135,13 @@ public class OutboxEvent {
 
     public void setLastError(String lastError) {
         this.lastError = lastError;
+    }
+
+    // Helper method to increment permanent failure count
+    public void incrementPermanentFailureCount() {
+        if (this.permanentFailureCount == null) {
+            this.permanentFailureCount = 0;
+        }
+        this.permanentFailureCount++;
     }
 }

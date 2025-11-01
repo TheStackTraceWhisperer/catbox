@@ -31,7 +31,7 @@ public class OutboxDeadLetterEvent {
     private String payload;
 
     @Column(nullable = false)
-    private LocalDateTime createdAt;
+    private LocalDateTime originalCreatedAt;
 
     @Column(nullable = false)
     private LocalDateTime failedAt;
@@ -40,7 +40,7 @@ public class OutboxDeadLetterEvent {
     private String finalError;
 
     @PrePersist
-    protected void onCreate() {
+    protected void onFail() {
         failedAt = LocalDateTime.now();
     }
 
@@ -54,7 +54,7 @@ public class OutboxDeadLetterEvent {
         this.aggregateId = event.getAggregateId();
         this.eventType = event.getEventType();
         this.payload = event.getPayload();
-        this.createdAt = event.getCreatedAt();
+        this.originalCreatedAt = event.getCreatedAt();
         this.finalError = finalError;
     }
 
@@ -107,12 +107,12 @@ public class OutboxDeadLetterEvent {
         this.payload = payload;
     }
 
-    public LocalDateTime getCreatedAt() {
-        return createdAt;
+    public LocalDateTime getOriginalCreatedAt() {
+        return originalCreatedAt;
     }
 
-    public void setCreatedAt(LocalDateTime createdAt) {
-        this.createdAt = createdAt;
+    public void setOriginalCreatedAt(LocalDateTime originalCreatedAt) {
+        this.originalCreatedAt = originalCreatedAt;
     }
 
     public LocalDateTime getFailedAt() {
