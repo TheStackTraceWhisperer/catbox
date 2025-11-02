@@ -42,7 +42,7 @@ Before deploying to production, you **MUST** update the following:
 
 ## Access
 
-- **Application**: http://localhost:8080/realms/catbox
-- **Admin Console**: http://localhost:8080/admin
+- **Application**: http://localhost:8180/realms/catbox
+- **Admin Console**: http://localhost:8180/admin
   - Username: `admin`
   - Password: `admin`
