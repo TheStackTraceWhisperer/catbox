@@ -110,6 +110,7 @@
                     <target>${java.version}</target>
                     <compilerArgs>
                         <arg>-parameters</arg>
+                        <arg>-proc:full</arg>
                     </compilerArgs>
                 </configuration>
             </plugin>
