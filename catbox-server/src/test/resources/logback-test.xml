@@ -20,5 +20,3 @@
   <logger name="com.zaxxer.hikari" level="OFF"/>
   <logger name="com.microsoft.sqlserver.jdbc" level="OFF"/>
 </configuration>
-
-
