@@ -54,7 +54,7 @@ spring:
             sasl.mechanism: SCRAM-SHA-512
             # IMPORTANT: For production, use environment variables for credentials
             # Example: username="${KAFKA_USERNAME:producer}" password="${KAFKA_PASSWORD:producer-secret}"
-            sasl.jaas.config: org.apache.kafka.common.security.scram.ScramLoginModule required username="producer" password="producer-secret";
+            sasl.jaas.config: org.apache.kafka.common.security.scram.ScramLoginModule required username="${KAFKA_USERNAME:producer}" password="${KAFKA_PASSWORD:producer-secret}";
       # --- Cluster C (PLAINTEXT - second independent cluster for multi-cluster testing) ---
       cluster-c:
         bootstrap-servers: localhost:9095

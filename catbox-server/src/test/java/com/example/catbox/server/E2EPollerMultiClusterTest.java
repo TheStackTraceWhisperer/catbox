@@ -42,8 +42,7 @@ class E2EPollerMultiClusterTest {
 
     @Container
     static MSSQLServerContainer<?> mssql = new MSSQLServerContainer<>("mcr.microsoft.com/mssql/server:2022-latest")
-            .acceptLicense()
-            .withPassword("YourStrong@Passw0rd");
+            .acceptLicense();
 
     @Container
     static KafkaContainer kafkaA = new KafkaContainer(DockerImageName.parse("confluentinc/cp-kafka:7.9.1"));
