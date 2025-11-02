@@ -168,6 +168,18 @@ mvn clean install
 * `GET /api/outbox-events/search`: Paginated search for events.
 * `POST /api/outbox-events/{id}/mark-unsent`: Manually mark a sent event for reprocessing.
 
+### Admin Web UI
+
+The `catbox-server` also hosts a simple Thymeleaf-based web interface for monitoring and administrative tasks.
+
+* **URL**: `http://localhost:8081/admin`
+
+**Features:**
+* View all outbox events in a paginated table.
+* Filter events by `eventType`, `aggregateType`, `aggregateId`, and `pendingOnly` status.
+* Sort by various columns.
+* Manually mark a `Sent` event as `Unsent` to trigger reprocessing.
+
 ## Example Usage
 
 1. Create an order (order-service on port 8080):
@@ -569,11 +581,13 @@ outbox:
       OrderStatusChanged: cluster-b  # Routes to secure cluster
 ```
 
-### Multi-Cluster Routing
+## Multi-Cluster Routing
 
-The outbox pattern supports advanced multi-cluster routing with flexible strategies:
+The outbox publisher supports advanced routing rules to publish a single event to multiple Kafka clusters with different success strategies. This is configured under the `outbox.routing.rules` key in `application.yml`.
 
 #### Simple Single-Cluster Routing (Backward Compatible)
+
+For simple routing, you can provide a string value representing the target cluster key. This is the default and backward-compatible format.
 
 ```yaml
 outbox:
@@ -582,47 +596,59 @@ outbox:
       OrderCreated: cluster-a
 ```
 
-#### Multi-Cluster Publishing Strategies
+#### Advanced Multi-Cluster Publishing Strategies
 
-**All Must Succeed**: Event is marked as sent only if ALL required clusters succeed
+For more complex scenarios, you can define a rule object with `clusters`, `strategy`, and `optional` keys.
+
+**Strategy 1: `ALL_MUST_SUCCEED` (Default)**
+The event is only marked as "sent" if publishing succeeds to **all** clusters listed in the `clusters` list.
 
 ```yaml
 outbox:
   routing:
     rules:
-      OrderCreated:
-        clusters: [cluster-a, cluster-b, cluster-c]
-        strategy: all-must-succeed
+      # This event must be published to both cluster-a and cluster-b
+      InventoryEvent:
+        clusters: [cluster-a, cluster-b]
+        strategy: all-must-succeed 
 ```
 
-**At Least One**: Event is marked as sent if ANY cluster succeeds (useful for high availability)
+**Strategy 2: `AT_LEAST_ONE`**
+The event is marked as "sent" if publishing succeeds to **at least one** of the clusters in the `clusters` list. This is useful for high-availability geographic replication.
 
 ```yaml
 outbox:
   routing:
     rules:
+      # This event will be sent to both, but is considered "successful"
+      # if it reaches either the east or west region.
       PaymentEvent:
-        clusters: [east-region, west-region, north-region]
+        clusters: [cluster-east, cluster-west]
         strategy: at-least-one
 ```
 
-**Optional Clusters**: Some clusters can fail without affecting overall success
+**Strategy 3: `optional` Clusters**
+You can specify `optional` clusters. Publishing failures to these clusters are logged but **ignored** and will not prevent the event from being marked as "sent". This is only valid when the `strategy` is `ALL_MUST_SUCCEED`.
 
 ```yaml
 outbox:
   routing:
     rules:
+      # This event MUST go to the primary-cluster.
+      # It will also *try* to go to analytics and audit-log,
+      # but failures on those are ignored.
       NotificationEvent:
         clusters: [primary-cluster]        # Required
         optional: [analytics, audit-log]   # Optional - failures ignored
         strategy: all-must-succeed         # Applies only to required clusters
 ```
 
-This enables:
-- **Geographic replication**: Publish to multiple regional clusters
-- **High availability**: Mark as sent if any cluster succeeds
-- **Best-effort delivery**: Required + optional clusters for primary and secondary systems
-- **Zero-downtime migrations**: Route to both old and new clusters during migration
+This flexibility enables:
+
+  - **Geographic replication**: Publish to multiple regional clusters.
+  - **High availability**: Mark as "sent" if any cluster succeeds.
+  - **Best-effort delivery**: Use `optional` for non-critical systems like analytics or logging.
+  - **Zero-downtime migrations**: Route to both old and new clusters during a migration.
 
 ### Security Credentials (Development)
 
