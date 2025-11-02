@@ -48,7 +48,10 @@ Thumbs.db
 *.key
 *.crt
 !kafka-security/certs/ca-cert.pem
-# Exclude Docker Compose override and environment files
-.env
 compose.override.yml
+# Exclude environment files
+.env
+.env.local
+.env.*.local
+.env.test
 

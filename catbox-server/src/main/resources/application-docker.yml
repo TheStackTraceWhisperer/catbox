@@ -50,7 +50,7 @@ spring:
 
   jpa:
     hibernate:
-      ddl-auto: update # Use 'update' for persistent DB
+      ddl-auto: validate
     properties:
       hibernate:
         dialect: org.hibernate.dialect.SQLServerDialect

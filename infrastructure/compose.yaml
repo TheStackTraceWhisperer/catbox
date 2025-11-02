@@ -11,6 +11,19 @@ services:
       MSSQL_PID: "Developer"
     volumes:
       - azuresql-data:/var/opt/mssql
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+      - ./docker-entrypoint-initdb.sh:/docker-entrypoint-initdb.sh:ro
+    command: >
+      /bin/bash -c "
+      /opt/mssql/bin/sqlservr &
+      SERVER_PID=$$!
+      if ! /docker-entrypoint-initdb.sh; then
+        echo 'Database initialization failed, stopping container'
+        kill $$SERVER_PID
+        exit 1
+      fi
+      wait $$SERVER_PID
+      "
     healthcheck:
       test: /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P "${DB_PASSWORD}" -Q "SELECT 1" -C -No
       interval: 10s
@@ -101,14 +114,14 @@ services:
     environment:
       KAFKA_NODE_ID: 1
       KAFKA_PROCESS_ROLES: broker,controller
-      
+
       # Listeners: PLAINTEXT (9095), CONTROLLER (9096)
       KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9095,CONTROLLER://0.0.0.0:9096
       KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9095
       KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT
       KAFKA_CONTROLLER_QUORUM_VOTERS: 1@localhost:9096
-      
+
       # Standard Kafka settings
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
       KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
