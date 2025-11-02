@@ -25,6 +25,9 @@ jobs:
           java-version: '21'
           distribution: 'temurin'
 
+      # Cache Maven dependencies to speed up builds
+      # Cache key includes hash of all pom.xml files (multi-module project)
+      # Excludes project artifacts (com/example) to only cache external dependencies
       - name: Cache Maven dependencies
         uses: actions/cache@v3
         with:
