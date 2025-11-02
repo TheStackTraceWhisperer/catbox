@@ -8,7 +8,7 @@ import com.example.order.repository.OrderRepository;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.testcontainers.containers.MSSQLServerContainer;
@@ -52,7 +52,7 @@ class OrderServiceFailureTest {
     @Autowired
     private OrderRepository orderRepository;
 
-    @MockBean
+    @MockitoBean
     private OutboxClient outboxClient;
 
     /**
