@@ -96,11 +96,12 @@ class KafkaIntegrationTest {
     @Test
     void testDynamicFactorySendAndReceive() throws Exception {
         // 1. Verify the routing rule was loaded
-        String clusterKey = routingConfig.getRules().get(TEST_EVENT_TYPE);
-        assertThat(clusterKey).isEqualTo(TEST_CLUSTER_KEY);
+        com.example.catbox.server.config.RoutingRule rule = routingConfig.getRoutingRule(TEST_EVENT_TYPE);
+        assertThat(rule).isNotNull();
+        assertThat(rule.getClusters()).containsExactly(TEST_CLUSTER_KEY);
 
         // 2. Get the DYNAMIC template from the factory
-        KafkaTemplate<String, String> template = kafkaTemplateFactory.getTemplate(clusterKey);
+        KafkaTemplate<String, String> template = kafkaTemplateFactory.getTemplate(TEST_CLUSTER_KEY);
         assertThat(template).isNotNull();
 
         // 3. Send message
@@ -115,7 +116,7 @@ class KafkaIntegrationTest {
         assertThat(received.value()).isEqualTo(testValue);
 
         // 5. Verify caching
-        KafkaTemplate<String, String> cachedTemplate = kafkaTemplateFactory.getTemplate(clusterKey);
+        KafkaTemplate<String, String> cachedTemplate = kafkaTemplateFactory.getTemplate(TEST_CLUSTER_KEY);
         assertThat(cachedTemplate).isSameAs(template);
     }
 }
