@@ -52,13 +52,13 @@ outbox:
     factory:
       # Timeouts for the dynamic factory
       idle-eviction-time-minutes: 30
-      eviction-check-ms: 300000 # 5 minutes
+      eviction-check-ms: 5m # 5 minutes
 
   processing:
-    claim-timeout-ms: 300000
+    claim-timeout: 5m
     batch-size: 100
-    poll-fixed-delay-ms: 2000
-    poll-initial-delay-ms: 10000
+    poll-fixed-delay: 2s
+    poll-initial-delay: 10s
     
     # --- ARCHIVAL CONFIG ---
     archival-retention-days: 7  # Archive events older than 7 days (set to 0 to disable)

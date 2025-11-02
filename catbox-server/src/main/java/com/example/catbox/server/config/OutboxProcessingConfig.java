@@ -6,6 +6,7 @@ import lombok.Setter;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
 
+import java.time.Duration;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -17,9 +18,9 @@ import java.util.Set;
 public class OutboxProcessingConfig {
 
     /**
-     * How long (in milliseconds) an event stays claimed (inProgressUntil) before being eligible for retry.
+     * How long an event stays claimed (inProgressUntil) before being eligible for retry.
      */
-    private long claimTimeoutMs = 5 * 60 * 1000L; // default 5 minutes
+    private Duration claimTimeout = Duration.ofMinutes(5);
 
     /**
      * Number of events to claim per poll.
@@ -27,14 +28,14 @@ public class OutboxProcessingConfig {
     private int batchSize = 100; // default
 
     /**
-     * Fixed delay between polls in milliseconds.
+     * Fixed delay between polls.
      */
-    private long pollFixedDelayMs = 2000; // default 2s
+    private Duration pollFixedDelay = Duration.ofSeconds(2);
 
     /**
-     * Initial delay before first poll in milliseconds.
+     * Initial delay before first poll.
      */
-    private long pollInitialDelayMs = 10000; // default 10s
+    private Duration pollInitialDelay = Duration.ofSeconds(10);
 
     /**
      * Max number of retries for a PERMANENT failure before moving to DLQ.
