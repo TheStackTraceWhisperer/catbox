@@ -259,13 +259,13 @@ docker compose down
 
 ### Load and Stress Testing
 
-The project includes comprehensive JMeter test suites for performance testing:
+The project includes comprehensive JMeter test suites for performance testing using Docker containers:
 
 ```bash
 # Navigate to JMeter tests directory
 cd jmeter-tests
 
-# Run individual test
+# Run individual test (uses Docker - no JMeter installation needed)
 ./scripts/run-test.sh order    # Order Service load test
 ./scripts/run-test.sh outbox   # Outbox Service load test
 ./scripts/run-test.sh stress   # End-to-end stress test
@@ -281,7 +281,7 @@ See [jmeter-tests/README.md](jmeter-tests/README.md) for detailed documentation 
 - Analyzing results
 
 **Prerequisites for load testing:**
-1. Apache JMeter 5.5+ installed and in PATH
+1. Docker (tests run in JMeter Docker container - no local installation needed)
 2. Both Order Service and Catbox Server running
 3. Infrastructure (Azure SQL, Kafka) running via Docker Compose
 

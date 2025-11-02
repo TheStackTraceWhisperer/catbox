@@ -1,5 +1,5 @@
 #!/bin/bash
-# Quick script to run a single JMeter test
+# Quick script to run a single JMeter test using Docker
 
 set -e
 
@@ -25,9 +25,10 @@ usage() {
     exit 1
 }
 
-# Check if JMeter is installed
-if ! command -v jmeter &> /dev/null; then
-    echo "Error: JMeter is not installed or not in PATH"
+# Check if Docker is installed
+if ! command -v docker &> /dev/null; then
+    echo "Error: Docker is not installed or not in PATH"
+    echo "Please install Docker to run JMeter tests"
     exit 1
 fi
 
@@ -108,15 +109,34 @@ echo "  Test Plan: $TEST_FILE"
 echo "  Threads: $THREADS"
 echo "  Ramp-up: ${RAMP_UP}s"
 echo "  Duration: ${DURATION}s"
+echo "  JMeter: Docker container (justb4/jmeter:5.6.3)"
 echo ""
 echo "Starting test..."
 echo ""
 
-# Run JMeter test
-jmeter -n -t "$TEST_FILE" \
+# Determine host network settings based on OS
+if [[ "$OSTYPE" == "darwin"* ]] || [[ "$OSTYPE" == "msys" ]] || [[ "$OSTYPE" == "win32" ]]; then
+    # On macOS/Windows, use host.docker.internal to access host services
+    NETWORK_MODE=""
+    HOST_OVERRIDE="-Jorder.service.host=host.docker.internal -Joutbox.service.host=host.docker.internal"
+else
+    # On Linux, use host network mode
+    NETWORK_MODE="--network=host"
+    HOST_OVERRIDE=""
+fi
+
+# Run JMeter test using Docker
+docker run --rm \
+    $NETWORK_MODE \
+    -v "$JMETER_DIR/testplans:/tests" \
+    -v "$JMETER_DIR/testdata:/testdata" \
+    -v "$JMETER_DIR/results:/results" \
+    justb4/jmeter:5.6.3 \
+    -n -t "/tests/$TEST_FILE" \
     $PARAMS \
-    -l "results/${RESULT_PREFIX}_${TIMESTAMP}.jtl" \
-    -e -o "results/${RESULT_PREFIX}_report_${TIMESTAMP}"
+    $HOST_OVERRIDE \
+    -l "/results/${RESULT_PREFIX}_${TIMESTAMP}.jtl" \
+    -e -o "/results/${RESULT_PREFIX}_report_${TIMESTAMP}"
 
 echo ""
 echo "=================================="

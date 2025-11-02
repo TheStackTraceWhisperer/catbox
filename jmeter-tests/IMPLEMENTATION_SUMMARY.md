@@ -2,7 +2,7 @@
 
 ## Overview
 
-This document provides a comprehensive summary of the JMeter test suite implementation for the Catbox application. The test suite is designed to stress test the Order Service, Outbox Service, and the transactional outbox pattern implementation.
+This document provides a comprehensive summary of the JMeter test suite implementation for the Catbox application. The test suite uses Docker containers to run JMeter tests, eliminating the need for local JMeter installation and ensuring consistent test execution across platforms.
 
 ## What Was Implemented
 
@@ -64,8 +64,10 @@ Three comprehensive JMeter test plans were created:
 - Provides next-step instructions for starting application services
 
 #### run-test.sh
-- Quick script to run individual test plans
+- Quick script to run individual test plans using Docker
+- No local JMeter installation required
 - Supports custom parameters for threads, ramp-up, and duration
+- Automatically detects OS and configures network mode (host network on Linux, host.docker.internal on macOS/Windows)
 - Usage examples:
   ```bash
   ./run-test.sh order              # Default: 50 threads, 5 min
@@ -74,7 +76,8 @@ Three comprehensive JMeter test plans were created:
 - Automatically generates timestamped results and HTML reports
 
 #### run-all-tests.sh
-- Comprehensive script to run all three test plans sequentially
+- Comprehensive script to run all three test plans sequentially using Docker
+- Pulls JMeter Docker image automatically
 - Checks service availability before starting tests
 - Provides breaks between tests to let services stabilize
 - Generates complete test results with HTML reports
@@ -84,15 +87,15 @@ Three comprehensive JMeter test plans were created:
 
 #### jmeter-tests/README.md
 Comprehensive documentation covering:
-- Prerequisites (JMeter installation, Java 21, Docker)
+- Prerequisites (Docker only - no JMeter installation needed)
 - Detailed description of each test plan
 - Default configurations and parameters
-- CLI commands for running tests
+- Docker-based execution commands
 - Performance benchmarks and expected results
 - Assertions and validation criteria
-- Troubleshooting guide
+- Troubleshooting guide (including Docker-specific issues)
 - Best practices for load testing
-- CI/CD integration examples
+- CI/CD integration examples (Docker-based)
 
 ### 5. Project Integration
 
@@ -211,6 +214,16 @@ With 100 concurrent threads:
 
 ## Technical Highlights
 
+### Docker-Based Execution
+
+The test suite uses Docker containers for JMeter:
+- **Image**: `justb4/jmeter:5.6.3` (official JMeter Docker image)
+- **Benefits**:
+  - No local JMeter installation required
+  - Consistent test environment across platforms
+  - Easier CI/CD integration
+  - Automatic platform detection (Linux uses host network, macOS/Windows uses host.docker.internal)
+
 ### Virtual Threads Performance
 
 The test suite is designed to validate Java 21 virtual threads:
@@ -254,14 +267,16 @@ jmeter-tests/
 
 ## Benefits
 
-1. **Comprehensive Coverage**: Tests all major API endpoints and operations
-2. **Realistic Scenarios**: Uses actual customer/product data with realistic think times
-3. **Scalability Testing**: Can easily scale from 10 to 200+ concurrent users
-4. **Automated Execution**: Scripts make it easy to run tests consistently
-5. **Detailed Reports**: HTML reports provide deep insights into performance
-6. **CI/CD Ready**: Can be integrated into continuous integration pipelines
-7. **Performance Baselines**: Establishes benchmarks for future optimization
-8. **Bottleneck Identification**: Helps identify performance issues early
+1. **No Installation Required**: Docker-based approach eliminates JMeter setup hassle
+2. **Cross-Platform Compatibility**: Works consistently on Linux, macOS, and Windows
+3. **Comprehensive Coverage**: Tests all major API endpoints and operations
+4. **Realistic Scenarios**: Uses actual customer/product data with realistic think times
+5. **Scalability Testing**: Can easily scale from 10 to 200+ concurrent users
+6. **Automated Execution**: Scripts make it easy to run tests consistently
+7. **Detailed Reports**: HTML reports provide deep insights into performance
+8. **CI/CD Ready**: Simplified integration into continuous integration pipelines
+9. **Performance Baselines**: Establishes benchmarks for future optimization
+10. **Bottleneck Identification**: Helps identify performance issues early
 
 ## Next Steps
 

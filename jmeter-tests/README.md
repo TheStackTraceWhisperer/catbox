@@ -23,18 +23,18 @@ jmeter-tests/
 
 ### Required Software
 
-1. **Apache JMeter 5.5+**
+1. **Docker** (for running JMeter tests)
    ```bash
-   # Download and install JMeter
-   wget https://dlcdn.apache.org//jmeter/binaries/apache-jmeter-5.6.3.tgz
-   tar -xzf apache-jmeter-5.6.3.tgz
-   export JMETER_HOME=/path/to/apache-jmeter-5.6.3
-   export PATH=$PATH:$JMETER_HOME/bin
+   # Check if Docker is installed
+   docker --version
+   
+   # If not installed, download from:
+   # https://www.docker.com/get-started
    ```
+   
+   The test scripts use the official JMeter Docker image (`justb4/jmeter:5.6.3`), eliminating the need for local JMeter installation.
 
-2. **Java 21** (already required for the application)
-
-3. **Docker & Docker Compose** (for infrastructure)
+2. **Docker Compose** (for infrastructure - Azure SQL Edge and Kafka)
 
 ### Running Services
 
@@ -72,21 +72,28 @@ Tests the Order Service API under various load conditions.
 
 **Running the test:**
 ```bash
-# GUI Mode (for development/debugging)
-jmeter -t testplans/OrderService_LoadTest.jmx
-
-# CLI Mode (for actual load testing)
-jmeter -n -t testplans/OrderService_LoadTest.jmx \
-  -l results/order_service_$(date +%Y%m%d_%H%M%S).jtl \
-  -e -o results/order_service_report_$(date +%Y%m%d_%H%M%S)
+# Using the helper script (recommended)
+./scripts/run-test.sh order
 
 # With custom parameters
-jmeter -n -t testplans/OrderService_LoadTest.jmx \
-  -Jnum.threads=100 \
-  -Jramp.up=60 \
-  -Jduration=600 \
-  -l results/order_service_stress.jtl
+./scripts/run-test.sh order -t 100 -r 60 -d 600
+
+# Direct Docker command (advanced)
+docker run --rm \
+  --network=host \
+  -v "$(pwd)/testplans:/tests" \
+  -v "$(pwd)/testdata:/testdata" \
+  -v "$(pwd)/results:/results" \
+  justb4/jmeter:5.6.3 \
+  -n -t "/tests/OrderService_LoadTest.jmx" \
+  -Jnum.threads=50 \
+  -Jramp.up=30 \
+  -Jduration=300 \
+  -l "/results/order_service_$(date +%Y%m%d_%H%M%S).jtl" \
+  -e -o "/results/order_service_report_$(date +%Y%m%d_%H%M%S)"
 ```
+
+**Note:** The tests run inside a Docker container. On Linux, the container uses host network mode. On macOS/Windows, it uses `host.docker.internal` to access services on the host.
 
 **Assertions:**
 - HTTP 201 for order creation
@@ -108,20 +115,11 @@ Tests the Outbox Service API and event retrieval performance.
 
 **Running the test:**
 ```bash
-# GUI Mode
-jmeter -t testplans/OutboxService_LoadTest.jmx
-
-# CLI Mode
-jmeter -n -t testplans/OutboxService_LoadTest.jmx \
-  -l results/outbox_service_$(date +%Y%m%d_%H%M%S).jtl \
-  -e -o results/outbox_service_report_$(date +%Y%m%d_%H%M%S)
+# Using the helper script (recommended)
+./scripts/run-test.sh outbox
 
 # With custom parameters
-jmeter -n -t testplans/OutboxService_LoadTest.jmx \
-  -Jnum.threads=50 \
-  -Jramp.up=30 \
-  -Jduration=600 \
-  -l results/outbox_service_load.jtl
+./scripts/run-test.sh outbox -t 50 -r 30 -d 600
 ```
 
 **Assertions:**
@@ -145,20 +143,11 @@ Comprehensive stress test simulating high load on both services simultaneously.
 
 **Running the test:**
 ```bash
-# GUI Mode (NOT recommended for stress testing)
-jmeter -t testplans/EndToEnd_StressTest.jmx
-
-# CLI Mode (RECOMMENDED)
-jmeter -n -t testplans/EndToEnd_StressTest.jmx \
-  -l results/stress_test_$(date +%Y%m%d_%H%M%S).jtl \
-  -e -o results/stress_test_report_$(date +%Y%m%d_%H%M%S)
+# Using the helper script (recommended)
+./scripts/run-test.sh stress
 
 # High stress configuration
-jmeter -n -t testplans/EndToEnd_StressTest.jmx \
-  -Jstress.threads=200 \
-  -Jramp.up=120 \
-  -Jduration=1800 \
-  -l results/extreme_stress.jtl
+./scripts/run-test.sh stress -t 200 -r 120 -d 1800
 ```
 
 **What this test validates:**
@@ -298,18 +287,29 @@ The application uses Java 21 virtual threads, which should maintain performance 
    - Check database performance
    ```
 
-4. **OutOfMemory Errors in JMeter**
+4. **Docker Connection Issues**
    ```
-   Solution: Increase JMeter heap size
-   export HEAP="-Xms1g -Xmx4g -XX:MaxMetaspaceSize=512m"
-   jmeter -n -t testplans/EndToEnd_StressTest.jmx ...
+   On Linux: Tests use --network=host mode
+   On macOS/Windows: Tests use host.docker.internal
+   
+   If connection fails:
+   - Verify services are accessible from host
+   - Check Docker network settings
+   - Try running services in Docker network
+   ```
+
+5. **Volume Mount Permissions**
+   ```
+   Solution: Ensure results directory is writable
+   chmod -R 777 jmeter-tests/results
    ```
 
 ## Best Practices
 
-1. **Always run load tests in CLI mode** (`-n` flag)
-   - GUI mode consumes significant resources
-   - CLI mode provides better performance metrics
+1. **Tests run in Docker containers**
+   - No local JMeter installation needed
+   - Consistent environment across platforms
+   - Easier CI/CD integration
 
 2. **Use appropriate ramp-up times**
    - Prevents overwhelming the system immediately
@@ -342,25 +342,22 @@ Example GitHub Actions workflow snippet:
 ```yaml
 - name: Run JMeter Load Tests
   run: |
-    # Install JMeter
-    wget https://dlcdn.apache.org//jmeter/binaries/apache-jmeter-5.6.3.tgz
-    tar -xzf apache-jmeter-5.6.3.tgz
-    export PATH=$PATH:$(pwd)/apache-jmeter-5.6.3/bin
-    
     # Start services
     docker compose up -d
     mvn spring-boot:run -pl order-service -Dspring-boot.run.profiles=azuresql &
     mvn spring-boot:run -pl catbox-server -Dspring-boot.run.profiles=azuresql &
     sleep 20
     
-    # Run tests
+    # Run tests using Docker
     cd jmeter-tests
-    jmeter -n -t testplans/OrderService_LoadTest.jmx \
-      -Jnum.threads=25 \
-      -Jduration=60 \
-      -l results/ci_test.jtl \
-      -e -o results/ci_report
+    ./scripts/run-test.sh order -t 25 -d 60
 ```
+
+**Benefits of Docker-based approach:**
+- No JMeter installation required in CI/CD
+- Consistent test environment
+- Faster pipeline setup
+- Reduced maintenance
 
 ## Additional Resources
 

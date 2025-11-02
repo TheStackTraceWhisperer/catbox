@@ -1,9 +1,7 @@
 # JMeter Test Suite - Quick Reference
 
 ## Prerequisites
-- Java 21
-- Apache JMeter 5.5+
-- Docker & Docker Compose
+- Docker
 - Both Order Service and Catbox Server running
 
 ## Quick Start (3 Steps)
@@ -98,22 +96,27 @@ curl http://localhost:8081/actuator/health
 - Increase ramp-up time
 - Check application logs
 
-### JMeter OutOfMemory
-```bash
-export HEAP="-Xms1g -Xmx4g"
-./scripts/run-test.sh <test>
-```
+### Docker Network Issues
+- On Linux: Uses --network=host
+- On macOS/Windows: Uses host.docker.internal
+- Verify services are accessible
 
 ## Advanced Usage
 
-### Direct JMeter CLI
+### Direct Docker Command
 ```bash
-jmeter -n -t testplans/OrderService_LoadTest.jmx \
+docker run --rm \
+  --network=host \
+  -v "$(pwd)/testplans:/tests" \
+  -v "$(pwd)/testdata:/testdata" \
+  -v "$(pwd)/results:/results" \
+  justb4/jmeter:5.6.3 \
+  -n -t "/tests/OrderService_LoadTest.jmx" \
   -Jnum.threads=75 \
   -Jramp.up=45 \
   -Jduration=600 \
-  -l results/custom_test.jtl \
-  -e -o results/custom_report
+  -l "/results/custom_test.jtl" \
+  -e -o "/results/custom_report"
 ```
 
 ### Monitor During Test

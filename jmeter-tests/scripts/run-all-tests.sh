@@ -1,5 +1,5 @@
 #!/bin/bash
-# Script to run all JMeter tests sequentially
+# Script to run all JMeter tests sequentially using Docker
 
 set -e
 
@@ -7,18 +7,19 @@ echo "=================================="
 echo "Running JMeter Test Suite"
 echo "=================================="
 
-# Check if JMeter is installed
-if ! command -v jmeter &> /dev/null; then
-    echo "Error: JMeter is not installed or not in PATH"
+# Check if Docker is installed
+if ! command -v docker &> /dev/null; then
+    echo "Error: Docker is not installed or not in PATH"
     echo ""
-    echo "Please install JMeter 5.5+ and add it to your PATH"
-    echo "Download from: https://jmeter.apache.org/download_jmeter.cgi"
+    echo "Please install Docker to run JMeter tests"
+    echo "Download from: https://www.docker.com/get-started"
     exit 1
 fi
 
-# Check JMeter version
-JMETER_VERSION=$(jmeter -v 2>&1 | head -n 1)
-echo "Using: $JMETER_VERSION"
+# Pull JMeter Docker image
+echo "Pulling JMeter Docker image..."
+docker pull justb4/jmeter:5.6.3
+echo "Using: JMeter 5.6.3 (Docker container)"
 
 # Navigate to jmeter-tests directory
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
@@ -85,6 +86,17 @@ echo "All services are available!"
 echo "=================================="
 echo ""
 
+# Determine host network settings based on OS
+if [[ "$OSTYPE" == "darwin"* ]] || [[ "$OSTYPE" == "msys" ]] || [[ "$OSTYPE" == "win32" ]]; then
+    # On macOS/Windows, use host.docker.internal to access host services
+    NETWORK_MODE=""
+    ORDER_HOST="host.docker.internal"
+    OUTBOX_HOST="host.docker.internal"
+else
+    # On Linux, use host network mode
+    NETWORK_MODE="--network=host"
+fi
+
 # Test 1: Order Service Load Test
 echo "-------------------------------"
 echo "Test 1: Order Service Load Test"
@@ -92,14 +104,20 @@ echo "-------------------------------"
 echo "Running with 50 threads for 5 minutes..."
 echo ""
 
-jmeter -n -t testplans/OrderService_LoadTest.jmx \
+docker run --rm \
+    $NETWORK_MODE \
+    -v "$JMETER_DIR/testplans:/tests" \
+    -v "$JMETER_DIR/testdata:/testdata" \
+    -v "$JMETER_DIR/results:/results" \
+    justb4/jmeter:5.6.3 \
+    -n -t "/tests/OrderService_LoadTest.jmx" \
     -Jorder.service.host="$ORDER_HOST" \
     -Jorder.service.port="$ORDER_PORT" \
     -Jnum.threads=50 \
     -Jramp.up=30 \
     -Jduration=300 \
-    -l "results/order_service_${TIMESTAMP}.jtl" \
-    -e -o "results/order_service_report_${TIMESTAMP}"
+    -l "/results/order_service_${TIMESTAMP}.jtl" \
+    -e -o "/results/order_service_report_${TIMESTAMP}"
 
 echo ""
 echo "✓ Order Service Load Test completed"
@@ -118,14 +136,20 @@ echo "-------------------------------"
 echo "Running with 30 threads for 5 minutes..."
 echo ""
 
-jmeter -n -t testplans/OutboxService_LoadTest.jmx \
+docker run --rm \
+    $NETWORK_MODE \
+    -v "$JMETER_DIR/testplans:/tests" \
+    -v "$JMETER_DIR/testdata:/testdata" \
+    -v "$JMETER_DIR/results:/results" \
+    justb4/jmeter:5.6.3 \
+    -n -t "/tests/OutboxService_LoadTest.jmx" \
     -Joutbox.service.host="$OUTBOX_HOST" \
     -Joutbox.service.port="$OUTBOX_PORT" \
     -Jnum.threads=30 \
     -Jramp.up=20 \
     -Jduration=300 \
-    -l "results/outbox_service_${TIMESTAMP}.jtl" \
-    -e -o "results/outbox_service_report_${TIMESTAMP}"
+    -l "/results/outbox_service_${TIMESTAMP}.jtl" \
+    -e -o "/results/outbox_service_report_${TIMESTAMP}"
 
 echo ""
 echo "✓ Outbox Service Load Test completed"
@@ -144,7 +168,13 @@ echo "-------------------------------"
 echo "Running with 100 threads for 10 minutes..."
 echo ""
 
-jmeter -n -t testplans/EndToEnd_StressTest.jmx \
+docker run --rm \
+    $NETWORK_MODE \
+    -v "$JMETER_DIR/testplans:/tests" \
+    -v "$JMETER_DIR/testdata:/testdata" \
+    -v "$JMETER_DIR/results:/results" \
+    justb4/jmeter:5.6.3 \
+    -n -t "/tests/EndToEnd_StressTest.jmx" \
     -Jorder.service.host="$ORDER_HOST" \
     -Jorder.service.port="$ORDER_PORT" \
     -Joutbox.service.host="$OUTBOX_HOST" \
@@ -152,8 +182,8 @@ jmeter -n -t testplans/EndToEnd_StressTest.jmx \
     -Jstress.threads=100 \
     -Jramp.up=60 \
     -Jduration=600 \
-    -l "results/stress_test_${TIMESTAMP}.jtl" \
-    -e -o "results/stress_test_report_${TIMESTAMP}"
+    -l "/results/stress_test_${TIMESTAMP}.jtl" \
+    -e -o "/results/stress_test_report_${TIMESTAMP}"
 
 echo ""
 echo "✓ End-to-End Stress Test completed"
