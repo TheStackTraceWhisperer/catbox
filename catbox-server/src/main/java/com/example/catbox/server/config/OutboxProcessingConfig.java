@@ -55,6 +55,12 @@ public class OutboxProcessingConfig {
             "org.apache.kafka.common.errors.AuthorizationException"
     );
 
+    /**
+     * Number of days to retain sent events before archiving them.
+     * Set to 0 or negative to disable archival.
+     */
+    private int archivalRetentionDays = 7; // default 7 days
+
     // A Set for efficient O(1) lookups
     private final Set<String> permanentExceptionSet = new HashSet<>();
 

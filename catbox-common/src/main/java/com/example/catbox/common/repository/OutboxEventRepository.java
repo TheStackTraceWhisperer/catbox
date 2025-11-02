@@ -31,4 +31,8 @@ public interface OutboxEventRepository extends JpaRepository<OutboxEvent, Long>,
     long countBySentAtIsNull();
     
     Optional<OutboxEvent> findFirstBySentAtIsNullOrderByCreatedAtAsc();
+    
+    // Archival support methods
+    @Query("SELECT e FROM OutboxEvent e WHERE e.sentAt IS NOT NULL AND e.sentAt < :cutoffTime")
+    List<OutboxEvent> findSentEventsBefore(@Param("cutoffTime") LocalDateTime cutoffTime);
 }

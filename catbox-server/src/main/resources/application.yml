@@ -60,6 +60,9 @@ outbox:
     poll-fixed-delay-ms: 2000
     poll-initial-delay-ms: 10000
     
+    # --- ARCHIVAL CONFIG ---
+    archival-retention-days: 7  # Archive events older than 7 days (set to 0 to disable)
+    
     # --- DEAD-LETTER CONFIG ---
     max-permanent-retries: 5
     permanent-failure-exceptions:
