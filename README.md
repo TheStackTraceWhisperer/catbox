@@ -7,11 +7,14 @@ A Spring Boot 3.5.7 application demonstrating the transactional outbox pattern w
 - **Transactional Outbox Pattern** - Reliable event publishing with at-least-once delivery guarantees
 - **Java 21 Virtual Threads** - High-performance concurrent event processing
 - **Multi-Cluster Kafka Routing** - Flexible routing strategies for geographic replication and high availability
+- **Admin Web UI** - Professional dashboard for monitoring and managing outbox events
+- **Event Lifecycle Management** - Automatic archival and dead letter queue for failed events
 - **Spring Boot 3.5.7** - Modern Spring ecosystem with WebMVC, Data JPA, and Kafka
 - **Comprehensive Observability** - Custom Prometheus metrics, Grafana dashboards, and Loki log aggregation
 - **Security** - OAuth2/OIDC with Keycloak, Kafka SSL/SASL authentication
 - **Docker Compose** - Full infrastructure stack with Azure SQL Edge, Kafka, and monitoring
 - **Load Testing** - JMeter test suites for performance validation
+- **Architecture Testing** - ArchUnit for automated design validation
 
 ## Quick Start
 
@@ -120,6 +123,7 @@ catbox-parent
 ├── catbox-client        # Client library for creating events
 ├── catbox-server        # Standalone event processor (port 8081)
 ├── order-service        # Business service (port 8080)
+├── catbox-archunit      # Architecture testing with ArchUnit
 ├── coverage-report      # Aggregated test coverage reports
 ├── jmeter-tests         # JMeter load and stress test suites
 ├── infrastructure       # Docker Compose and infrastructure
