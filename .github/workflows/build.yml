@@ -24,19 +24,7 @@ jobs:
         with:
           java-version: '21'
           distribution: 'temurin'
-
-      # Cache Maven dependencies to speed up builds
-      # Cache key includes hash of all pom.xml files (multi-module project)
-      # Excludes project artifacts (com/example) to only cache external dependencies
-      - name: Cache Maven dependencies
-        uses: actions/cache@v4
-        with:
-          path: |
-            ~/.m2/repository
-            !~/.m2/repository/com/example
-          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
-          restore-keys: |
-            ${{ runner.os }}-maven-
+          cache: 'maven'
 
       - name: Build, test, and generate coverage report
         run: mvn clean verify -B
