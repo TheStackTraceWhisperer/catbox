@@ -185,6 +185,9 @@
                         <exclude>**/*IT.java</exclude>
                         <exclude>**/*IntegrationTest.java</exclude>
                     </excludes>
+                    <!-- Increase exit timeout for tests with Testcontainers, Kafka, and virtual threads
+                         Default is 30 seconds which may not be enough for proper cleanup -->
+                    <forkedProcessExitTimeoutInSeconds>60</forkedProcessExitTimeoutInSeconds>
                 </configuration>
             </plugin>
             
@@ -200,6 +203,9 @@
                         <include>**/*IT.java</include>
                         <include>**/*IntegrationTest.java</include>
                     </includes>
+                    <!-- Increase exit timeout for tests with Testcontainers, Kafka, and virtual threads
+                         Default is 30 seconds which may not be enough for proper cleanup -->
+                    <forkedProcessExitTimeoutInSeconds>60</forkedProcessExitTimeoutInSeconds>
                 </configuration>
                 <executions>
                     <execution>
