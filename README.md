@@ -69,14 +69,31 @@ To run the system, you must start both applications (and the required Docker ser
 
 ### Start Infrastructure
 
+First, set up your environment variables:
+
+```bash
+# Copy the example .env file and update with your password
+cp .env.example .env
+```
+
+Then start the services:
+
 ```bash
 docker compose up -d
 ```
 
 This starts:
-- Azure SQL Edge on port 1433
+- Azure SQL Edge on port 1433 (with automatic database schema initialization)
 - Kafka on port 9092 (PLAINTEXT) and 9093 (SASL_SSL)
 - Keycloak on port 8080 (identity provider)
+
+**Database Schema Initialization:**
+
+The database schema is automatically created when Docker Compose starts using the `init.sql` script. The applications are configured to validate the schema (not auto-generate it) to ensure schema consistency across environments.
+
+- The `init.sql` script contains the complete database schema for all tables (orders, outbox_events, outbox_archive_events, outbox_dead_letter_events)
+- For production deployments, you can run the `init.sql` script manually against your database before starting the applications
+- The applications use `spring.jpa.hibernate.ddl-auto=validate` to ensure the schema matches the entity definitions
 
 **Optional - Enable Kafka Security:**
 
@@ -196,7 +213,18 @@ Virtual threads are lightweight (thousands can run concurrently) and provide bet
 
 ## Database
 
-The applications use Azure SQL Edge when running with Docker Compose. The `catbox-server` also supports H2 in-memory database for development/testing without the `azuresql` profile.
+The applications use Azure SQL Edge when running with Docker Compose. The database schema is defined in the `init.sql` file and automatically initialized when Docker Compose starts.
+
+**Schema Management:**
+- The `init.sql` script is located in the project root directory
+- It contains CREATE TABLE statements for all required tables (orders, outbox_events, outbox_archive_events, outbox_dead_letter_events)
+- The Docker Compose configuration automatically runs this script on container startup
+- Applications use `spring.jpa.hibernate.ddl-auto=validate` to validate the schema matches entity definitions
+- For production deployments, run the `init.sql` script manually before starting the applications
+
+**Development/Testing:**
+- The `catbox-server` supports H2 in-memory database for development/testing without the `azuresql` profile
+- Tests use Testcontainers with SQL Server and automatically create schemas using `ddl-auto=create-drop`
 
 ## Transactional Outbox Pattern
 
