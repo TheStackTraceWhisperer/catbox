@@ -176,8 +176,8 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
                 <configuration>
-                    <!-- Use JaCoCo agent for unit tests -->
-                    <argLine>@{surefireArgLine}</argLine>
+                    <!-- Use JaCoCo agent for unit tests and suppress JVM warnings -->
+                    <argLine>@{surefireArgLine} -XX:+EnableDynamicAgentLoading -Xshare:off</argLine>
                     <!-- Exclude integration tests from unit test phase -->
                     <excludes>
                         <exclude>**/*IT.java</exclude>
@@ -191,8 +191,8 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-failsafe-plugin</artifactId>
                 <configuration>
-                    <!-- Use JaCoCo agent for integration tests -->
-                    <argLine>@{failsafeArgLine}</argLine>
+                    <!-- Use JaCoCo agent for integration tests and suppress JVM warnings -->
+                    <argLine>@{failsafeArgLine} -XX:+EnableDynamicAgentLoading -Xshare:off</argLine>
                     <!-- Include integration test patterns -->
                     <includes>
                         <include>**/*IT.java</include>
