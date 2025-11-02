@@ -7,7 +7,7 @@ spring:
     url: jdbc:sqlserver://localhost:1433;databaseName=catbox;encrypt=true;trustServerCertificate=true
     driver-class-name: com.microsoft.sqlserver.jdbc.SQLServerDriver
     username: sa
-    password: YourStrong@Passw0rd
+    password: ${DB_PASSWORD}
 
   jpa:
     hibernate:
