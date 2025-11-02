@@ -276,7 +276,7 @@ The project includes a `compose.yaml` file that sets up:
 1. **Azure SQL Edge** - Microsoft SQL Server compatible database
    - Port: 1433
    - Username: `sa`
-   - Password: `YourStrong@Passw0rd`
+   - Password: Set via `DB_PASSWORD` environment variable
    - Compatible with Azure SQL Database
 
 2. **Apache Kafka** - Message broker using KRaft mode (no Zookeeper)

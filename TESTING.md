@@ -126,7 +126,7 @@ docker exec catbox-kafka kafka-topics.sh --list \
 ```bash
 # Using sqlcmd inside the container
 docker exec -it catbox-azuresql /opt/mssql-tools18/bin/sqlcmd \
-  -S localhost -U sa -P "YourStrong@Passw0rd" \
+  -S localhost -U sa -P "${DB_PASSWORD}" \
   -Q "SELECT @@VERSION" -C -No
 ```
 
