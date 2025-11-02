@@ -4,11 +4,9 @@ import jakarta.annotation.PostConstruct;
 import lombok.Getter;
 import lombok.Setter;
 import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.boot.convert.DurationUnit;
 import org.springframework.context.annotation.Configuration;
 
 import java.time.Duration;
-import java.time.temporal.ChronoUnit;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -22,7 +20,6 @@ public class OutboxProcessingConfig {
     /**
      * How long an event stays claimed (inProgressUntil) before being eligible for retry.
      */
-    @DurationUnit(ChronoUnit.MILLIS)
     private Duration claimTimeout = Duration.ofMinutes(5);
 
     /**
@@ -33,13 +30,11 @@ public class OutboxProcessingConfig {
     /**
      * Fixed delay between polls.
      */
-    @DurationUnit(ChronoUnit.MILLIS)
     private Duration pollFixedDelay = Duration.ofSeconds(2);
 
     /**
      * Initial delay before first poll.
      */
-    @DurationUnit(ChronoUnit.MILLIS)
     private Duration pollInitialDelay = Duration.ofSeconds(10);
 
     /**
