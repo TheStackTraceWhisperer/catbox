@@ -38,10 +38,13 @@ import java.util.concurrent.TimeUnit;
 @Slf4j
 public class DynamicKafkaTemplateFactory implements ApplicationContextAware {
 
+    private static final String TEMPLATE_BEAN_SUFFIX = "-KafkaTemplate";
+    private static final String FACTORY_BEAN_SUFFIX = "-ProducerFactory";
+
     private final KafkaClustersConfig clustersConfig;
     private final SslBundles sslBundles;
     private ConfigurableApplicationContext applicationContext;
-    private DynamicKafkaTemplateFactory self; // The proxied version of this bean
+    private volatile DynamicKafkaTemplateFactory self; // The proxied version of this bean
 
     // This is our thread-safe cache: Map<ClusterKey, KafkaTemplate>
     private final Map<String, KafkaTemplate<String, String>> templateCache = new ConcurrentHashMap<>();
@@ -129,7 +132,7 @@ public class DynamicKafkaTemplateFactory implements ApplicationContextAware {
         Map<String, Object> producerProps = props.buildProducerProperties(null);
 
         // 2. Manually apply SSL Bundle if configured
-        String bundleName = props.getSsl().getBundle();
+        String bundleName = props.getSsl() != null ? props.getSsl().getBundle() : null;
         if (StringUtils.hasText(bundleName)) {
             log.debug("Applying SSL Bundle '{}' to cluster '{}'", bundleName, clusterKey);
 
@@ -154,7 +157,7 @@ public class DynamicKafkaTemplateFactory implements ApplicationContextAware {
      * @return The bean name of the newly registered factory.
      */
     private String registerProducerFactory(BeanDefinitionRegistry registry, String clusterKey, Map<String, Object> producerProps) {
-        String factoryBeanName = clusterKey + "-ProducerFactory";
+        String factoryBeanName = clusterKey + FACTORY_BEAN_SUFFIX;
 
         BeanDefinition factoryBeanDef = BeanDefinitionBuilder
                 .rootBeanDefinition(DefaultKafkaProducerFactory.class)
@@ -171,7 +174,7 @@ public class DynamicKafkaTemplateFactory implements ApplicationContextAware {
      * @return The bean name of the newly registered template.
      */
     private String registerKafkaTemplate(BeanDefinitionRegistry registry, String clusterKey, String factoryBeanName) {
-        String templateBeanName = clusterKey + "-KafkaTemplate";
+        String templateBeanName = clusterKey + TEMPLATE_BEAN_SUFFIX;
 
         BeanDefinition templateBeanDef = BeanDefinitionBuilder
                 .rootBeanDefinition(KafkaTemplate.class)
@@ -217,8 +220,8 @@ public class DynamicKafkaTemplateFactory implements ApplicationContextAware {
             ConfigurableListableBeanFactory beanFactory = applicationContext.getBeanFactory();
             BeanDefinitionRegistry registry = (BeanDefinitionRegistry) beanFactory;
 
-            String templateBeanName = clusterKey + "-KafkaTemplate";
-            String factoryBeanName = clusterKey + "-ProducerFactory";
+            String templateBeanName = clusterKey + TEMPLATE_BEAN_SUFFIX;
+            String factoryBeanName = clusterKey + FACTORY_BEAN_SUFFIX;
 
             // Destroy the singleton instances
             destroySingletonIfExists(beanFactory, templateBeanName);

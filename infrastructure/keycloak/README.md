@@ -29,7 +29,7 @@ Before deploying to production, you **MUST** update the following:
    - Generate a cryptographically strong secret
 
 4. **Admin Credentials**:
-   - Current: Default admin/admin (set in compose.yaml)
+   - Current: Default admin/admin (set in ../compose.yaml)
    - Production: Change via environment variables before deployment
 
 ## Modifying the Configuration
@@ -37,7 +37,7 @@ Before deploying to production, you **MUST** update the following:
 1. Edit `catbox-realm.json` as needed
 2. Restart Keycloak to import changes:
    ```bash
-   docker compose restart keycloak
+   cd .. && docker compose restart keycloak
    ```
 
 ## Access

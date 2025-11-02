@@ -42,13 +42,15 @@ Before running tests, ensure both services and infrastructure are running:
 
 ```bash
 # 1. Start infrastructure (Azure SQL Edge and Kafka)
-cd /path/to/catbox
+cd /path/to/catbox/infrastructure
 docker compose up -d
 
-# 2. Start Order Service (in one terminal)
+# 2. Start Order Service (in one terminal, from project root)
+cd /path/to/catbox
 mvn spring-boot:run -pl order-service -Dspring-boot.run.profiles=azuresql
 
-# 3. Start Catbox Server (in another terminal)
+# 3. Start Catbox Server (in another terminal, from project root)
+cd /path/to/catbox
 mvn spring-boot:run -pl catbox-server -Dspring-boot.run.profiles=azuresql
 ```
 
@@ -343,7 +345,7 @@ Example GitHub Actions workflow snippet:
 - name: Run JMeter Load Tests
   run: |
     # Start services
-    docker compose up -d
+    cd infrastructure && docker compose up -d && cd ..
     mvn spring-boot:run -pl order-service -Dspring-boot.run.profiles=azuresql &
     mvn spring-boot:run -pl catbox-server -Dspring-boot.run.profiles=azuresql &
     sleep 20
@@ -371,5 +373,5 @@ Example GitHub Actions workflow snippet:
 For issues or questions:
 1. Check application logs in both services
 2. Review JMeter test logs in `jmeter.log`
-3. Verify infrastructure is healthy with `docker compose ps`
+3. Verify infrastructure is healthy with `cd ../infrastructure && docker compose ps`
 4. Check system resources (CPU, memory, disk)

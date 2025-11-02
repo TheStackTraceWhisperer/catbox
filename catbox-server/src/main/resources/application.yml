@@ -23,7 +23,7 @@ spring:
       jks:
         kafka-client:
           truststore:
-            location: file:kafka-security/certs/kafka-client-truststore.jks
+            location: file:infrastructure/kafka-security/certs/kafka-client-truststore.jks
             password: changeit
 
   # --- Kafka Configuration ---
@@ -55,6 +55,15 @@ spring:
             # IMPORTANT: For production, use environment variables for credentials
             # Example: username="${KAFKA_USERNAME:producer}" password="${KAFKA_PASSWORD:producer-secret}"
             sasl.jaas.config: org.apache.kafka.common.security.scram.ScramLoginModule required username="producer" password="producer-secret";
+      # --- Cluster C (PLAINTEXT - second independent cluster for multi-cluster testing) ---
+      cluster-c:
+        bootstrap-servers: localhost:9095
+        producer:
+          key-serializer: org.apache.kafka.common.serialization.StringSerializer
+          value-serializer: org.apache.kafka.common.serialization.StringSerializer
+          properties:
+            linger.ms: 10
+            acks: all
 
 # --- Routing and Factory Configuration ---
 outbox:
