@@ -22,7 +22,8 @@ See the [Quick Start Guide](docs/quick-start.md) for detailed setup instructions
 
 ### Prerequisites
 
-- Java 21 or higher
+- Java 21 or higher (required - enforced by Maven Enforcer Plugin)
+  - A `.java-version` file is provided for SDK version managers (jenv, asdf, etc.)
 - Maven 3.6+
 - Docker and Docker Compose
 
