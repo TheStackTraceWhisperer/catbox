@@ -20,7 +20,9 @@ cd "$PROJECT_ROOT"
 
 echo ""
 echo "1. Starting Docker Compose services (Azure SQL Edge & Kafka)..."
-cd infrastructure && docker compose up -d && cd ..
+pushd infrastructure > /dev/null
+docker compose up -d
+popd > /dev/null
 
 echo ""
 echo "2. Waiting for services to be healthy..."
@@ -29,7 +31,9 @@ sleep 10
 # Check if services are running
 echo ""
 echo "3. Checking service health..."
-cd infrastructure && docker compose ps && cd ..
+pushd infrastructure > /dev/null
+docker compose ps
+popd > /dev/null
 
 echo ""
 echo "=================================="
