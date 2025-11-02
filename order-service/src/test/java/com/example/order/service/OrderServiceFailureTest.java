@@ -2,6 +2,7 @@ package com.example.order.service;
 
 import com.example.catbox.client.OutboxClient;
 import com.example.order.OrderServiceApplication;
+import com.example.order.dto.CreateOrderRequest;
 import com.example.order.entity.Order;
 import com.example.order.repository.OrderRepository;
 import org.junit.jupiter.api.Test;
@@ -67,10 +68,10 @@ class OrderServiceFailureTest {
         // Get initial count
         long initialCount = orderRepository.count();
 
-        Order order = new Order("Alice Smith", "Laptop", new BigDecimal("1299.99"));
+        CreateOrderRequest request = new CreateOrderRequest("Alice Smith", "Laptop", new BigDecimal("1299.99"));
 
         // Act & Assert: Verify that creating the order throws an exception
-        assertThatThrownBy(() -> orderService.createOrder(order))
+        assertThatThrownBy(() -> orderService.createOrder(request))
                 .isInstanceOf(RuntimeException.class)
                 .hasMessageContaining("Simulated serialization failure");
 
