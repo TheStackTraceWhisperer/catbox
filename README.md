@@ -13,6 +13,7 @@ A Spring Boot 3.5.7 WebMVC application demonstrating the transactional outbox pa
 - **H2 In-Memory Database** for easy local development
 - **RESTful API** for order management
 - **Comprehensive Testing** with unit and integration tests
+- **JMeter Test Suite** for load and stress testing
 
 ## Architecture
 
@@ -257,6 +258,34 @@ docker compose down
 - **Testcontainers** for containerized testing support
 - **Spring Boot Test** for application context testing
 
+### Load and Stress Testing
+
+The project includes comprehensive JMeter test suites for performance testing using Docker containers:
+
+```bash
+# Navigate to JMeter tests directory
+cd jmeter-tests
+
+# Run individual test (uses Docker - no JMeter installation needed)
+./scripts/run-test.sh order    # Order Service load test
+./scripts/run-test.sh outbox   # Outbox Service load test
+./scripts/run-test.sh stress   # End-to-end stress test
+
+# Run all tests sequentially
+./scripts/run-all-tests.sh
+```
+
+See [jmeter-tests/README.md](jmeter-tests/README.md) for detailed documentation on:
+- Test plan descriptions and configurations
+- Performance benchmarks
+- Running tests with custom parameters
+- Analyzing results
+
+**Prerequisites for load testing:**
+1. Docker (tests run in JMeter Docker container - no local installation needed)
+2. Both Order Service and Catbox Server running
+3. Infrastructure (Azure SQL, Kafka) running via Docker Compose
+
 ## Project Structure
 
 ```
@@ -265,6 +294,7 @@ catbox-parent
 ├── catbox-client     # Simple client for creating events (used by order-service)
 ├── catbox-server     # Standalone poller/publisher application (runs on 8081)
 ├── order-service     # Business service application (runs on 8080)
+├── jmeter-tests      # JMeter load and stress test suites
 ├── monitoring        # Prometheus, Grafana, and Loki configurations
 ├── compose.yaml      # Docker Compose for infrastructure
 └── pom.xml           # Parent POM
