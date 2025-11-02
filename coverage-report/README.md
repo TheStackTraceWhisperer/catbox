@@ -6,7 +6,7 @@ This module aggregates test coverage reports from all Catbox modules.
 
 This POM-only module exists solely to generate an aggregated JaCoCo coverage report across all modules in the Catbox project:
 - catbox-common
-- catbox-client  
+- catbox-client
 - catbox-server
 - order-service
 
