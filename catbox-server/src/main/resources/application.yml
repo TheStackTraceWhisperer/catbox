@@ -8,10 +8,10 @@ spring:
   jpa:
     hibernate:
       ddl-auto: validate
-    show-sql: true
+    show-sql: false
     properties:
       hibernate:
-        format_sql: true
+        format_sql: false
 
   threads:
     virtual:
@@ -146,4 +146,4 @@ logging:
   level:
     com.example.catbox: INFO
     org.springframework.web: INFO
-    org.hibernate.SQL: DEBUG
+    org.hibernate.SQL: INFO
