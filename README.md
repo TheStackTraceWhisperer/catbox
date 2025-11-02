@@ -75,6 +75,7 @@ docker compose up -d
 This starts:
 - Azure SQL Edge on port 1433
 - Kafka on port 9092
+- Keycloak on port 8080 (identity provider)
 
 ### Run the order-service
 
@@ -383,3 +384,73 @@ curl http://localhost:8080/actuator/prometheus | grep outbox_events
 - Publishing throughput over time
 - Processing duration percentiles
 - Success/failure ratios
+
+## Security with Keycloak
+
+The catbox-server supports OAuth2/OIDC authentication via Keycloak. Security is **disabled by default** and can be enabled via Spring Boot profile.
+
+### Keycloak Setup
+
+The Docker Compose configuration includes a Keycloak container that is automatically configured with:
+
+- **Realm**: `catbox`
+- **User**: `catbox` with password `catbox`
+- **Client ID**: `catbox-server`
+- **Client Secret**: `catbox-server-secret`
+
+### Running with Security Enabled
+
+To enable authentication, use the `secure` profile:
+
+```bash
+# Start Keycloak and other infrastructure
+docker compose up -d
+
+# Run catbox-server with security enabled
+mvn spring-boot:run -pl catbox-server -Dspring-boot.run.profiles=azuresql,secure
+```
+
+### Accessing the Application
+
+1. Navigate to `http://localhost:8081`
+2. You will be redirected to Keycloak login page
+3. Login with:
+   - **Username**: `catbox`
+   - **Password**: `catbox`
+4. After successful authentication, you'll be redirected back to the application
+
+### Keycloak Admin Console
+
+Access the Keycloak admin console at `http://localhost:8080`:
+- **Username**: `admin`
+- **Password**: `admin`
+
+From the admin console, you can:
+- Add more users
+- Configure additional clients
+- Manage realm settings
+- View user sessions and events
+
+### Security Configuration
+
+Security is configured via Spring profiles:
+
+- **Default profile**: Security disabled (all requests permitted)
+- **`secure` profile**: OAuth2/OIDC authentication enabled with Keycloak
+
+The configuration allows:
+- Unauthenticated access to health checks (`/actuator/health/**`) and metrics (`/actuator/prometheus`)
+- All other endpoints require authentication
+
+### Customizing Keycloak Configuration
+
+The Keycloak realm configuration is defined in `keycloak/catbox-realm.json`. You can modify this file to:
+- Add additional users
+- Configure roles and permissions
+- Set up client scopes
+- Enable/disable features
+
+After modifying the realm file, restart Keycloak:
+```bash
+docker compose restart keycloak
+```
