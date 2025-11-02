@@ -105,7 +105,7 @@ class OutboxEventPublisherMultiClusterTest {
     }
 
     @Test
-    void allMustSucceed_failsWhenOneCusterFails() throws Exception {
+    void allMustSucceed_failsWhenOneClusterFails() throws Exception {
         // Given
         OutboxEvent event = outboxEventRepository.save(
                 new OutboxEvent("Order", "A1", "OrderCreated", "{}")
