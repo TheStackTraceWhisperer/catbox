@@ -38,9 +38,12 @@ docker compose down
 - **Azure SQL Edge** - Microsoft SQL Server compatible database on port 1433
 
 ### Messaging
-- **Apache Kafka** - Message broker using KRaft mode
+- **Apache Kafka Cluster 1** - Primary message broker using KRaft mode
   - Port 9092 (PLAINTEXT - for backward compatibility)
   - Port 9093 (SASL_SSL - secure with authentication and encryption)
+- **Apache Kafka Cluster 2** - Secondary message broker for multi-cluster testing
+  - Port 9095 (PLAINTEXT)
+- **Kafka UI** - Web interface for managing and monitoring both Kafka clusters on port 8090
 
 ### Identity & Access Management
 - **Keycloak** - OAuth2/OIDC provider on port 8080
@@ -79,6 +82,28 @@ The default realm includes:
 - Realm: `catbox`
 - User: `catbox` / `catbox`
 - Client ID: `catbox-server`
+
+### Kafka UI Configuration
+
+Kafka UI provides a web interface for managing and monitoring both Kafka clusters:
+
+- **Access**: http://localhost:8090
+- **Clusters**:
+  - `cluster-1-primary` - Connected to kafka:9092 (main cluster with PLAINTEXT and SASL_SSL)
+  - `cluster-2-secondary` - Connected to kafka-2:9095 (secondary cluster for multi-cluster testing)
+
+Features:
+- Browse topics, messages, and consumer groups
+- Create and manage topics
+- View cluster metrics and broker information
+- Monitor consumer lag
+- Inspect message schemas
+
+The application is configured to route different event types to different clusters:
+- `OrderCreated` events → cluster-a (kafka:9092)
+- `OrderStatusChanged` events → cluster-c (kafka-2:9095)
+
+This allows testing of the multi-cluster routing behavior in the outbox pattern.
 
 ### Monitoring Configuration
 

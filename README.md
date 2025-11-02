@@ -75,8 +75,11 @@ cd infrastructure && docker compose up -d
 
 This starts:
 - Azure SQL Edge on port 1433
-- Kafka on port 9092 (PLAINTEXT) and 9093 (SASL_SSL)
+- Kafka Cluster 1 on ports 9092 (PLAINTEXT) and 9093 (SASL_SSL)
+- Kafka Cluster 2 on port 9095 (PLAINTEXT) - for multi-cluster testing
+- Kafka UI on port 8090 (web interface for both clusters)
 - Keycloak on port 8080 (identity provider)
+- Monitoring stack (Prometheus, Grafana, Loki)
 
 **Optional - Enable Kafka Security:**
 
@@ -329,7 +332,7 @@ The project includes an `infrastructure` directory with a `compose.yaml` file th
    - Password: Set via `DB_PASSWORD` environment variable
    - Compatible with Azure SQL Database
 
-2. **Apache Kafka** - Message broker using KRaft mode (no Zookeeper)
+2. **Apache Kafka Cluster 1** - Primary message broker using KRaft mode (no Zookeeper)
    - Port 9092 (PLAINTEXT - for backward compatibility)
    - Port 9093 (SASL_SSL - secure with authentication and encryption)
    - SSL/TLS encryption enabled
@@ -337,6 +340,17 @@ The project includes an `infrastructure` directory with a `compose.yaml` file th
    - ACL-based authorization enabled
    - 3 partitions for outbox events
    - Ready for horizontal scaling
+
+3. **Apache Kafka Cluster 2** - Secondary message broker for multi-cluster testing
+   - Port 9095 (PLAINTEXT)
+   - Independent broker for testing multi-cluster routing
+   - 3 partitions for outbox events
+
+4. **Kafka UI** - Web interface for managing both Kafka clusters
+   - Port 8090
+   - Pre-configured with both clusters
+   - Browse topics, messages, and consumer groups
+   - Monitor cluster health and metrics
 
 ### Using Docker Compose
 
