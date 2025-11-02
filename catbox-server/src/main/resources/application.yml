@@ -17,10 +17,19 @@ spring:
     virtual:
       enabled: true
 
+  # --- SSL Bundle Configuration ---
+  ssl:
+    bundle:
+      jks:
+        kafka-client:
+          truststore:
+            location: file:kafka-security/certs/kafka-client-truststore.jks
+            password: changeit
+
   # --- Kafka Configuration ---
   kafka:
     clusters:
-      # --- Cluster A ---
+      # --- Cluster A (PLAINTEXT - for backward compatibility and testing) ---
       cluster-a:
         bootstrap-servers: localhost:9092
         producer:
@@ -29,15 +38,21 @@ spring:
           properties:
             linger.ms: 10
             acks: all
-      # --- Cluster B ---
+      # --- Cluster B (SASL_SSL - secure cluster) ---
       cluster-b:
         bootstrap-servers: localhost:9093
+        ssl:
+          bundle: kafka-client
         producer:
           key-serializer: org.apache.kafka.common.serialization.StringSerializer
           value-serializer: org.apache.kafka.common.serialization.StringSerializer
           properties:
             linger.ms: 10
             acks: all
+            # SASL/SSL Security Configuration
+            security.protocol: SASL_SSL
+            sasl.mechanism: SCRAM-SHA-512
+            sasl.jaas.config: org.apache.kafka.common.security.scram.ScramLoginModule required username="producer" password="producer-secret";
 
 # --- Routing and Factory Configuration ---
 outbox:

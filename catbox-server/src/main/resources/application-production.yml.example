@@ -1,0 +1,207 @@
+# Catbox Production Configuration Example
+# This file demonstrates how to configure SSL/TLS, SASL, and ACLs for production deployment
+
+spring:
+  application:
+    name: catbox
+
+  # --- SSL Bundle Configuration ---
+  # In production, store certificates in a secure location and reference them here
+  ssl:
+    bundle:
+      jks:
+        kafka-client:
+          truststore:
+            # Use absolute path or environment variable
+            location: ${KAFKA_TRUSTSTORE_LOCATION:file:/opt/catbox/security/kafka-client-truststore.jks}
+            password: ${KAFKA_TRUSTSTORE_PASSWORD:changeit}
+          # Optional: Enable mutual TLS by configuring keystore
+          keystore:
+            location: ${KAFKA_KEYSTORE_LOCATION:file:/opt/catbox/security/kafka-client-keystore.jks}
+            password: ${KAFKA_KEYSTORE_PASSWORD:changeit}
+            key-password: ${KAFKA_KEY_PASSWORD:changeit}
+
+  # --- Kafka Cluster Configuration ---
+  kafka:
+    clusters:
+      # Production Cluster with SSL/TLS and SASL
+      production-cluster:
+        bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:kafka-prod.example.com:9093}
+        ssl:
+          bundle: kafka-client
+        producer:
+          key-serializer: org.apache.kafka.common.serialization.StringSerializer
+          value-serializer: org.apache.kafka.common.serialization.StringSerializer
+          properties:
+            # Performance tuning
+            linger.ms: 10
+            acks: all
+            batch.size: 16384
+            buffer.memory: 33554432
+            compression.type: snappy
+            max.in.flight.requests.per.connection: 5
+            
+            # Security Configuration
+            security.protocol: SASL_SSL
+            sasl.mechanism: SCRAM-SHA-512
+            # Use environment variables for credentials - NEVER hardcode in production
+            sasl.jaas.config: org.apache.kafka.common.security.scram.ScramLoginModule required username="${KAFKA_USERNAME:producer}" password="${KAFKA_PASSWORD:producer-secret}";
+            
+            # SSL Configuration
+            ssl.endpoint.identification.algorithm: https
+            ssl.enabled.protocols: TLSv1.3,TLSv1.2
+            
+            # Idempotence for exactly-once semantics
+            enable.idempotence: true
+            
+            # Retry configuration
+            retries: 2147483647
+            max.block.ms: 60000
+            request.timeout.ms: 30000
+            delivery.timeout.ms: 120000
+
+      # Disaster Recovery Cluster (optional)
+      dr-cluster:
+        bootstrap-servers: ${KAFKA_DR_BOOTSTRAP_SERVERS:kafka-dr.example.com:9093}
+        ssl:
+          bundle: kafka-client
+        producer:
+          key-serializer: org.apache.kafka.common.serialization.StringSerializer
+          value-serializer: org.apache.kafka.common.serialization.StringSerializer
+          properties:
+            linger.ms: 10
+            acks: all
+            security.protocol: SASL_SSL
+            sasl.mechanism: SCRAM-SHA-512
+            sasl.jaas.config: org.apache.kafka.common.security.scram.ScramLoginModule required username="${KAFKA_DR_USERNAME:producer}" password="${KAFKA_DR_PASSWORD:producer-secret}";
+
+# --- Outbox Configuration ---
+outbox:
+  routing:
+    rules:
+      # Route order events to production cluster
+      OrderCreated: production-cluster
+      OrderStatusChanged: production-cluster
+      # Route other events to DR cluster for redundancy
+      InventoryEvent: dr-cluster
+
+  kafka:
+    factory:
+      # Resource management
+      idle-eviction-time-minutes: 60
+      eviction-check-ms: 600000  # 10 minutes
+
+  processing:
+    claim-timeout-ms: 300000      # 5 minutes
+    batch-size: 100
+    poll-fixed-delay-ms: 2000     # 2 seconds
+    poll-initial-delay-ms: 10000  # 10 seconds initial delay
+    
+    # Dead letter configuration
+    max-permanent-retries: 5
+    permanent-failure-exceptions:
+      - java.lang.IllegalStateException
+      - org.apache.kafka.common.errors.InvalidTopicException
+      - org.apache.kafka.common.errors.RecordTooLargeException
+      - org.apache.kafka.common.errors.SerializationException
+      - org.apache.kafka.common.errors.AuthenticationException
+      - org.apache.kafka.common.errors.AuthorizationException
+
+# --- Server Configuration ---
+server:
+  port: ${SERVER_PORT:8081}
+  shutdown: graceful
+
+# --- Spring Boot Actuator ---
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,prometheus,info,metrics
+  endpoint:
+    health:
+      probes:
+        enabled: true
+      show-details: when-authorized
+  health:
+    livenessState:
+      enabled: true
+    readinessState:
+      enabled: true
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+
+# --- Logging ---
+logging:
+  structured:
+    format:
+      console: ecs
+  level:
+    com.example.catbox: INFO
+    org.springframework.kafka: WARN
+    org.apache.kafka: WARN
+    # Enable for debugging security issues
+    # org.springframework.kafka: DEBUG
+    # org.apache.kafka: DEBUG
+
+---
+# Production Database Profile
+spring:
+  config:
+    activate:
+      on-profile: production
+
+  datasource:
+    url: ${DATABASE_URL:jdbc:sqlserver://sqlserver-prod.example.com:1433;databaseName=catbox;encrypt=true}
+    driver-class-name: com.microsoft.sqlserver.jdbc.SQLServerDriver
+    username: ${DATABASE_USERNAME:catbox_user}
+    password: ${DATABASE_PASSWORD:changeit}
+    hikari:
+      maximum-pool-size: 20
+      minimum-idle: 5
+      connection-timeout: 30000
+      idle-timeout: 600000
+      max-lifetime: 1800000
+
+  jpa:
+    hibernate:
+      ddl-auto: validate  # Never use 'create' or 'update' in production
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.SQLServerDialect
+        jdbc:
+          batch_size: 20
+        order_inserts: true
+        order_updates: true
+    show-sql: false
+
+# Production-specific logging
+logging:
+  level:
+    com.example.catbox: INFO
+    org.springframework.web: WARN
+    org.hibernate: WARN
+
+---
+# Staging Environment
+spring:
+  config:
+    activate:
+      on-profile: staging
+
+  datasource:
+    url: ${DATABASE_URL:jdbc:sqlserver://sqlserver-staging.example.com:1433;databaseName=catbox;encrypt=true}
+    driver-class-name: com.microsoft.sqlserver.jdbc.SQLServerDriver
+    username: ${DATABASE_USERNAME:catbox_user}
+    password: ${DATABASE_PASSWORD:changeit}
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+
+logging:
+  level:
+    com.example.catbox: DEBUG
