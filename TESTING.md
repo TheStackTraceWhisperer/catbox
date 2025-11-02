@@ -10,6 +10,20 @@ The project now includes comprehensive testing at multiple levels:
 2. **Integration Tests**: Test interaction with external systems (Kafka)
 3. **Context Tests**: Ensure Spring application context loads correctly
 
+## Code Coverage
+
+The project uses JaCoCo Maven Plugin to track code coverage separately for unit tests and integration tests:
+
+- **Unit Test Coverage**: Written to `target/jacoco-ut/`
+  - Includes all tests except `*IT.java` and `*IntegrationTest.java`
+  - Generated during `mvn test` phase
+  
+- **Integration Test Coverage**: Written to `target/jacoco-it/`
+  - Includes tests matching `*IT.java` or `*IntegrationTest.java`
+  - Generated during `mvn verify` phase
+
+Coverage reports are available in HTML, XML, and CSV formats.
+
 ## Running Tests
 
 ### Run All Tests
@@ -28,7 +42,17 @@ mvn test -Dtest=OrderServiceTest
 
 ### Run Tests with Coverage
 ```bash
-mvn clean test jacoco:report
+# Run unit tests with coverage (generates reports in target/jacoco-ut/)
+mvn clean test
+
+# Run both unit and integration tests with coverage
+mvn clean verify
+
+# View unit test coverage report
+open catbox-server/target/jacoco-ut/index.html
+
+# View integration test coverage report  
+open catbox-server/target/jacoco-it/index.html
 ```
 
 ## Test Categories
