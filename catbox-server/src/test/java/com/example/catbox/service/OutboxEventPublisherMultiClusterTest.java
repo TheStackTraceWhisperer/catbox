@@ -9,7 +9,7 @@ import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.kafka.support.SendResult;
 import org.springframework.test.context.DynamicPropertyRegistry;
@@ -67,7 +67,7 @@ class OutboxEventPublisherMultiClusterTest {
     @Autowired
     com.example.catbox.server.service.OutboxEventPublisher publisher;
 
-    @MockBean
+    @MockitoBean
     DynamicKafkaTemplateFactory kafkaTemplateFactory;
 
     @SuppressWarnings("unchecked")
