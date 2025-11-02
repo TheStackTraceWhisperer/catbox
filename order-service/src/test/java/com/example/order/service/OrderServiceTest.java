@@ -28,8 +28,7 @@ class OrderServiceTest {
 
     @Container
     static MSSQLServerContainer<?> mssql = new MSSQLServerContainer<>("mcr.microsoft.com/mssql/server:2022-latest")
-            .acceptLicense()
-            .withPassword("YourStrong@Passw0rd");
+            .acceptLicense();
 
     @DynamicPropertySource
     static void sqlProps(DynamicPropertyRegistry registry) {
