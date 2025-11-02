@@ -46,6 +46,29 @@ services:
       retries: 5
       start_period: 30s
 
+  # Keycloak - Identity and Access Management
+  keycloak:
+    image: quay.io/keycloak/keycloak:latest
+    container_name: catbox-keycloak
+    ports:
+      - "8080:8080"
+    environment:
+      KEYCLOAK_ADMIN: admin
+      KEYCLOAK_ADMIN_PASSWORD: admin
+      KC_HEALTH_ENABLED: true
+    command:
+      - start-dev
+      - --import-realm
+    volumes:
+      - ./keycloak:/opt/keycloak/data/import
+      - keycloak-data:/opt/keycloak/data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health/ready"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 60s
+
   # Prometheus - Metrics collection
   prometheus:
     image: prom/prometheus:latest
@@ -126,6 +149,8 @@ volumes:
   azuresql-data:
     driver: local
   kafka-data:
+    driver: local
+  keycloak-data:
     driver: local
   prometheus-data:
     driver: local
