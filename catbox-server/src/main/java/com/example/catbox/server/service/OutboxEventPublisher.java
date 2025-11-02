@@ -1,8 +1,10 @@
 package com.example.catbox.server.service;
 
+import com.example.catbox.server.config.ClusterPublishingStrategy;
 import com.example.catbox.server.config.DynamicKafkaTemplateFactory;
 import com.example.catbox.server.config.OutboxRoutingConfig;
 import com.example.catbox.server.config.OutboxProcessingConfig;
+import com.example.catbox.server.config.RoutingRule;
 import com.example.catbox.server.metrics.OutboxMetricsService;
 import com.example.catbox.common.entity.OutboxEvent;
 import com.example.catbox.common.repository.OutboxEventRepository;
@@ -14,6 +16,10 @@ import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
 
@@ -92,30 +98,90 @@ public class OutboxEventPublisher {
     }
 
     /**
-     * Publishes the event to the correct Kafka cluster based on routing rules.
+     * Publishes the event to the correct Kafka cluster(s) based on routing rules.
+     * Supports multi-cluster publishing with different strategies.
      */
     private void publishToKafka(OutboxEvent event) throws Exception {
-        // 1. Find the route for this event
-        String clusterKey = routingConfig.getRules().get(event.getEventType());
-        if (clusterKey == null) {
+        // 1. Find the routing rule for this event
+        RoutingRule rule = routingConfig.getRoutingRule(event.getEventType());
+        if (rule == null) {
             // Fatal error: No route defined for this event type.
             throw new IllegalStateException("No Kafka route found for eventType: " + event.getEventType());
         }
-
-        // 2. Get the dynamic KafkaTemplate
-        KafkaTemplate<String, String> template = kafkaTemplateFactory.getTemplate(clusterKey);
 
         String topic = event.getEventType();
         String key = event.getAggregateId(); // Guarantees ordering per aggregate
         String payload = event.getPayload();
 
-        log.debug("Publishing to cluster '{}' , topic '{}' , key '{}'", clusterKey, topic, key);
+        // 2. Publish to all required clusters
+        List<String> requiredClusters = rule.getClusters();
+        List<String> optionalClusters = rule.getOptional();
+        ClusterPublishingStrategy strategy = rule.getStrategy();
 
-        // 3. Send the message with correlation ID header for consumer deduplication
+        log.debug("Publishing to {} required cluster(s) and {} optional cluster(s) with strategy: {}", 
+                  requiredClusters.size(), optionalClusters.size(), strategy);
+
+        // Track successes and failures for required clusters only
+        int requiredSuccessCount = 0;
+        Map<String, Exception> requiredFailures = new HashMap<>();
+
+        // 3. Publish to required clusters
+        for (String clusterKey : requiredClusters) {
+            try {
+                publishToCluster(clusterKey, topic, key, payload, event.getCorrelationId());
+                requiredSuccessCount++;
+                log.debug("Successfully published to required cluster: {}", clusterKey);
+            } catch (Exception e) {
+                requiredFailures.put(clusterKey, e);
+                log.warn("Failed to publish to required cluster '{}': {}", clusterKey, e.getMessage());
+            }
+        }
+
+        // 4. Publish to optional clusters (failures are ignored)
+        for (String clusterKey : optionalClusters) {
+            try {
+                publishToCluster(clusterKey, topic, key, payload, event.getCorrelationId());
+                log.debug("Successfully published to optional cluster: {}", clusterKey);
+            } catch (Exception e) {
+                log.warn("Failed to publish to optional cluster '{}' (ignored): {}", clusterKey, e.getMessage());
+                // Optional cluster failures are ignored
+            }
+        }
+
+        // 5. Evaluate success based on strategy
+        boolean isSuccess = evaluatePublishingSuccess(
+            strategy, 
+            requiredClusters.size(), 
+            requiredSuccessCount, 
+            requiredFailures
+        );
+
+        if (!isSuccess) {
+            // Throw the first exception to trigger retry logic
+            String errorMsg = String.format(
+                "Publishing failed according to strategy %s. Required clusters: %d, Successful: %d, Failed: %s", 
+                strategy, requiredClusters.size(), requiredSuccessCount, requiredFailures.keySet()
+            );
+            
+            // Throw the first failure's exception with enhanced message
+            Exception firstFailure = requiredFailures.values().iterator().next();
+            throw new Exception(errorMsg, firstFailure);
+        }
+    }
+
+    /**
+     * Publishes a message to a single cluster.
+     */
+    private void publishToCluster(String clusterKey, String topic, String key, String payload, String correlationId) 
+            throws Exception {
+        KafkaTemplate<String, String> template = kafkaTemplateFactory.getTemplate(clusterKey);
+        
+        log.debug("Publishing to cluster '{}', topic '{}', key '{}'", clusterKey, topic, key);
+
         try {
             var producerRecord = new org.apache.kafka.clients.producer.ProducerRecord<>(topic, key, payload);
-            if (event.getCorrelationId() != null) {
-                producerRecord.headers().add("correlationId", event.getCorrelationId().getBytes(java.nio.charset.StandardCharsets.UTF_8));
+            if (correlationId != null) {
+                producerRecord.headers().add("correlationId", correlationId.getBytes(java.nio.charset.StandardCharsets.UTF_8));
             }
             template.send(producerRecord).get(); // .get() will throw if the send fails
         } catch (InterruptedException e) {
@@ -124,6 +190,35 @@ public class OutboxEventPublisher {
         } catch (ExecutionException e) {
             // Unwrap and throw the real, actionable Kafka exception
             throw (Exception) e.getCause();
+        }
+    }
+
+    /**
+     * Evaluates whether publishing was successful based on the strategy.
+     * 
+     * @param strategy The publishing strategy
+     * @param totalRequired Number of required clusters
+     * @param successCount Number of successful publishes to required clusters
+     * @param failures Map of failed required cluster keys to exceptions
+     * @return true if publishing meets the success criteria
+     */
+    private boolean evaluatePublishingSuccess(
+            ClusterPublishingStrategy strategy,
+            int totalRequired,
+            int successCount,
+            Map<String, Exception> failures) {
+        
+        switch (strategy) {
+            case AT_LEAST_ONE:
+                // Success if at least one required cluster succeeded
+                return successCount > 0;
+                
+            case ALL_MUST_SUCCEED:
+                // Success if all required clusters succeeded (no failures)
+                return failures.isEmpty();
+                
+            default:
+                throw new IllegalArgumentException("Unknown strategy: " + strategy);
         }
     }
 
