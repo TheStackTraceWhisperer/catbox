@@ -181,8 +181,6 @@ Sophisticated failure handling with dead letter queue pattern:
 
 ### 1.4 Dynamic Kafka Routing ✅ INNOVATIVE
 
-### 1.4 Dynamic Kafka Routing ✅ INNOVATIVE
-
 The `DynamicKafkaTemplateFactory` with advanced multi-cluster routing is a standout feature:
 
 **Core Features:**
