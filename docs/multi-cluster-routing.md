@@ -4,11 +4,11 @@ This document describes the advanced multi-cluster routing capabilities in the C
 
 ## Overview
 
-The outbox pattern supports flexible multi-cluster routing with various publishing strategies. This enables scenarios like geographic replication, high availability, and zero-downtime migrations.
+The outbox publisher supports advanced routing rules to publish a single event to multiple Kafka clusters with different success strategies. This is configured under the `outbox.routing.rules` key in `application.yml`.
 
 ## Basic Single-Cluster Routing
 
-The simplest configuration routes events to a single Kafka cluster:
+The simplest configuration routes events to a single Kafka cluster. For simple routing, you can provide a string value representing the target cluster key. This is the default and backward-compatible format.
 
 ```yaml
 outbox:
@@ -20,20 +20,23 @@ outbox:
 
 This is backward compatible with simple outbox implementations.
 
-## Multi-Cluster Publishing Strategies
+## Advanced Multi-Cluster Publishing Strategies
 
-### All Must Succeed Strategy
+For more complex scenarios, you can define a rule object with `clusters`, `strategy`, and `optional` keys.
 
-Events are marked as sent **only if ALL required clusters** succeed. This ensures complete consistency across all clusters.
+### Strategy 1: ALL_MUST_SUCCEED (Default)
+
+The event is only marked as "sent" if publishing succeeds to **all** clusters listed in the `clusters` list. This ensures complete consistency across all clusters.
 
 **Configuration:**
 ```yaml
 outbox:
   routing:
     rules:
-      OrderCreated:
-        clusters: [cluster-a, cluster-b, cluster-c]
-        strategy: all-must-succeed
+      # This event must be published to both cluster-a and cluster-b
+      InventoryEvent:
+        clusters: [cluster-a, cluster-b]
+        strategy: all-must-succeed 
 ```
 
 **Use Cases:**
@@ -47,17 +50,19 @@ outbox:
 - Event remains in outbox for retry
 - All clusters will receive the event again on retry
 
-### At Least One Strategy
+### Strategy 2: AT_LEAST_ONE
 
-Events are marked as sent if **ANY cluster** succeeds. This prioritizes availability over consistency.
+The event is marked as "sent" if publishing succeeds to **at least one** of the clusters in the `clusters` list. This is useful for high-availability geographic replication. This prioritizes availability over consistency.
 
 **Configuration:**
 ```yaml
 outbox:
   routing:
     rules:
+      # This event will be sent to both, but is considered "successful"
+      # if it reaches either the east or west region.
       PaymentEvent:
-        clusters: [east-region, west-region, north-region]
+        clusters: [cluster-east, cluster-west]
         strategy: at-least-one
 ```
 
@@ -73,15 +78,18 @@ outbox:
 - Failed clusters won't receive the event (no retry for that event)
 - Consider implementing consumer-side deduplication
 
-### Optional Clusters Strategy
+### Strategy 3: optional Clusters
 
-Some clusters are **required** while others are **optional**. Optional cluster failures don't affect overall success.
+You can specify `optional` clusters. Publishing failures to these clusters are logged but **ignored** and will not prevent the event from being marked as "sent". This is only valid when the `strategy` is `ALL_MUST_SUCCEED`. Some clusters are **required** while others are **optional**. Optional cluster failures don't affect overall success.
 
 **Configuration:**
 ```yaml
 outbox:
   routing:
     rules:
+      # This event MUST go to the primary-cluster.
+      # It will also *try* to go to analytics and audit-log,
+      # but failures on those are ignored.
       NotificationEvent:
         clusters: [primary-cluster]        # Required
         optional: [analytics, audit-log]   # Optional - failures ignored
@@ -99,6 +107,15 @@ outbox:
 - Optional clusters are attempted but failures are ignored
 - Event is marked as sent if required clusters succeed
 - Useful for non-critical downstream systems
+
+### Benefits of Multi-Cluster Routing
+
+This flexibility enables:
+
+- **Geographic replication**: Publish to multiple regional clusters.
+- **High availability**: Mark as "sent" if any cluster succeeds.
+- **Best-effort delivery**: Use `optional` for non-critical systems like analytics or logging.
+- **Zero-downtime migrations**: Route to both old and new clusters during a migration.
 
 ## Cluster Configuration
 

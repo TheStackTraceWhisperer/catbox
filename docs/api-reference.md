@@ -210,6 +210,32 @@ Manually mark a sent event for reprocessing.
 }
 ```
 
+## Admin Web UI
+
+The `catbox-server` also hosts a simple Thymeleaf-based web interface for monitoring and administrative tasks.
+
+**URL:** `http://localhost:8081/admin`
+
+### Features
+
+- **View all outbox events** in a paginated table
+- **Filter events** by:
+  - `eventType` - Filter by specific event types
+  - `aggregateType` - Filter by aggregate type
+  - `aggregateId` - Filter by aggregate ID
+  - `pendingOnly` - Show only unsent events
+- **Sort** by various columns (ID, event type, created date, sent date)
+- **Manually mark events** - Change a `Sent` event back to `Unsent` to trigger reprocessing
+
+### Accessing the Admin UI
+
+1. Ensure the catbox-server is running on port 8081
+2. Navigate to `http://localhost:8081/admin` in your web browser
+3. Use the filter and sort controls to find specific events
+4. Click on an event to see details or mark it for reprocessing
+
+The Admin UI provides a convenient way to monitor the outbox events without using API calls or database queries.
+
 ## Health and Metrics Endpoints
 
 Both services expose Spring Boot Actuator endpoints for health checks and metrics.
