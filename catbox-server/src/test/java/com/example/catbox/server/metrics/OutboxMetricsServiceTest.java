@@ -29,7 +29,8 @@ class OutboxMetricsServiceTest {
 
     @Container
     static MSSQLServerContainer<?> mssql = new MSSQLServerContainer<>("mcr.microsoft.com/mssql/server:2022-latest")
-            .acceptLicense();
+            .acceptLicense()
+            .withReuse(true);
 
     @DynamicPropertySource
     static void sqlProps(DynamicPropertyRegistry registry) {
