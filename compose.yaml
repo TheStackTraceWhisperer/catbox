@@ -11,12 +11,20 @@ services:
       MSSQL_PID: "Developer"
     volumes:
       - azuresql-data:/var/opt/mssql
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+      - ./docker-entrypoint-initdb.sh:/docker-entrypoint-initdb.sh:ro
+    command: >
+      /bin/bash -c "
+      /opt/mssql/bin/sqlservr &
+      /docker-entrypoint-initdb.sh
+      wait
+      "
     healthcheck:
       test: /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P "${DB_PASSWORD}" -Q "SELECT 1" -C -No
       interval: 10s
       timeout: 5s
       retries: 5
-      start_period: 30s
+      start_period: 40s
 
   # Kafka with KRaft mode (no Zookeeper required)
   # Now configured with SSL/TLS, SASL authentication, and ACLs
