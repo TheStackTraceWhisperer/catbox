@@ -1,0 +1,9 @@
+# JMeter test results and generated reports
+*.jtl
+*.log
+*_report_*/
+jmeter.log
+
+# Keep the directory but ignore contents
+*
+!.gitignore
