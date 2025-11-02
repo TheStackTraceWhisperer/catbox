@@ -89,7 +89,7 @@ For detailed architecture information, see [Architecture Documentation](docs/arc
 ### Build the Application
 
 ```bash
-mvn clean install
+mvn clean verify
 ```
 
 ### Run Tests
