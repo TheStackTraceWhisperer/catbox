@@ -18,7 +18,7 @@ public class OrderService {
     private final OrderRepository orderRepository;
     private final OutboxClient outboxClient;
 
-    // (Optional but recommended: define payload as inner records for type safety)
+    // Payload record definitions for outbox events
     private record OrderCreatedPayload(Long orderId, String customerName, String productName, BigDecimal amount, String status) {}
     private record OrderStatusChangedPayload(Long orderId, String oldStatus, String newStatus) {}
 

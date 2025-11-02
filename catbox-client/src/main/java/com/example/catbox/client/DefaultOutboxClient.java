@@ -34,7 +34,7 @@ class DefaultOutboxClient implements OutboxClient {
             outboxEventRepository.save(event);
             
         } catch (JsonProcessingException e) {
-            // This is a fatal error in the service, so we use an unchecked exception
+            // Fatal serialization error - propagate as unchecked exception
             throw new RuntimeException("Failed to serialize outbox event payload for: " + eventType, e);
         }
     }
