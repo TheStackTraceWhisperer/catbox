@@ -3,6 +3,7 @@ package com.example.order.service;
 import com.example.catbox.client.OutboxClient;
 import com.example.order.dto.CreateOrderRequest;
 import com.example.order.entity.Order;
+import com.example.order.exception.OrderNotFoundException;
 import com.example.order.repository.OrderRepository;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -55,7 +56,7 @@ public class OrderService {
     @Transactional
     public Order updateOrderStatus(Long orderId, String newStatus) {
         Order order = orderRepository.findById(orderId)
-                .orElseThrow(() -> new RuntimeException("Order not found: " + orderId));
+                .orElseThrow(() -> new OrderNotFoundException(orderId));
         String oldStatus = order.getStatus();
         order.setStatus(newStatus);
         Order updatedOrder = orderRepository.save(order);
@@ -82,6 +83,6 @@ public class OrderService {
 
     public Order getOrderById(Long id) {
         return orderRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Order not found: " + id));
+                .orElseThrow(() -> new OrderNotFoundException(id));
     }
 }

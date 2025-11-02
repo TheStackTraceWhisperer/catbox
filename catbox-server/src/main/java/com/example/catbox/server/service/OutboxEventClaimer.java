@@ -30,8 +30,8 @@ public class OutboxEventClaimer {
         LocalDateTime now = LocalDateTime.now();
         List<OutboxEvent> events = outboxEventRepository.claimPendingEvents(now, processingConfig.getBatchSize());
 
-        // Set claim lease using millisecond resolution
-        LocalDateTime claimUntil = now.plusNanos(processingConfig.getClaimTimeoutMs() * 1_000_000L);
+        // Set claim lease using Duration
+        LocalDateTime claimUntil = now.plus(processingConfig.getClaimTimeout());
         for (OutboxEvent event : events) {
             event.setInProgressUntil(claimUntil);
         }

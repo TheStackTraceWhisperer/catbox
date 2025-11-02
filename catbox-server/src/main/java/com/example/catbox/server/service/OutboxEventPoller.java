@@ -25,8 +25,8 @@ public class OutboxEventPoller {
      * Polls for pending events.
      */
     @Scheduled(
-        fixedDelayString = "${outbox.processing.poll-fixed-delay-ms:2000}",
-        initialDelayString = "${outbox.processing.poll-initial-delay-ms:10000}"
+        fixedDelayString = "${outbox.processing.poll-fixed-delay:2s}",
+        initialDelayString = "${outbox.processing.poll-initial-delay:10s}"
     )
     public void pollAndPublish() {
         List<OutboxEvent> claimedEvents = claimer.claimEvents();
