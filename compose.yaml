@@ -43,7 +43,8 @@ services:
       KAFKA_SSL_KEY_PASSWORD: changeit
       KAFKA_SSL_TRUSTSTORE_LOCATION: /etc/kafka/secrets/kafka-truststore.jks
       KAFKA_SSL_TRUSTSTORE_PASSWORD: changeit
-      KAFKA_SSL_CLIENT_AUTH: required
+      # Use 'requested' for development (allows fallback), 'required' for production (enforces mTLS)
+      KAFKA_SSL_CLIENT_AUTH: requested
       
       # SASL Configuration
       KAFKA_SASL_ENABLED_MECHANISMS: SCRAM-SHA-512

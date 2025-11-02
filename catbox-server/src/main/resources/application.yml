@@ -52,6 +52,8 @@ spring:
             # SASL/SSL Security Configuration
             security.protocol: SASL_SSL
             sasl.mechanism: SCRAM-SHA-512
+            # IMPORTANT: For production, use environment variables for credentials
+            # Example: username="${KAFKA_USERNAME:producer}" password="${KAFKA_PASSWORD:producer-secret}"
             sasl.jaas.config: org.apache.kafka.common.security.scram.ScramLoginModule required username="producer" password="producer-secret";
 
 # --- Routing and Factory Configuration ---

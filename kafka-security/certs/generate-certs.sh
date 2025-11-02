@@ -115,6 +115,8 @@ key.password=${KEY_PASSWORD}
 EOL
 
 # Create a JAAS configuration file for SASL
+# IMPORTANT: These credentials are for DEVELOPMENT ONLY
+# In production, use environment variables or secure credential management
 cat > kafka_server_jaas.conf << EOL
 KafkaServer {
     org.apache.kafka.common.security.scram.ScramLoginModule required
@@ -127,6 +129,7 @@ KafkaServer {
 EOL
 
 # Create client JAAS configuration
+# IMPORTANT: These credentials are for DEVELOPMENT ONLY
 cat > kafka_client_jaas.conf << EOL
 KafkaClient {
     org.apache.kafka.common.security.scram.ScramLoginModule required

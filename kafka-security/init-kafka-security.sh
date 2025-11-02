@@ -119,6 +119,9 @@ docker exec catbox-kafka kafka-acls.sh \
   --topic OrderStatusChanged
 
 # Consumer group ACLs
+# NOTE: Using wildcard '*' for development convenience
+# PRODUCTION: Use specific consumer group names for better security
+# Example: --group order-consumer-group
 docker exec catbox-kafka kafka-acls.sh \
   --bootstrap-server localhost:9092 \
   --add \
