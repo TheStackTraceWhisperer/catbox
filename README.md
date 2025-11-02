@@ -75,6 +75,24 @@ docker compose up -d
 
 This starts:
 - Azure SQL Edge on port 1433
+- Kafka on port 9092 (PLAINTEXT) and 9093 (SASL_SSL)
+- Keycloak on port 8080 (identity provider)
+
+**Optional - Enable Kafka Security:**
+
+To use secure Kafka connections with SSL/TLS and SASL authentication:
+
+1. Generate SSL certificates (first-time only):
+   ```bash
+   cd kafka-security/certs && ./generate-certs.sh && cd ../..
+   ```
+
+2. After Kafka starts, initialize security configuration:
+   ```bash
+   ./kafka-security/init-kafka-security.sh
+   ```
+
+See the [Security Configuration](#security-configuration) section for details.
 - Kafka on port 9092
 - Keycloak on port 8080 (identity provider)
 
@@ -311,7 +329,11 @@ The project includes a `compose.yaml` file that sets up:
    - Compatible with Azure SQL Database
 
 2. **Apache Kafka** - Message broker using KRaft mode (no Zookeeper)
-   - Port: 9092
+   - Port 9092 (PLAINTEXT - for backward compatibility)
+   - Port 9093 (SASL_SSL - secure with authentication and encryption)
+   - SSL/TLS encryption enabled
+   - SASL SCRAM-SHA-512 authentication configured
+   - ACL-based authorization enabled
    - 3 partitions for outbox events
    - Ready for horizontal scaling
 
@@ -364,6 +386,148 @@ Active profiles: azuresql
 Both applications will automatically use:
 - Database: Azure SQL Edge
 - Kafka: localhost:9092 (catbox-server only)
+
+## Security Configuration
+
+The project supports comprehensive Kafka security features including SSL/TLS encryption, SASL authentication, and ACL-based access control.
+
+### Security Features
+
+1. **SSL/TLS Encryption** - Encrypts data in transit between clients and Kafka brokers
+2. **SASL Authentication (SCRAM-SHA-512)** - Authenticates clients before allowing connections
+3. **ACLs (Access Control Lists)** - Controls which users can access which topics
+
+### Quick Start with Security
+
+The Kafka broker is configured with two listeners:
+- **Port 9092** - PLAINTEXT (for backward compatibility and testing)
+- **Port 9093** - SASL_SSL (secure with authentication and encryption)
+
+#### 1. Generate SSL Certificates
+
+First-time setup requires generating SSL certificates:
+
+```bash
+cd kafka-security/certs
+./generate-certs.sh
+cd ../..
+```
+
+This creates:
+- Self-signed Certificate Authority (CA)
+- Kafka broker keystore with signed certificate
+- Client truststore for secure connections
+- JAAS configuration files for SASL authentication
+
+#### 2. Start Kafka with Security Enabled
+
+```bash
+docker compose up -d kafka
+```
+
+The Kafka container will start with:
+- SSL/TLS enabled on port 9093
+- SASL SCRAM-SHA-512 authentication configured
+- ACL authorization enabled (deny by default)
+
+#### 3. Initialize Security Configuration
+
+After Kafka starts, run the initialization script to create SASL users and configure ACLs:
+
+```bash
+./kafka-security/init-kafka-security.sh
+```
+
+This script:
+- Creates SCRAM-SHA-512 credentials for admin, producer, and consumer users
+- Creates test topics (OrderCreated, OrderStatusChanged)
+- Configures ACLs to grant appropriate permissions
+
+#### 4. Using Secure Kafka Connection
+
+The application is pre-configured to use the secure cluster (cluster-b) on port 9093:
+
+```yaml
+kafka:
+  clusters:
+    cluster-b:
+      bootstrap-servers: localhost:9093
+      ssl:
+        bundle: kafka-client
+      properties:
+        security.protocol: SASL_SSL
+        sasl.mechanism: SCRAM-SHA-512
+        sasl.jaas.config: ...username="producer" password="producer-secret"...
+```
+
+To route events to the secure cluster, update the routing rules in `application.yml`:
+
+```yaml
+outbox:
+  routing:
+    rules:
+      OrderCreated: cluster-b        # Routes to secure cluster
+      OrderStatusChanged: cluster-b  # Routes to secure cluster
+```
+
+### Security Credentials (Development)
+
+**IMPORTANT**: These are development credentials. In production, use strong passwords and secure credential management.
+
+**SASL Users:**
+- Admin: `admin` / `admin-secret` (superuser - full access)
+- Producer: `producer` / `producer-secret` (write access to order topics)
+- Consumer: `consumer` / `consumer-secret` (read access to order topics)
+
+**Keystore/Truststore Passwords:**
+- All passwords: `changeit`
+
+### Production Deployment
+
+For production, refer to:
+- `kafka-security/README.md` - Detailed security documentation
+- `catbox-server/src/main/resources/application-production.yml.example` - Production configuration template
+
+**Production Security Checklist:**
+1. ✅ Use CA-signed certificates (not self-signed)
+2. ✅ Store credentials in environment variables or secret management tools
+3. ✅ Use strong passwords (not default "changeit")
+4. ✅ Enable mutual TLS (mTLS) for additional security
+5. ✅ Configure proper ACLs based on principle of least privilege
+6. ✅ Enable Kafka audit logging
+7. ✅ Rotate credentials regularly
+8. ✅ Use network segmentation and firewalls
+
+### Verifying Security Configuration
+
+Check SCRAM users:
+```bash
+docker exec catbox-kafka kafka-configs.sh \
+  --bootstrap-server localhost:9092 \
+  --describe \
+  --entity-type users
+```
+
+List configured ACLs:
+```bash
+docker exec catbox-kafka kafka-acls.sh \
+  --bootstrap-server localhost:9092 \
+  --list
+```
+
+### Troubleshooting
+
+**SSL Handshake Failures:**
+- Verify truststore path is correct in application.yml
+- Check certificate validity: `keytool -list -v -keystore kafka-security/certs/kafka-client-truststore.jks`
+
+**SASL Authentication Failures:**
+- Verify username/password in JAAS configuration
+- Check that SCRAM users were created: see "Verifying Security Configuration" above
+
+**ACL Permission Denied:**
+- List ACLs to verify user has proper permissions
+- Ensure super users are configured correctly in compose.yaml
 
 ## License
 

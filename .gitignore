@@ -32,3 +32,20 @@ Thumbs.db
 *.tmp
 *.swp
 *~
+
+# Security - DO NOT COMMIT THESE FILES
+# Exclude actual production config files (keep .example files)
+**/application-production.yml
+**/application-prod.yml
+# Exclude keystores and private keys (but keep the generated test certs in kafka-security/certs)
+*.jks
+*.p12
+!kafka-security/certs/*.jks
+# Exclude credential files
+**/credentials.properties
+**/secrets.properties
+# Exclude private keys and certificates (keep the test CA cert)
+*.key
+*.crt
+!kafka-security/certs/ca-cert.pem
+
