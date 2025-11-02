@@ -13,14 +13,16 @@ if ! command -v docker &> /dev/null; then
     exit 1
 fi
 
-# Navigate to project root
+# Navigate to project root (one level above jmeter-tests)
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
+PROJECT_ROOT="$(dirname "$(dirname "$SCRIPT_DIR")")"
 cd "$PROJECT_ROOT"
 
 echo ""
 echo "1. Starting Docker Compose services (Azure SQL Edge & Kafka)..."
+pushd infrastructure > /dev/null
 docker compose up -d
+popd > /dev/null
 
 echo ""
 echo "2. Waiting for services to be healthy..."
@@ -29,7 +31,9 @@ sleep 10
 # Check if services are running
 echo ""
 echo "3. Checking service health..."
+pushd infrastructure > /dev/null
 docker compose ps
+popd > /dev/null
 
 echo ""
 echo "=================================="

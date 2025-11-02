@@ -44,7 +44,7 @@ kafka-security/
 To regenerate certificates (if needed):
 
 ```bash
-cd kafka-security/certs
+cd certs
 ./generate-certs.sh
 ```
 
@@ -79,7 +79,7 @@ spring:
       jks:
         kafka-client:
           truststore:
-            location: file:kafka-security/certs/kafka-client-truststore.jks
+            location: file:infrastructure/kafka-security/certs/kafka-client-truststore.jks
             password: changeit
 
 kafka:
