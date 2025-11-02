@@ -60,10 +60,27 @@ spring:
 outbox:
   routing:
     rules:
-      # map: eventType -> cluster-key
+      # Simple single-cluster routing (backward compatible)
       OrderCreated: cluster-a
       OrderStatusChanged: cluster-a
-      # e.g., InventoryEvent: cluster-b
+      
+      # Multi-cluster routing examples:
+      
+      # Example 1: Publish to multiple clusters, all must succeed
+      # InventoryEvent:
+      #   clusters: [cluster-a, cluster-b]
+      #   strategy: all-must-succeed
+      
+      # Example 2: Publish to multiple clusters, at least one must succeed
+      # PaymentEvent:
+      #   clusters: [cluster-a, cluster-b]
+      #   strategy: at-least-one
+      
+      # Example 3: Required and optional clusters
+      # NotificationEvent:
+      #   clusters: [cluster-a]          # Required cluster(s)
+      #   optional: [cluster-b, cluster-c]  # Optional cluster(s), failures ignored
+      #   strategy: all-must-succeed     # Applies only to required clusters
 
   kafka:
     factory:

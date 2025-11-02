@@ -470,6 +470,61 @@ outbox:
       OrderStatusChanged: cluster-b  # Routes to secure cluster
 ```
 
+### Multi-Cluster Routing
+
+The outbox pattern supports advanced multi-cluster routing with flexible strategies:
+
+#### Simple Single-Cluster Routing (Backward Compatible)
+
+```yaml
+outbox:
+  routing:
+    rules:
+      OrderCreated: cluster-a
+```
+
+#### Multi-Cluster Publishing Strategies
+
+**All Must Succeed**: Event is marked as sent only if ALL required clusters succeed
+
+```yaml
+outbox:
+  routing:
+    rules:
+      OrderCreated:
+        clusters: [cluster-a, cluster-b, cluster-c]
+        strategy: all-must-succeed
+```
+
+**At Least One**: Event is marked as sent if ANY cluster succeeds (useful for high availability)
+
+```yaml
+outbox:
+  routing:
+    rules:
+      PaymentEvent:
+        clusters: [east-region, west-region, north-region]
+        strategy: at-least-one
+```
+
+**Optional Clusters**: Some clusters can fail without affecting overall success
+
+```yaml
+outbox:
+  routing:
+    rules:
+      NotificationEvent:
+        clusters: [primary-cluster]        # Required
+        optional: [analytics, audit-log]   # Optional - failures ignored
+        strategy: all-must-succeed         # Applies only to required clusters
+```
+
+This enables:
+- **Geographic replication**: Publish to multiple regional clusters
+- **High availability**: Mark as sent if any cluster succeeds
+- **Best-effort delivery**: Required + optional clusters for primary and secondary systems
+- **Zero-downtime migrations**: Route to both old and new clusters during migration
+
 ### Security Credentials (Development)
 
 **IMPORTANT**: These are development credentials. In production, use strong passwords and secure credential management.
