@@ -88,7 +88,27 @@ The original `compose.yaml` configured Keycloak to use port 8080, which conflict
 
 ---
 
-## Missing .env File Documentation (RESOLVED)
+## Database Not Created Automatically (RESOLVED)
+
+**Status:** Resolved  
+**Fixed in:** This PR
+
+### Description
+
+The application configuration uses `hibernate.ddl-auto: update` which should create tables but not the database itself. Azure SQL Edge requires the database to exist before Hibernate can create tables.
+
+### Resolution
+
+- Added database creation step to README.md Quick Start section
+- Documents the `CREATE DATABASE catbox` command
+- Users must create the database before starting the applications
+
+### Alternative Approaches
+
+For a fully automated setup, consider:
+1. Adding an init script to the Docker Compose configuration that creates the database
+2. Using Flyway or Liquibase for database migrations which can handle database creation
+3. Changing to H2 in-memory database for local development (already supported in non-azuresql profile)
 
 **Status:** Resolved  
 **Fixed in:** This PR

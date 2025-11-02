@@ -94,6 +94,17 @@ This starts:
 - Grafana on port 3000 (dashboards)
 - Loki on port 3100 (log aggregation)
 
+**Create the database:**
+
+The applications require a database named `catbox`. Create it manually:
+
+```bash
+# Create the catbox database
+docker exec catbox-azuresql /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P "${DB_PASSWORD}" -Q "CREATE DATABASE catbox" -C -No
+```
+
+Or if you prefer, connect using your favorite SQL client to `localhost:1433` with username `sa` and the password from your `.env` file, then run `CREATE DATABASE catbox`.
+
 **Optional - Enable Kafka Security:**
 
 ⚠️ **Known Issue:** The Apache Kafka Docker image currently has compatibility issues with the SSL/SASL configuration in `compose.yaml`. For testing purposes, you may need to use a simplified configuration (PLAINTEXT only) or use Kafka in a different container setup.
