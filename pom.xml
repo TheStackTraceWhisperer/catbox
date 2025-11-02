@@ -30,6 +30,7 @@
         <module>catbox-client</module>
         <module>catbox-server</module>
         <module>order-service</module>
+        <module>coverage-report</module>
         <module>catbox-archunit</module>
     </modules>
 

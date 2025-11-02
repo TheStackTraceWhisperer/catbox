@@ -233,13 +233,36 @@ Use idempotent producer settings and consumer deduplication to handle at-least-o
 
 ## Testing
 
-The project includes comprehensive unit and integration tests.
+The project includes comprehensive unit and integration tests with code coverage reporting.
 
 ### Run All Tests
 
 ```bash
 mvn test
 ```
+
+### Generate Coverage Reports
+
+To generate code coverage reports:
+
+```bash
+# Run tests and generate coverage
+mvn clean verify
+
+# View aggregate coverage report (all modules combined)
+open coverage-report/target/site/jacoco-aggregate/index.html
+
+# Or view individual module reports
+open order-service/target/jacoco-ut/index.html
+open catbox-server/target/jacoco-ut/index.html
+```
+
+Coverage reports are generated using [JaCoCo](https://www.jacoco.org/) and include:
+- **Unit Test Coverage**: Each module's `target/jacoco-ut/` directory
+- **Integration Test Coverage**: Each module's `target/jacoco-it/` directory  
+- **Aggregate Report**: Combined coverage across all modules in `coverage-report/target/site/jacoco-aggregate/`
+
+The GitHub Actions CI workflow automatically generates and uploads coverage reports as build artifacts for every PR and commit.
 
 ### Test Coverage
 
@@ -276,6 +299,7 @@ docker compose down
 - **Spring Kafka Test** with EmbeddedKafka for integration tests
 - **Testcontainers** for containerized testing support
 - **Spring Boot Test** for application context testing
+- **JaCoCo** for code coverage analysis
 
 ### Verbose Test Logging
 
@@ -325,6 +349,7 @@ catbox-parent
 ├── catbox-client     # Simple client for creating events (used by order-service)
 ├── catbox-server     # Standalone poller/publisher application (runs on 8081)
 ├── order-service     # Business service application (runs on 8080)
+├── coverage-report   # Aggregated test coverage reports
 ├── jmeter-tests      # JMeter load and stress test suites
 ├── infrastructure    # Docker Compose and infrastructure configurations
 │   ├── compose.yaml     # Docker Compose for infrastructure services
