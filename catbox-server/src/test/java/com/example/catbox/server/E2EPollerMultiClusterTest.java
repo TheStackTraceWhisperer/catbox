@@ -76,8 +76,8 @@ class E2EPollerMultiClusterTest {
         registry.add("outbox.routing.rules.InventoryAdjusted", () -> "cluster-b");
         
         // Speed up polling for tests
-        registry.add("outbox.processing.poll-fixed-delay-ms", () -> "500");
-        registry.add("outbox.processing.poll-initial-delay-ms", () -> "1000");
+        registry.add("outbox.processing.poll-fixed-delay", () -> "500ms");
+        registry.add("outbox.processing.poll-initial-delay", () -> "1s");
     }
 
     @Autowired
