@@ -66,8 +66,18 @@ public class OutboxRoutingConfig {
             rule.setClusters((java.util.List<String>) clustersObj);
         } else if (clustersObj instanceof String) {
             rule.setClusters(java.util.List.of((String) clustersObj));
+        } else if (clustersObj instanceof Map) {
+            // Handle indexed properties like clusters[0], clusters[1] from DynamicPropertyRegistry
+            // These come in as Map<String, Object> with keys "0", "1", etc.
+            Map<String, Object> clusterMap = (Map<String, Object>) clustersObj;
+            java.util.List<String> clusterList = new java.util.ArrayList<>();
+            // Sort by index and extract values
+            clusterMap.keySet().stream()
+                .sorted((a, b) -> Integer.compare(Integer.parseInt(a), Integer.parseInt(b)))
+                .forEach(key -> clusterList.add((String) clusterMap.get(key)));
+            rule.setClusters(clusterList);
         } else if (clustersObj != null) {
-            throw new IllegalArgumentException("Invalid 'clusters' format. Expected List or String.");
+            throw new IllegalArgumentException("Invalid 'clusters' format. Expected List, String, or Map, got: " + clustersObj.getClass().getName());
         }
         
         // Parse optional clusters
@@ -76,6 +86,14 @@ public class OutboxRoutingConfig {
             rule.setOptional((java.util.List<String>) optionalObj);
         } else if (optionalObj instanceof String) {
             rule.setOptional(java.util.List.of((String) optionalObj));
+        } else if (optionalObj instanceof Map) {
+            // Handle indexed properties like optional[0], optional[1]
+            Map<String, Object> optionalMap = (Map<String, Object>) optionalObj;
+            java.util.List<String> optionalList = new java.util.ArrayList<>();
+            optionalMap.keySet().stream()
+                .sorted((a, b) -> Integer.compare(Integer.parseInt(a), Integer.parseInt(b)))
+                .forEach(key -> optionalList.add((String) optionalMap.get(key)));
+            rule.setOptional(optionalList);
         }
         
         // Parse strategy

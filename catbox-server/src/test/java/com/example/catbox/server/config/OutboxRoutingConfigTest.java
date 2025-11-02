@@ -128,6 +128,32 @@ class OutboxRoutingConfigTest {
     }
 
     @Test
+    void getRoutingRule_handlesIndexedPropertiesFromDynamicRegistry() {
+        // Given - Simulates what Spring Boot does when loading properties like:
+        // outbox.routing.rules.OrderCreated.clusters[0]=cluster-a
+        // outbox.routing.rules.OrderCreated.clusters[1]=cluster-b
+        OutboxRoutingConfig config = new OutboxRoutingConfig();
+        Map<String, Object> clustersMap = new java.util.LinkedHashMap<>();
+        clustersMap.put("0", "cluster-a");
+        clustersMap.put("1", "cluster-b");
+        
+        config.setRules(Map.of(
+            "OrderCreated", Map.of(
+                "clusters", clustersMap,
+                "strategy", "all-must-succeed"
+            )
+        ));
+        
+        // When
+        RoutingRule rule = config.getRoutingRule("OrderCreated");
+        
+        // Then
+        assertThat(rule).isNotNull();
+        assertThat(rule.getClusters()).containsExactly("cluster-a", "cluster-b");
+        assertThat(rule.getStrategy()).isEqualTo(ClusterPublishingStrategy.ALL_MUST_SUCCEED);
+    }
+
+    @Test
     void getRoutingRule_returnsNullForUnknownEventType() {
         // Given
         OutboxRoutingConfig config = new OutboxRoutingConfig();
