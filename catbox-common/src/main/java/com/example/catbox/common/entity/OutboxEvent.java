@@ -26,6 +26,9 @@ public class OutboxEvent {
     @Column(nullable = false)
     private String eventType;
 
+    @Column(unique = true)
+    private String correlationId;
+
     @Column(nullable = false, columnDefinition = "TEXT")
     private String payload;
 
@@ -54,6 +57,15 @@ public class OutboxEvent {
         this.aggregateType = aggregateType;
         this.aggregateId = aggregateId;
         this.eventType = eventType;
+        this.payload = payload;
+        this.permanentFailureCount = 0;
+    }
+
+    public OutboxEvent(String aggregateType, String aggregateId, String eventType, String correlationId, String payload) {
+        this.aggregateType = aggregateType;
+        this.aggregateId = aggregateId;
+        this.eventType = eventType;
+        this.correlationId = correlationId;
         this.payload = payload;
         this.permanentFailureCount = 0;
     }

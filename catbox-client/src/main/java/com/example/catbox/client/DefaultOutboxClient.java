@@ -19,4 +19,10 @@ class DefaultOutboxClient implements OutboxClient {
         OutboxEvent event = new OutboxEvent(aggregateType, aggregateId, eventType, payload);
         outboxEventRepository.save(event);
     }
+
+    @Override
+    public void createEvent(String aggregateType, String aggregateId, String eventType, String correlationId, String payload) {
+        OutboxEvent event = new OutboxEvent(aggregateType, aggregateId, eventType, correlationId, payload);
+        outboxEventRepository.save(event);
+    }
 }

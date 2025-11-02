@@ -60,6 +60,9 @@ outbox:
     poll-fixed-delay: 2s
     poll-initial-delay: 10s
     
+    # --- ARCHIVAL CONFIG ---
+    archival-retention-days: 7  # Archive events older than 7 days (set to 0 to disable)
+    
     # --- DEAD-LETTER CONFIG ---
     max-permanent-retries: 5
     permanent-failure-exceptions:
@@ -70,6 +73,9 @@ outbox:
       - org.apache.kafka.common.errors.SerializationException
       - org.apache.kafka.common.errors.AuthenticationException
       - org.apache.kafka.common.errors.AuthorizationException
+
+  archival:
+    schedule: "0 0 2 * * *"  # Daily at 2 AM (can be customized using cron expression)
 
 server:
   port: 8081
