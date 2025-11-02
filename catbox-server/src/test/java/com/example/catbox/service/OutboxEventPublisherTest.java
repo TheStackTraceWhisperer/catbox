@@ -28,6 +28,7 @@ import java.util.concurrent.CompletableFuture;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.any;
 
 /**
  * Tests for OutboxEventPublisher focusing on permanent vs transient failure classification.
@@ -92,7 +93,7 @@ class OutboxEventPublisherTest {
         CompletableFuture<SendResult<String, String>> future = CompletableFuture.completedFuture(null);
         
         Mockito.when(kafkaTemplateFactory.getTemplate(eq("cluster-a"))).thenReturn(mockTemplate);
-        Mockito.when(mockTemplate.send(eq("OrderCreated"), eq("A1"), eq("{}"))).thenReturn(future);
+        Mockito.when(mockTemplate.send(any(org.apache.kafka.clients.producer.ProducerRecord.class))).thenReturn(future);
 
         // When
         publisher.publishEvent(event);
@@ -136,7 +137,7 @@ class OutboxEventPublisherTest {
         future.completeExceptionally(new IllegalStateException("Some permanent Kafka error"));
         
         Mockito.when(kafkaTemplateFactory.getTemplate(eq("cluster-a"))).thenReturn(mockTemplate);
-        Mockito.when(mockTemplate.send(anyString(), anyString(), anyString())).thenReturn(future);
+        Mockito.when(mockTemplate.send(any(org.apache.kafka.clients.producer.ProducerRecord.class))).thenReturn(future);
 
         // When
         publisher.publishEvent(event);
@@ -189,7 +190,7 @@ class OutboxEventPublisherTest {
         CompletableFuture<SendResult<String, String>> future = CompletableFuture.completedFuture(null);
         
         Mockito.when(kafkaTemplateFactory.getTemplate(eq("cluster-a"))).thenReturn(mockTemplate);
-        Mockito.when(mockTemplate.send(anyString(), anyString(), anyString())).thenReturn(future);
+        Mockito.when(mockTemplate.send(any(org.apache.kafka.clients.producer.ProducerRecord.class))).thenReturn(future);
 
         // When
         publisher.publishEvent(event);

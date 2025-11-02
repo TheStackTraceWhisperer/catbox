@@ -111,9 +111,13 @@ public class OutboxEventPublisher {
 
         log.debug("Publishing to cluster '{}' , topic '{}' , key '{}'", clusterKey, topic, key);
 
-        // 3. Send the message
+        // 3. Send the message with correlation ID header for consumer deduplication
         try {
-            template.send(topic, key, payload).get(); // .get() will throw if the send fails
+            var producerRecord = new org.apache.kafka.clients.producer.ProducerRecord<>(topic, key, payload);
+            if (event.getCorrelationId() != null) {
+                producerRecord.headers().add("correlationId", event.getCorrelationId().getBytes(java.nio.charset.StandardCharsets.UTF_8));
+            }
+            template.send(producerRecord).get(); // .get() will throw if the send fails
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
             throw e;

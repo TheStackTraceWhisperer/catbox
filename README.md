@@ -93,6 +93,8 @@ To use secure Kafka connections with SSL/TLS and SASL authentication:
    ```
 
 See the [Security Configuration](#security-configuration) section for details.
+- Kafka on port 9092
+- Keycloak on port 8080 (identity provider)
 
 ### Run the order-service
 
