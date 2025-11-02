@@ -187,7 +187,7 @@ public class DynamicKafkaTemplateFactory implements ApplicationContextAware {
      * Scheduled task to find and evict idle KafkaTemplates.
      * Runs every 5 minutes.
      */
-    @Scheduled(fixedRateString = "${outbox.kafka.factory.eviction-check-ms:300000}")
+    @Scheduled(fixedRateString = "${outbox.kafka.factory.eviction-check-ms:5m}")
     public void evictIdleTemplates() {
         log.debug("Running idle KafkaTemplate eviction check...");
         long idleThreshold = System.currentTimeMillis() - TimeUnit.MINUTES.toMillis(idleEvictionTimeMinutes);

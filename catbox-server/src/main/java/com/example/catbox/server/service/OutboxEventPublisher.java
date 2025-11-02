@@ -74,7 +74,7 @@ public class OutboxEventPublisher {
                 // TRANSIENT: Log and let transaction roll back for later retry
                 log.warn(
                     "Transient failure publishing event: {}. Will retry after ~{} ms. Error: {}",
-                    event.getId(), processingConfig.getClaimTimeoutMs(), e.getMessage()
+                    event.getId(), processingConfig.getClaimTimeout().toMillis(), e.getMessage()
                 );
             }
         }
@@ -86,7 +86,7 @@ public class OutboxEventPublisher {
      */
     private LocalDateTime calculateEventClaimTime(OutboxEvent event) {
         if (event.getInProgressUntil() != null) {
-            return event.getInProgressUntil().minusNanos(processingConfig.getClaimTimeoutMs() * 1_000_000L);
+            return event.getInProgressUntil().minus(processingConfig.getClaimTimeout());
         }
         return LocalDateTime.now();
     }

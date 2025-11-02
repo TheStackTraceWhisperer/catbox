@@ -62,9 +62,9 @@ class OutboxProcessingConfigTest {
     @Test
     void config_hasExistingProcessingSettings() {
         // Then - Existing settings should still work
-        assertThat(config.getClaimTimeoutMs()).isEqualTo(300000);
+        assertThat(config.getClaimTimeout()).isEqualTo(java.time.Duration.ofMinutes(5));
         assertThat(config.getBatchSize()).isEqualTo(100);
-        assertThat(config.getPollFixedDelayMs()).isEqualTo(2000);
-        assertThat(config.getPollInitialDelayMs()).isEqualTo(10000);
+        assertThat(config.getPollFixedDelay()).isEqualTo(java.time.Duration.ofSeconds(2));
+        assertThat(config.getPollInitialDelay()).isEqualTo(java.time.Duration.ofSeconds(10));
     }
 }
