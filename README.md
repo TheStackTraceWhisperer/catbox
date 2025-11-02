@@ -69,18 +69,36 @@ To run the system, you must start both applications (and the required Docker ser
 
 ### Start Infrastructure
 
+First, create a `.env` file in the project root to configure the database password:
+
+```bash
+# Create .env file with database password (minimum 8 characters required)
+cat > .env << 'EOL'
+DB_PASSWORD=YourStrong!Passw0rd
+EOL
+```
+
+**Important:** The Azure SQL Edge container requires a strong password with at least 8 characters, including uppercase, lowercase, numbers, and special characters.
+
+Then start the infrastructure:
+
 ```bash
 docker compose up -d
 ```
 
 This starts:
 - Azure SQL Edge on port 1433
-- Kafka on port 9092 (PLAINTEXT) and 9093 (SASL_SSL)
-- Keycloak on port 8080 (identity provider)
+- Kafka on port 9092 (PLAINTEXT)
+- Keycloak on port 8180 (identity provider) - **Note: Changed from 8080 to avoid conflict with order-service**
+- Prometheus on port 9090 (metrics)
+- Grafana on port 3000 (dashboards)
+- Loki on port 3100 (log aggregation)
 
 **Optional - Enable Kafka Security:**
 
-To use secure Kafka connections with SSL/TLS and SASL authentication:
+⚠️ **Known Issue:** The Apache Kafka Docker image currently has compatibility issues with the SSL/SASL configuration in `compose.yaml`. For testing purposes, you may need to use a simplified configuration (PLAINTEXT only) or use Kafka in a different container setup.
+
+To use secure Kafka connections with SSL/TLS and SASL authentication (when the issue is resolved):
 
 1. Generate SSL certificates (first-time only):
    ```bash
@@ -93,8 +111,6 @@ To use secure Kafka connections with SSL/TLS and SASL authentication:
    ```
 
 See the [Security Configuration](#security-configuration) section for details.
-- Kafka on port 9092
-- Keycloak on port 8080 (identity provider)
 
 ### Run the order-service
 
@@ -615,7 +631,7 @@ mvn spring-boot:run -pl catbox-server -Dspring-boot.run.profiles=azuresql,secure
 
 ### Keycloak Admin Console
 
-Access the Keycloak admin console at `http://localhost:8080`:
+Access the Keycloak admin console at `http://localhost:8180`:
 - **Username**: `admin`
 - **Password**: `admin`
 

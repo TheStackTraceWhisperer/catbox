@@ -4,9 +4,26 @@ set -e
 # Colors for output
 GREEN='\033[0;32m'
 BLUE='\033[0;34m'
+YELLOW='\033[1;33m'
 NC='\033[0m' # No Color
 
 echo -e "${BLUE}Generating Kafka SSL Certificates${NC}"
+echo ""
+
+# Check if certificates already exist
+if [ -f "kafka-broker-keystore.jks" ]; then
+    echo -e "${YELLOW}⚠️  Existing certificates found.${NC}"
+    echo -n "Do you want to regenerate them? This will delete existing files. [y/N] "
+    read -r response
+    if [[ ! "$response" =~ ^([yY][eE][sS]|[yY])$ ]]; then
+        echo "Keeping existing certificates. Exiting."
+        exit 0
+    fi
+    echo -e "${YELLOW}Removing existing certificate files...${NC}"
+    rm -f ca-keystore.jks ca-cert.pem kafka-broker-keystore.jks kafka-truststore.jks kafka-client-truststore.jks
+    rm -f credentials.properties kafka_server_jaas.conf kafka_client_jaas.conf
+    echo ""
+fi
 
 # Certificate configuration
 VALIDITY_DAYS=3650
