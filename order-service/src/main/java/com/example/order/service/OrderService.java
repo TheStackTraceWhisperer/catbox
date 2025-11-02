@@ -5,22 +5,22 @@ import com.example.order.dto.CreateOrderRequest;
 import com.example.order.entity.Order;
 import com.example.order.exception.OrderNotFoundException;
 import com.example.order.repository.OrderRepository;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.HashMap;
+import java.math.BigDecimal;
 import java.util.List;
-import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
 public class OrderService {
     private final OrderRepository orderRepository;
     private final OutboxClient outboxClient;
-    private final ObjectMapper objectMapper;
+
+    // (Optional but recommended: define payload as inner records for type safety)
+    private record OrderCreatedPayload(Long orderId, String customerName, String productName, BigDecimal amount, String status) {}
+    private record OrderStatusChangedPayload(Long orderId, String oldStatus, String newStatus) {}
 
     @Transactional
     public Order createOrder(CreateOrderRequest request) {
@@ -32,24 +32,24 @@ public class OrderService {
         );
         
         Order savedOrder = orderRepository.save(order);
-        try {
-            Map<String, Object> eventData = new HashMap<>();
-            eventData.put("orderId", savedOrder.getId());
-            eventData.put("customerName", savedOrder.getCustomerName());
-            eventData.put("productName", savedOrder.getProductName());
-            eventData.put("amount", savedOrder.getAmount());
-            eventData.put("status", savedOrder.getStatus());
-            String payload = objectMapper.writeValueAsString(eventData);
+        
+        // 1. Create a type-safe payload object (no more HashMap)
+        var payload = new OrderCreatedPayload(
+                savedOrder.getId(),
+                savedOrder.getCustomerName(),
+                savedOrder.getProductName(),
+                savedOrder.getAmount(),
+                savedOrder.getStatus()
+        );
 
-            outboxClient.createEvent(
-                    "Order",
-                    savedOrder.getId().toString(),
-                    "OrderCreated",
-                    payload
-            );
-        } catch (JsonProcessingException e) {
-            throw new RuntimeException("Failed to create outbox event", e);
-        }
+        // 2. Pass metadata and the payload *object* to the client
+        outboxClient.write(
+                "Order",
+                savedOrder.getId().toString(),
+                "OrderCreated",
+                payload
+        );
+        
         return savedOrder;
     }
 
@@ -60,22 +60,22 @@ public class OrderService {
         String oldStatus = order.getStatus();
         order.setStatus(newStatus);
         Order updatedOrder = orderRepository.save(order);
-        try {
-            Map<String, Object> eventData = new HashMap<>();
-            eventData.put("orderId", updatedOrder.getId());
-            eventData.put("oldStatus", oldStatus);
-            eventData.put("newStatus", newStatus);
-            String payload = objectMapper.writeValueAsString(eventData);
 
-            outboxClient.createEvent(
-                    "Order",
-                    updatedOrder.getId().toString(),
-                    "OrderStatusChanged",
-                    payload
-            );
-        } catch (JsonProcessingException e) {
-            throw new RuntimeException("Failed to create outbox event", e);
-        }
+        // 1. Create a type-safe payload object
+        var payload = new OrderStatusChangedPayload(
+                updatedOrder.getId(),
+                oldStatus,
+                newStatus
+        );
+
+        // 2. Pass metadata and the payload *object* to the client
+        outboxClient.write(
+                "Order",
+                updatedOrder.getId().toString(),
+                "OrderStatusChanged",
+                payload
+        );
+        
         return updatedOrder;
     }
 

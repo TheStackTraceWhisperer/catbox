@@ -20,6 +20,7 @@ import java.math.BigDecimal;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doThrow;
 
 /**
@@ -61,21 +62,24 @@ class OrderServiceFailureTest {
      */
     @Test
     void testOrderCreationFailsWhenOutboxWriteFails() {
-        // Arrange: Configure the mock OutboxClient to throw an exception
+        // Arrange: Configure mock to throw on the new 'write' method
         doThrow(new RuntimeException("Simulated serialization failure"))
-                .when(outboxClient).createEvent(anyString(), anyString(), anyString(), anyString());
+                .when(outboxClient).write(
+                    anyString(), 
+                    anyString(), 
+                    anyString(), 
+                    any(Object.class)
+                );
 
-        // Get initial count
         long initialCount = orderRepository.count();
-
         CreateOrderRequest request = new CreateOrderRequest("Alice Smith", "Laptop", new BigDecimal("1299.99"));
 
-        // Act & Assert: Verify that creating the order throws an exception
+        // Act & Assert
         assertThatThrownBy(() -> orderService.createOrder(request))
                 .isInstanceOf(RuntimeException.class)
                 .hasMessageContaining("Simulated serialization failure");
 
-        // Assert: Verify that no order was saved due to transaction rollback
+        // Assert
         long finalCount = orderRepository.count();
         assertThat(finalCount).isEqualTo(initialCount);
     }
