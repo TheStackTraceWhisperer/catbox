@@ -119,15 +119,15 @@ open catbox-server/target/jacoco-it/index.html
 
 1. Start services:
 ```bash
-docker compose up -d
+cd infrastructure && docker compose up -d
 ```
 
 2. Wait for services to be healthy:
 ```bash
-docker compose ps
+cd infrastructure && docker compose ps
 ```
 
-3. Run application with Azure SQL profile:
+3. Run application with Azure SQL profile (from project root):
 ```bash
 mvn spring-boot:run -Dspring-boot.run.profiles=azuresql
 ```
@@ -156,7 +156,7 @@ docker exec -it catbox-azuresql /opt/mssql-tools18/bin/sqlcmd \
 
 6. Stop services:
 ```bash
-docker compose down
+cd infrastructure && docker compose down
 ```
 
 ## Test Utilities and Helpers
@@ -224,7 +224,7 @@ jobs:
         run: mvn clean test
         
       - name: Verify Docker Compose
-        run: docker compose config --quiet
+        run: cd infrastructure && docker compose config --quiet
 ```
 
 ## Troubleshooting
@@ -243,10 +243,10 @@ jobs:
 **Issue**: Cannot connect to Azure SQL when using docker-compose
 
 **Solutions**:
-1. Verify container is running: `docker compose ps`
-2. Check logs: `docker compose logs azuresql`
+1. Verify container is running: `cd infrastructure && docker compose ps`
+2. Check logs: `cd infrastructure && docker compose logs azuresql`
 3. Wait for health check: The container needs time to initialize
-4. Verify password in connection string matches compose.yaml
+4. Verify password in connection string matches infrastructure/compose.yaml
 
 ### Out of Memory During Tests
 

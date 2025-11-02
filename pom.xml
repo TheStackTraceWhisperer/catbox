@@ -31,6 +31,7 @@
         <module>catbox-server</module>
         <module>order-service</module>
         <module>coverage-report</module>
+        <module>catbox-archunit</module>
     </modules>
 
     <!-- Dependency Management: All modules inherit these versions -->

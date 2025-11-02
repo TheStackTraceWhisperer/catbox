@@ -70,13 +70,16 @@ To run the system, you must start both applications (and the required Docker ser
 ### Start Infrastructure
 
 ```bash
-docker compose up -d
+cd infrastructure && docker compose up -d
 ```
 
 This starts:
 - Azure SQL Edge on port 1433
-- Kafka on port 9092 (PLAINTEXT) and 9093 (SASL_SSL)
+- Kafka Cluster 1 on ports 9092 (PLAINTEXT) and 9093 (SASL_SSL)
+- Kafka Cluster 2 on port 9095 (PLAINTEXT) - for multi-cluster testing
+- Kafka UI on port 8090 (web interface for both clusters)
 - Keycloak on port 8080 (identity provider)
+- Monitoring stack (Prometheus, Grafana, Loki)
 
 **Optional - Enable Kafka Security:**
 
@@ -84,17 +87,15 @@ To use secure Kafka connections with SSL/TLS and SASL authentication:
 
 1. Generate SSL certificates (first-time only):
    ```bash
-   cd kafka-security/certs && ./generate-certs.sh && cd ../..
+   cd infrastructure/kafka-security/certs && ./generate-certs.sh && cd ../../..
    ```
 
 2. After Kafka starts, initialize security configuration:
    ```bash
-   ./kafka-security/init-kafka-security.sh
+   ./infrastructure/kafka-security/init-kafka-security.sh
    ```
 
 See the [Security Configuration](#security-configuration) section for details.
-- Kafka on port 9092
-- Keycloak on port 8080 (identity provider)
 
 ### Run the order-service
 
@@ -300,6 +301,18 @@ docker compose down
 - **Spring Boot Test** for application context testing
 - **JaCoCo** for code coverage analysis
 
+### Verbose Test Logging
+
+By default, test logs are suppressed for cleaner output. To enable verbose logging including Testcontainers logs:
+
+```bash
+# Enable verbose logging for all tests
+mvn test -Dspring.profiles.active=verbose-logging
+
+# Enable verbose logging for a specific module
+mvn test -Dspring.profiles.active=verbose-logging -pl order-service
+```
+
 ### Load and Stress Testing
 
 The project includes comprehensive JMeter test suites for performance testing using Docker containers:
@@ -338,14 +351,17 @@ catbox-parent
 ├── order-service     # Business service application (runs on 8080)
 ├── coverage-report   # Aggregated test coverage reports
 ├── jmeter-tests      # JMeter load and stress test suites
-├── monitoring        # Prometheus, Grafana, and Loki configurations
-├── compose.yaml      # Docker Compose for infrastructure
-└── pom.xml           # Parent POM with JaCoCo configuration
+├── infrastructure    # Docker Compose and infrastructure configurations
+│   ├── compose.yaml     # Docker Compose for infrastructure services
+│   ├── monitoring       # Prometheus, Grafana, and Loki configurations
+│   ├── kafka-security   # Kafka SSL/TLS and SASL configurations
+│   └── keycloak         # Keycloak realm configuration
+└── pom.xml           # Parent POM
 ```
 
 ## Docker Compose Setup
 
-The project includes a `compose.yaml` file that sets up:
+The project includes an `infrastructure` directory with a `compose.yaml` file that sets up:
 
 1. **Azure SQL Edge** - Microsoft SQL Server compatible database
    - Port: 1433
@@ -353,7 +369,7 @@ The project includes a `compose.yaml` file that sets up:
    - Password: Set via `DB_PASSWORD` environment variable
    - Compatible with Azure SQL Database
 
-2. **Apache Kafka** - Message broker using KRaft mode (no Zookeeper)
+2. **Apache Kafka Cluster 1** - Primary message broker using KRaft mode (no Zookeeper)
    - Port 9092 (PLAINTEXT - for backward compatibility)
    - Port 9093 (SASL_SSL - secure with authentication and encryption)
    - SSL/TLS encryption enabled
@@ -362,31 +378,42 @@ The project includes a `compose.yaml` file that sets up:
    - 3 partitions for outbox events
    - Ready for horizontal scaling
 
+3. **Apache Kafka Cluster 2** - Secondary message broker for multi-cluster testing
+   - Port 9095 (PLAINTEXT)
+   - Independent broker for testing multi-cluster routing
+   - 3 partitions for outbox events
+
+4. **Kafka UI** - Web interface for managing both Kafka clusters
+   - Port 8090
+   - Pre-configured with both clusters
+   - Browse topics, messages, and consumer groups
+   - Monitor cluster health and metrics
+
 ### Using Docker Compose
 
 Start services:
 ```bash
-docker compose up -d
+cd infrastructure && docker compose up -d
 ```
 
 Check service health:
 ```bash
-docker compose ps
+cd infrastructure && docker compose ps
 ```
 
 View logs:
 ```bash
-docker compose logs -f
+cd infrastructure && docker compose logs -f
 ```
 
 Stop services:
 ```bash
-docker compose down
+cd infrastructure && docker compose down
 ```
 
 Clean up volumes:
 ```bash
-docker compose down -v
+cd infrastructure && docker compose down -v
 ```
 
 ### Connecting to Azure SQL
@@ -433,9 +460,9 @@ The Kafka broker is configured with two listeners:
 First-time setup requires generating SSL certificates:
 
 ```bash
-cd kafka-security/certs
+cd infrastructure/kafka-security/certs
 ./generate-certs.sh
-cd ../..
+cd ../../..
 ```
 
 This creates:
@@ -447,7 +474,7 @@ This creates:
 #### 2. Start Kafka with Security Enabled
 
 ```bash
-docker compose up -d kafka
+cd infrastructure && docker compose up -d kafka
 ```
 
 The Kafka container will start with:
@@ -460,7 +487,7 @@ The Kafka container will start with:
 After Kafka starts, run the initialization script to create SASL users and configure ACLs:
 
 ```bash
-./kafka-security/init-kafka-security.sh
+./infrastructure/kafka-security/init-kafka-security.sh
 ```
 
 This script:
@@ -510,7 +537,7 @@ outbox:
 ### Production Deployment
 
 For production, refer to:
-- `kafka-security/README.md` - Detailed security documentation
+- `infrastructure/kafka-security/README.md` - Detailed security documentation
 - `catbox-server/src/main/resources/application-production.yml.example` - Production configuration template
 
 **Production Security Checklist:**
@@ -544,7 +571,7 @@ docker exec catbox-kafka kafka-acls.sh \
 
 **SSL Handshake Failures:**
 - Verify truststore path is correct in application.yml
-- Check certificate validity: `keytool -list -v -keystore kafka-security/certs/kafka-client-truststore.jks`
+- Check certificate validity: `keytool -list -v -keystore infrastructure/kafka-security/certs/kafka-client-truststore.jks`
 
 **SASL Authentication Failures:**
 - Verify username/password in JAAS configuration
@@ -552,7 +579,7 @@ docker exec catbox-kafka kafka-acls.sh \
 
 **ACL Permission Denied:**
 - List ACLs to verify user has proper permissions
-- Ensure super users are configured correctly in compose.yaml
+- Ensure super users are configured correctly in infrastructure/compose.yaml
 
 ## License
 
@@ -578,7 +605,7 @@ All metrics are exposed via the Prometheus actuator endpoint at `/actuator/prome
 
 ### Grafana Dashboard
 
-A pre-configured Grafana dashboard is available in `monitoring/grafana/dashboards/catbox-dashboard.json` with:
+A pre-configured Grafana dashboard is available in `infrastructure/monitoring/grafana/dashboards/catbox-dashboard.json` with:
 - **Outbox Pending Events** gauge
 - **Oldest Unsent Event Age** gauge  
 - **Event Publishing Rate** (success/failure) timeseries
@@ -623,10 +650,10 @@ To enable authentication, use the `secure` profile:
 
 ```bash
 # Start Keycloak and other infrastructure
-docker compose up -d
+cd infrastructure && docker compose up -d
 
-# Run catbox-server with security enabled
-mvn spring-boot:run -pl catbox-server -Dspring-boot.run.profiles=azuresql,secure
+# Run catbox-server with security enabled (from project root)
+cd .. && mvn spring-boot:run -pl catbox-server -Dspring-boot.run.profiles=azuresql,secure
 ```
 
 ### Accessing the Application
@@ -663,7 +690,7 @@ The configuration allows:
 
 ### Customizing Keycloak Configuration
 
-The Keycloak realm configuration is defined in `keycloak/catbox-realm.json`. You can modify this file to:
+The Keycloak realm configuration is defined in `infrastructure/keycloak/catbox-realm.json`. You can modify this file to:
 - Add additional users
 - Configure roles and permissions
 - Set up client scopes
@@ -671,5 +698,5 @@ The Keycloak realm configuration is defined in `keycloak/catbox-realm.json`. You
 
 After modifying the realm file, restart Keycloak:
 ```bash
-docker compose restart keycloak
+cd infrastructure && docker compose restart keycloak
 ```
