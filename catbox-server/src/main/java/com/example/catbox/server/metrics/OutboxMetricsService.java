@@ -7,8 +7,7 @@ import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Timer;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
@@ -20,11 +19,10 @@ import java.util.concurrent.atomic.AtomicLong;
  * Service that tracks custom metrics for the outbox pattern.
  * Provides insights into outbox health and performance.
  */
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class OutboxMetricsService {
-
-    private static final Logger logger = LoggerFactory.getLogger(OutboxMetricsService.class);
 
     private final OutboxEventRepository outboxEventRepository;
     private final MeterRegistry meterRegistry;
@@ -70,7 +68,7 @@ public class OutboxMetricsService {
                 .description("Duration of event processing from claim to publish")
                 .register(meterRegistry);
 
-        logger.info("Outbox metrics initialized");
+        log.info("Outbox metrics initialized");
     }
 
     /**
@@ -95,10 +93,10 @@ public class OutboxMetricsService {
                             () -> oldestEventAgeSeconds.set(0)
                     );
 
-            logger.debug("Updated outbox metrics: pending={}, oldestAgeSeconds={}", 
+            log.debug("Updated outbox metrics: pending={}, oldestAgeSeconds={}", 
                         pendingCount, oldestEventAgeSeconds.get());
         } catch (Exception e) {
-            logger.error("Error updating pending events metrics", e);
+            log.error("Error updating pending events metrics", e);
         }
     }
 

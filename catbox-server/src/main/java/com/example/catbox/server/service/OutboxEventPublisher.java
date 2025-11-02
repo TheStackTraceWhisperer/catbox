@@ -7,8 +7,7 @@ import com.example.catbox.server.metrics.OutboxMetricsService;
 import com.example.catbox.common.entity.OutboxEvent;
 import com.example.catbox.common.repository.OutboxEventRepository;
 import lombok.RequiredArgsConstructor;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
@@ -22,11 +21,10 @@ import java.util.concurrent.ExecutionException;
  * Publishes individual outbox events to Kafka using virtual threads.
  * Each event is published in its own transaction (REQUIRES_NEW).
  */
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class OutboxEventPublisher {
-
-    private static final Logger logger = LoggerFactory.getLogger(OutboxEventPublisher.class);
 
     private final OutboxEventRepository outboxEventRepository;
     private final DynamicKafkaTemplateFactory kafkaTemplateFactory;
@@ -53,7 +51,7 @@ public class OutboxEventPublisher {
             failureHandler.resetFailureCount(event);
             outboxEventRepository.save(event);
 
-            logger.info("Successfully published event: {} for aggregate: {}/{}",
+            log.info("Successfully published event: {} for aggregate: {}/{}",
                 event.getEventType(), event.getAggregateType(), event.getAggregateId());
 
             // Record metrics
@@ -67,14 +65,14 @@ public class OutboxEventPublisher {
             // FAILURE: Differentiate error type
             if (isPermanentFailure(e)) {
                 // PERMANENT: Call the failure handler
-                logger.error(
+                log.error(
                     "Permanent failure publishing event: {}. Recording failure. Error: {}",
                     event.getId(), e.getMessage()
                 );
                 failureHandler.recordPermanentFailure(event.getId(), e.getMessage());
             } else {
                 // TRANSIENT: Log and let transaction roll back for later retry
-                logger.warn(
+                log.warn(
                     "Transient failure publishing event: {}. Will retry after ~{} ms. Error: {}",
                     event.getId(), processingConfig.getClaimTimeoutMs(), e.getMessage()
                 );
@@ -111,7 +109,7 @@ public class OutboxEventPublisher {
         String key = event.getAggregateId(); // Guarantees ordering per aggregate
         String payload = event.getPayload();
 
-        logger.debug("Publishing to cluster '{}' , topic '{}' , key '{}'", clusterKey, topic, key);
+        log.debug("Publishing to cluster '{}' , topic '{}' , key '{}'", clusterKey, topic, key);
 
         // 3. Send the message
         try {

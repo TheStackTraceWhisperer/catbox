@@ -6,8 +6,7 @@ import com.example.catbox.common.repository.OutboxDeadLetterEventRepository;
 import com.example.catbox.common.repository.OutboxEventRepository;
 import com.example.catbox.server.config.OutboxProcessingConfig;
 import lombok.RequiredArgsConstructor;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
@@ -17,11 +16,10 @@ import org.springframework.transaction.annotation.Transactional;
  * Operates in REQUIRES_NEW transaction to ensure failure recording
  * happens independently of the publishing transaction.
  */
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class OutboxFailureHandler {
-
-    private static final Logger logger = LoggerFactory.getLogger(OutboxFailureHandler.class);
 
     private final OutboxEventRepository outboxEventRepository;
     private final OutboxDeadLetterEventRepository deadLetterRepository;
@@ -48,12 +46,12 @@ public class OutboxFailureHandler {
         event.setPermanentFailureCount(currentCount);
         event.setLastError(errorMessage);
 
-        logger.warn("Recording permanent failure #{} for event: {}. Error: {}", 
+        log.warn("Recording permanent failure #{} for event: {}. Error: {}", 
                 currentCount, eventId, errorMessage);
 
         if (currentCount >= processingConfig.getMaxPermanentRetries()) {
             // Move to dead-letter queue
-            logger.error("Event {} exceeded max permanent retries ({}). Moving to dead-letter queue.", 
+            log.error("Event {} exceeded max permanent retries ({}). Moving to dead-letter queue.", 
                     eventId, processingConfig.getMaxPermanentRetries());
             
             OutboxDeadLetterEvent deadLetter = new OutboxDeadLetterEvent(event, errorMessage);
@@ -62,13 +60,13 @@ public class OutboxFailureHandler {
             // Delete from outbox
             outboxEventRepository.delete(event);
             
-            logger.info("Event {} moved to dead-letter queue with ID: {}", eventId, deadLetter.getId());
+            log.info("Event {} moved to dead-letter queue with ID: {}", eventId, deadLetter.getId());
         } else {
             // Save the updated failure count and clear the claim for retry
             event.setInProgressUntil(null);
             outboxEventRepository.save(event);
             
-            logger.info("Event {} will be retried. Failures: {}/{}", 
+            log.info("Event {} will be retried. Failures: {}/{}", 
                     eventId, currentCount, processingConfig.getMaxPermanentRetries());
         }
     }
@@ -81,7 +79,7 @@ public class OutboxFailureHandler {
     @Transactional(propagation = Propagation.MANDATORY)
     public void resetFailureCount(OutboxEvent event) {
         if (event.getPermanentFailureCount() != null && event.getPermanentFailureCount() > 0) {
-            logger.debug("Resetting failure count for event: {}", event.getId());
+            log.debug("Resetting failure count for event: {}", event.getId());
             event.setPermanentFailureCount(0);
             event.setLastError(null);
         }
