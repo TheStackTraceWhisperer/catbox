@@ -1,7 +1,6 @@
 # Secure profile - Enables OAuth2/OIDC authentication with Keycloak
 spring:
   security:
-    enabled: true
     oauth2:
       client:
         registration:

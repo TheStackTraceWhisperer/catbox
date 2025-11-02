@@ -1,8 +1,8 @@
 package com.example.catbox.server.config;
 
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Profile;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.web.SecurityFilterChain;
@@ -26,7 +26,7 @@ public class SecurityConfig {
      * All requests are permitted without authentication.
      */
     @Bean
-    @ConditionalOnProperty(name = "spring.security.enabled", havingValue = "false", matchIfMissing = true)
+    @Profile("!secure")
     public SecurityFilterChain disabledSecurityFilterChain(HttpSecurity http) throws Exception {
         http
             .authorizeHttpRequests(authorize -> authorize
@@ -42,7 +42,7 @@ public class SecurityConfig {
      * Uses OAuth2 login with Keycloak for authentication.
      */
     @Bean
-    @ConditionalOnProperty(name = "spring.security.enabled", havingValue = "true")
+    @Profile("secure")
     public SecurityFilterChain enabledSecurityFilterChain(HttpSecurity http) throws Exception {
         http
             .authorizeHttpRequests(authorize -> authorize

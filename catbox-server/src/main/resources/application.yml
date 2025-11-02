@@ -2,10 +2,6 @@ spring:
   application:
     name: catbox
 
-  # Security is disabled by default. Enable via 'secure' profile.
-  security:
-    enabled: false
-
   # Remove explicit default datasource to avoid H2 in default profile; let tests configure via Testcontainers
   datasource: { }
 
