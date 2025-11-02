@@ -277,6 +277,18 @@ docker compose down
 - **Testcontainers** for containerized testing support
 - **Spring Boot Test** for application context testing
 
+### Verbose Test Logging
+
+By default, test logs are suppressed for cleaner output. To enable verbose logging including Testcontainers logs:
+
+```bash
+# Enable verbose logging for all tests
+mvn test -Dspring.profiles.active=verbose-logging
+
+# Enable verbose logging for a specific module
+mvn test -Dspring.profiles.active=verbose-logging -pl order-service
+```
+
 ### Load and Stress Testing
 
 The project includes comprehensive JMeter test suites for performance testing using Docker containers:
