@@ -88,7 +88,7 @@ This document summarizes the comprehensive review and validation of all Catbox p
 ## Testing Results
 
 ### Build & Test
-- ✅ Project builds successfully with `mvn clean install`
+- ✅ Project builds successfully with `mvn clean verify`
 - ✅ All tests pass with `mvn test` (4 tests in order-service, all passed)
 - ✅ Code coverage reports generated successfully
 

@@ -81,7 +81,7 @@ For detailed architecture information, see [Architecture Documentation](docs/arc
 - **[Monitoring](docs/monitoring.md)** - Metrics, dashboards, and observability
 - **[Multi-Cluster Routing](docs/multi-cluster-routing.md)** - Advanced Kafka routing strategies
 - **[Virtual Threads](docs/virtual-threads.md)** - Java 21 virtual threads implementation
-- **[Testing Guide](TESTING.md)** - Testing framework and coverage reports
+- **[Testing Guide](docs/testing.md)** - Testing framework and coverage reports
 - **[Known Issues](KNOWN_ISSUES.md)** - Known issues and workarounds
 
 ## Building and Testing
@@ -89,7 +89,7 @@ For detailed architecture information, see [Architecture Documentation](docs/arc
 ### Build the Application
 
 ```bash
-mvn clean install
+mvn clean verify
 ```
 
 ### Run Tests
@@ -105,7 +105,7 @@ mvn clean verify
 open coverage-report/target/site/jacoco-aggregate/index.html
 ```
 
-See [Testing Guide](TESTING.md) for comprehensive testing documentation.
+See [Testing Guide](docs/testing.md) for comprehensive testing documentation.
 
 ### Load Testing
 
