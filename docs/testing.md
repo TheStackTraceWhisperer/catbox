@@ -1,0 +1,575 @@
+# Testing Guide
+
+Comprehensive testing documentation for the Catbox transactional outbox pattern implementation.
+
+## Overview
+
+The Catbox project includes a mature, multi-layered testing strategy:
+
+1. **Unit Tests** - Fast, isolated component tests
+2. **Integration Tests** - Tests with real dependencies (database, Kafka)
+3. **End-to-End Tests** - Complete workflow validation from order creation to Kafka delivery
+4. **Architecture Tests** - Automated enforcement of design rules using ArchUnit
+5. **Performance Tests** - JMeter load and stress testing
+
+## Prerequisites
+
+- **Java 21** - Required for building and running tests (enforced by Maven)
+- **Docker** - Required for Testcontainers integration tests
+- **Maven 3.6+** - Build tool
+
+## Running Tests
+
+### Quick Start
+
+```bash
+# Run all unit tests
+mvn clean test
+
+# Run all tests including integration tests
+mvn clean verify
+
+# Run tests for a specific module
+mvn test -pl catbox-server
+mvn test -pl order-service
+```
+
+### Running Specific Test Classes
+
+```bash
+# Run specific test class
+mvn test -Dtest=OrderServiceTest
+
+# Run multiple test classes
+mvn test -Dtest=OrderServiceTest,OutboxServiceTest
+
+# Run tests matching a pattern
+mvn test -Dtest=*Integration*
+```
+
+### Running with Coverage
+
+```bash
+# Generate coverage reports
+mvn clean verify
+
+# View aggregated coverage report
+open coverage-report/target/site/jacoco-aggregate/index.html
+
+# View module-specific coverage
+open catbox-server/target/jacoco-ut/index.html
+open catbox-server/target/jacoco-it/index.html
+```
+
+## Test Categories
+
+### 1. Unit Tests
+
+**Purpose**: Verify individual components in isolation.
+
+**Examples**:
+- `OutboxMetricsServiceTest` - Tests metrics collection logic
+- `OutboxEventClaimTest` - Tests event claiming logic
+- `OutboxFailureHandlerTest` - Tests failure handling
+
+**Characteristics**:
+- Fast execution (milliseconds)
+- No external dependencies
+- Use mocks/stubs for dependencies
+- Located in `src/test/java` with Test suffix
+
+### 2. Integration Tests with Testcontainers
+
+**Purpose**: Test interactions with real databases and Kafka.
+
+**Technology**: Uses Testcontainers to spin up actual Docker containers for:
+- Azure SQL Server (mcr.microsoft.com/mssql/server:2022-latest)
+- Kafka (confluentinc/cp-kafka:7.9.1)
+
+**Examples**:
+
+#### Database Integration Tests
+```java
+@SpringBootTest
+@Testcontainers
+class OrderServiceTest {
+    @Container
+    static MSSQLServerContainer<?> mssql = 
+        new MSSQLServerContainer<>("mcr.microsoft.com/mssql/server:2022-latest")
+            .acceptLicense();
+    
+    // Tests create orders and verify outbox events in real database
+}
+```
+
+**What it tests**:
+- Transactional consistency between orders and outbox events
+- Database constraints and relationships
+- JPA entity mappings
+- SQL queries and repository methods
+
+#### Kafka Integration Tests
+```java
+@SpringBootTest
+@EmbeddedKafka(partitions = 1, topics = {"test-outbox-events"})
+class KafkaIntegrationTest {
+    // Tests message publishing to Kafka
+}
+```
+
+**What it tests**:
+- Kafka message serialization/deserialization
+- Dynamic KafkaTemplate factory
+- Multi-cluster routing configuration
+- Message delivery and consumption
+
+**Note**: Integration tests using Testcontainers require Docker to be running.
+
+### 3. End-to-End Tests
+
+**Purpose**: Validate complete workflows from order creation through Kafka publication.
+
+**Example**: `E2EPollerTest`, `E2EPollerMultiClusterTest`
+
+```java
+@SpringBootTest(classes = CatboxServerApplication.class)
+@Testcontainers
+class E2EPollerTest {
+    @Container
+    static MSSQLServerContainer<?> mssql = ...
+    
+    @Container
+    static KafkaContainer kafka = ...
+    
+    // Tests complete flow:
+    // 1. Create outbox event in database
+    // 2. Poller claims event (SELECT FOR UPDATE SKIP LOCKED)
+    // 3. Event is published to Kafka
+    // 4. Event status is updated in database
+}
+```
+
+**What it tests**:
+- Complete outbox pattern implementation
+- Event claiming with pessimistic locking
+- Virtual thread-based concurrent processing
+- At-least-once delivery guarantees
+- Multi-cluster routing strategies
+
+**Run time**: ~10-15 seconds (includes container startup)
+
+### 4. Architecture Tests (ArchUnit)
+
+**Purpose**: Enforce architectural rules and design patterns automatically.
+
+**Location**: `catbox-archunit` module
+
+**Test Classes**:
+- `LayeringArchitectureTest` - Enforces layered architecture (controller → service → repository)
+- `PackageDependencyTest` - Prevents circular dependencies
+- `NamingConventionTest` - Enforces consistent naming patterns
+- `SpringAnnotationTest` - Validates Spring annotation usage
+- `TransactionBoundaryTest` - Ensures proper @Transactional usage
+- `EntityRepositoryPatternTest` - Validates entity-repository patterns
+
+**Example**:
+```java
+@Test
+void servicesShouldNotDependOnControllers() {
+    noClasses()
+        .that().resideInAPackage("..service..")
+        .should().dependOnClassesThat()
+        .resideInAPackage("..controller..")
+        .check(importedClasses);
+}
+```
+
+**Benefits**:
+- Prevents architectural drift
+- Catches design violations in CI
+- Documents architecture through executable tests
+- Enforces best practices consistently
+
+**Running**:
+```bash
+mvn test -pl catbox-archunit
+```
+
+### 5. Performance and Load Tests
+
+**Purpose**: Validate system performance under load.
+
+**Technology**: Apache JMeter 5.6.3 (via Docker)
+
+**Location**: `jmeter-tests/` directory
+
+**Test Plans**:
+1. `OrderService_LoadTest.jmx` - Order creation, read, and update operations
+2. `OutboxService_LoadTest.jmx` - Outbox event processing throughput
+3. `EndToEnd_StressTest.jmx` - Complete system stress test
+
+**Running**:
+```bash
+cd jmeter-tests
+
+# Run specific test
+./scripts/run-test.sh order      # Order service load test
+./scripts/run-test.sh outbox     # Outbox processing test
+./scripts/run-test.sh stress     # End-to-end stress test
+
+# View results
+ls -lh results/
+```
+
+**Test Configuration**:
+- 50-500 concurrent users (configurable)
+- 5-30 minute test duration
+- Ramp-up periods for realistic load simulation
+- CSV data sets for varied test data
+
+See [jmeter-tests/README.md](../jmeter-tests/README.md) for detailed documentation.
+
+## Code Coverage
+
+### Coverage Configuration
+
+The project uses **JaCoCo Maven Plugin** with separate reports for unit and integration tests:
+
+- **Unit Test Coverage**: `target/jacoco-ut/`
+  - Includes all tests except `*IT.java` and `*IntegrationTest.java`
+  - Generated during `mvn test` phase
+
+- **Integration Test Coverage**: `target/jacoco-it/`
+  - Includes tests matching `*IT.java` or `*IntegrationTest.java`
+  - Generated during `mvn verify` phase
+
+- **Aggregated Coverage**: `coverage-report/target/site/jacoco-aggregate/`
+  - Combines coverage from all modules
+  - Provides project-wide coverage metrics
+
+### Viewing Coverage Reports
+
+```bash
+# Generate all coverage reports
+mvn clean verify
+
+# Open aggregated report (all modules)
+open coverage-report/target/site/jacoco-aggregate/index.html
+
+# Open module-specific reports
+open catbox-server/target/jacoco-ut/index.html       # Unit test coverage
+open catbox-server/target/jacoco-it/index.html       # Integration test coverage
+open order-service/target/jacoco-ut/index.html
+```
+
+Coverage reports are available in HTML, XML, and CSV formats.
+
+## Test Technologies and Frameworks
+
+### Core Frameworks
+- **JUnit 5** - Test framework
+- **AssertJ** - Fluent assertions
+- **Mockito** - Mocking framework
+- **Spring Boot Test** - Spring testing support
+
+### Integration Testing
+- **Testcontainers** - Docker containers for integration tests
+  - Azure SQL Server containers
+  - Kafka containers
+- **Spring Kafka Test** - Embedded Kafka for lighter tests
+- **Awaitility** - Asynchronous testing support
+
+### Architecture Testing
+- **ArchUnit** - Architecture testing framework
+
+### Performance Testing
+- **Apache JMeter** - Load and performance testing
+
+## Test Utilities and Patterns
+
+### Testcontainers Setup
+
+Example from `OrderServiceTest`:
+
+```java
+@Container
+static MSSQLServerContainer<?> mssql = 
+    new MSSQLServerContainer<>("mcr.microsoft.com/mssql/server:2022-latest")
+        .acceptLicense();
+
+@DynamicPropertySource
+static void sqlProps(DynamicPropertyRegistry registry) {
+    registry.add("spring.datasource.url", 
+        () -> mssql.getJdbcUrl() + ";encrypt=true;trustServerCertificate=true");
+    registry.add("spring.datasource.username", mssql::getUsername);
+    registry.add("spring.datasource.password", mssql::getPassword);
+}
+```
+
+**Benefits**:
+- Real database testing without manual setup
+- Isolated test environments
+- Automatic cleanup
+- Consistent across all environments
+
+### EmbeddedKafka Configuration
+
+For lighter Kafka testing without full containers:
+
+```java
+@EmbeddedKafka(partitions = 1, topics = {"test-outbox-events"})
+@TestPropertySource(properties = {
+    "spring.kafka.bootstrap-servers=${spring.embedded.kafka.brokers}"
+})
+class KafkaIntegrationTest {
+    // Tests use embedded Kafka automatically
+}
+```
+
+### Transactional Tests
+
+Service tests use `@Transactional` for automatic rollback:
+
+```java
+@SpringBootTest
+@Transactional
+class OrderServiceTest {
+    // Database state is rolled back after each test
+    // Ensures test isolation
+}
+```
+
+### Testing Virtual Threads
+
+Tests verify virtual thread usage for concurrent event processing:
+
+```java
+@Test
+void shouldProcessEventsInVirtualThreads() {
+    // Verify events are processed concurrently
+    // Check thread names contain "virtual"
+}
+```
+
+## Docker Compose Testing
+
+### Manual Integration Testing
+
+For testing the full infrastructure stack:
+
+```bash
+# 1. Start infrastructure
+cd infrastructure && docker compose up -d
+
+# 2. Wait for services to be healthy
+docker compose ps
+
+# 3. Start applications
+# Terminal 1 - Order Service
+mvn spring-boot:run -pl order-service -Dspring-boot.run.profiles=azuresql
+
+# Terminal 2 - Catbox Server
+mvn spring-boot:run -pl catbox-server -Dspring-boot.run.profiles=azuresql
+
+# 4. Test manually
+curl -X POST http://localhost:8080/api/orders \
+  -H "Content-Type: application/json" \
+  -d '{"customerName": "Alice", "productName": "Widget", "amount": 99.99}'
+
+# 5. Verify in Kafka
+docker exec catbox-kafka kafka-console-consumer.sh \
+  --bootstrap-server localhost:9092 \
+  --topic outbox-events \
+  --from-beginning
+
+# 6. Stop services
+cd infrastructure && docker compose down
+```
+
+## Continuous Integration
+
+### GitHub Actions
+
+The project includes CI workflows that run tests automatically:
+
+```yaml
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Set up JDK 21
+        uses: actions/setup-java@v3
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+          
+      - name: Run tests with coverage
+        run: mvn clean verify
+        
+      - name: Upload coverage reports
+        uses: codecov/codecov-action@v3
+```
+
+## Troubleshooting
+
+### Docker Issues
+
+**Testcontainers fails to start**
+
+```bash
+# Check Docker is running
+docker ps
+
+# Check Docker disk space
+docker system df
+
+# Clean up if needed
+docker system prune -a
+```
+
+### Kafka Test Failures
+
+**EmbeddedKafka timeout**
+
+- Increase test timeout in `@Test` annotation
+- Check available memory (Kafka requires ~512MB)
+- Verify no port conflicts
+
+**Testcontainers Kafka fails**
+
+- Ensure Docker has sufficient resources
+- Check Docker Desktop settings (4GB RAM minimum)
+- Review container logs: `docker logs <container-id>`
+
+### Database Test Failures
+
+**SQL Server container fails to start**
+
+```bash
+# Check license acceptance
+# Ensure .acceptLicense() is called on container
+
+# Verify SQL Server image
+docker pull mcr.microsoft.com/mssql/server:2022-latest
+
+# Check Docker resources (SQL Server needs ~2GB RAM)
+```
+
+**Connection timeout**
+
+- SQL Server container takes 15-30 seconds to be ready
+- Tests use automatic waiting with Testcontainers
+- Check Docker container logs for initialization errors
+
+### Performance Issues
+
+**Tests are slow**
+
+```bash
+# Run in parallel (use with caution for integration tests)
+mvn test -T 1C
+
+# Skip integration tests for faster feedback
+mvn test -DskipITs
+
+# Increase Maven memory
+export MAVEN_OPTS="-Xmx2048m"
+```
+
+### Coverage Report Issues
+
+**Missing coverage data**
+
+```bash
+# Ensure you run verify, not just test
+mvn clean verify
+
+# Check JaCoCo execution files exist
+ls -la target/jacoco-ut/jacoco.exec
+ls -la target/jacoco-it/jacoco.exec
+```
+
+## Best Practices
+
+### Writing Tests
+
+1. **Follow AAA Pattern**: Arrange, Act, Assert
+   ```java
+   @Test
+   void shouldCreateOrderWithOutboxEvent() {
+       // Arrange
+       CreateOrderRequest request = new CreateOrderRequest(...);
+       
+       // Act
+       Order order = orderService.createOrder(request);
+       
+       // Assert
+       assertThat(order).isNotNull();
+       assertThat(outboxEvents).hasSize(1);
+   }
+   ```
+
+2. **Use Meaningful Test Names**: Describe what the test verifies
+   - Good: `shouldCreateOrderWithOutboxEventInSameTransaction`
+   - Bad: `testOrder1`
+
+3. **Keep Tests Focused**: One test should verify one behavior
+
+4. **Use AssertJ**: For readable, fluent assertions
+   ```java
+   assertThat(events)
+       .hasSize(1)
+       .first()
+       .extracting(OutboxEvent::getEventType)
+       .isEqualTo("OrderCreated");
+   ```
+
+5. **Clean Up Resources**: Use `@AfterEach` for cleanup when needed
+
+### Integration Tests
+
+1. **Use Testcontainers**: For real database/Kafka testing
+2. **Reuse Containers**: Use static containers to avoid repeated startup
+3. **Use @DynamicPropertySource**: To configure Spring properties from containers
+4. **Test Transactions**: Verify transactional boundaries
+5. **Use Awaitility**: For asynchronous operations
+   ```java
+   await().atMost(10, SECONDS)
+       .until(() -> outboxRepository.findAll().size() == 1);
+   ```
+
+### Performance Tests
+
+1. **Establish Baselines**: Record initial performance metrics
+2. **Test Realistic Scenarios**: Use production-like data volumes
+3. **Monitor Resources**: CPU, memory, database connections
+4. **Ramp Up Gradually**: Simulate realistic user growth
+5. **Test Failure Scenarios**: Network failures, database slowdowns
+
+### Architecture Tests
+
+1. **Document Rules**: Explain why each rule exists
+2. **Run in CI**: Catch violations early
+3. **Update Tests**: As architecture evolves
+4. **Be Pragmatic**: Allow exceptions when justified
+
+## Additional Resources
+
+- **[JMeter Testing](../jmeter-tests/README.md)** - Detailed performance testing guide
+- **[Architecture Documentation](architecture.md)** - System design and patterns
+- **[Quick Start Guide](quick-start.md)** - Setup and running the application
+- **[Testcontainers Documentation](https://www.testcontainers.org/)** - Container testing
+- **[ArchUnit User Guide](https://www.archunit.org/userguide/html/000_Index.html)** - Architecture testing
+
+## Summary
+
+The Catbox project has comprehensive test coverage across multiple levels:
+
+- ✅ **31 test classes** covering unit, integration, and E2E scenarios
+- ✅ **Testcontainers** for realistic database and Kafka testing  
+- ✅ **ArchUnit** for automated architecture validation
+- ✅ **JMeter** for performance and load testing
+- ✅ **JaCoCo** for code coverage tracking and reporting
+- ✅ **Virtual thread testing** for concurrent processing validation
+
+This multi-layered approach ensures reliability, performance, and maintainability of the transactional outbox pattern implementation.
