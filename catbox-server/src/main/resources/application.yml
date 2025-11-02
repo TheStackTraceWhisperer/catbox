@@ -74,6 +74,9 @@ outbox:
       - org.apache.kafka.common.errors.AuthenticationException
       - org.apache.kafka.common.errors.AuthorizationException
 
+  archival:
+    schedule: "0 0 2 * * *"  # Daily at 2 AM (can be customized using cron expression)
+
 server:
   port: 8081
 

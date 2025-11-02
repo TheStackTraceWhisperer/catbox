@@ -51,11 +51,11 @@ public class OutboxArchivalService {
 
         log.info("Archiving {} events sent before {}", eventsToArchive.size(), cutoffTime);
 
-        // Move events to archive table
-        for (OutboxEvent event : eventsToArchive) {
-            OutboxArchiveEvent archiveEvent = new OutboxArchiveEvent(event);
-            archiveEventRepository.save(archiveEvent);
-        }
+        // Move events to archive table in batch
+        List<OutboxArchiveEvent> archiveEvents = eventsToArchive.stream()
+                .map(OutboxArchiveEvent::new)
+                .toList();
+        archiveEventRepository.saveAll(archiveEvents);
 
         // Delete archived events from the main table
         outboxEventRepository.deleteAll(eventsToArchive);
@@ -84,10 +84,11 @@ public class OutboxArchivalService {
 
         log.info("Manual archival: archiving {} events sent before {}", eventsToArchive.size(), cutoffTime);
 
-        for (OutboxEvent event : eventsToArchive) {
-            OutboxArchiveEvent archiveEvent = new OutboxArchiveEvent(event);
-            archiveEventRepository.save(archiveEvent);
-        }
+        // Move events to archive table in batch
+        List<OutboxArchiveEvent> archiveEvents = eventsToArchive.stream()
+                .map(OutboxArchiveEvent::new)
+                .toList();
+        archiveEventRepository.saveAll(archiveEvents);
 
         outboxEventRepository.deleteAll(eventsToArchive);
 
