@@ -337,6 +337,22 @@ The project includes a `compose.yaml` file that sets up:
    - 3 partitions for outbox events
    - Ready for horizontal scaling
 
+### Resource Limits
+
+All services are configured with CPU and memory limits to prevent resource exhaustion:
+
+- **Azure SQL Edge**: 2 CPU cores / 2GB RAM (max), 0.5 CPU / 512MB RAM (reserved)
+- **Kafka**: 2 CPU cores / 2GB RAM (max), 0.5 CPU / 512MB RAM (reserved)
+- **Keycloak**: 1.5 CPU cores / 1GB RAM (max), 0.25 CPU / 256MB RAM (reserved)
+- **Prometheus**: 1 CPU core / 1GB RAM (max), 0.25 CPU / 256MB RAM (reserved)
+- **Grafana**: 0.5 CPU cores / 512MB RAM (max), 0.1 CPU / 128MB RAM (reserved)
+- **Loki**: 1 CPU core / 512MB RAM (max), 0.1 CPU / 128MB RAM (reserved)
+- **Promtail**: 0.5 CPU cores / 256MB RAM (max), 0.1 CPU / 64MB RAM (reserved)
+
+**Total Requirements**: 9.5 CPU cores / 8.25GB RAM (maximum), 2.25 CPU cores / 1.9GB RAM (minimum reserved)
+
+These limits ensure stable operation and prevent any single service from consuming excessive resources. Adjust the limits in `compose.yaml` based on your system capacity and workload requirements.
+
 ### Using Docker Compose
 
 Start services:
