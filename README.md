@@ -349,7 +349,7 @@ All services are configured with CPU and memory limits to prevent resource exhau
 - **Loki**: 1 CPU core / 512MB RAM (max), 0.1 CPU / 128MB RAM (reserved)
 - **Promtail**: 0.5 CPU cores / 256MB RAM (max), 0.1 CPU / 64MB RAM (reserved)
 
-**Total Requirements**: 8.5 CPU cores / 7.25GB RAM (maximum), 1.8 CPU cores / 1.86GB RAM (minimum reserved)
+**Total Requirements**: 8.5 CPU cores / 7.25GB RAM (maximum), 1.8 CPU cores / 1.81GB RAM (minimum reserved)
 
 These limits ensure stable operation and prevent any single service from consuming excessive resources. The configured limits are suitable for development and testing environments. **For production deployments**, consider increasing these limits based on your actual workload requirements, especially for Azure SQL Edge and Kafka which may need significantly more resources under heavy load. Adjust the limits in `compose.yaml` based on your system capacity and environment type.
 
