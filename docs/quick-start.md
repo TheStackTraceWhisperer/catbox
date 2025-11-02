@@ -71,7 +71,7 @@ The `order-service` will be available at `http://localhost:8080` and the `catbox
 ## Building the Application
 
 ```bash
-mvn clean install
+mvn clean verify
 ```
 
 ## Example Usage
