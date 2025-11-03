@@ -28,6 +28,7 @@ cd jmeter-tests
 # Single test
 ./scripts/run-test.sh order    # Order Service (50 threads, 5 min)
 ./scripts/run-test.sh outbox   # Outbox Service (30 threads, 5 min)
+./scripts/run-test.sh admin    # Admin UI (20 threads, 5 min)
 ./scripts/run-test.sh stress   # Stress test (100 threads, 10 min)
 
 # All tests
@@ -40,6 +41,7 @@ cd jmeter-tests
 |------|---------|----------|---------|
 | `order` | 50 | 5 min | Load test Order Service API |
 | `outbox` | 30 | 5 min | Load test Outbox Service API |
+| `admin` | 20 | 5 min | Load test Admin Web UI |
 | `stress` | 100 | 10 min | End-to-end stress test |
 
 ## Custom Parameters
@@ -62,6 +64,8 @@ jmeter-tests/results/
 │   └── index.html                        # Open this in browser
 ├── outbox_service_<timestamp>.jtl
 ├── outbox_service_report_<timestamp>/
+├── admin_ui_<timestamp>.jtl
+├── admin_ui_report_<timestamp>/
 ├── stress_test_<timestamp>.jtl
 └── stress_test_report_<timestamp>/
 ```
@@ -79,8 +83,11 @@ jmeter-tests/results/
 |-----------|-----------|--------------|-----------|
 | Create Order | 50-100/s | 50-100ms | 200ms |
 | Get Orders | 100-200/s | 20-50ms | 100ms |
+| Get Order By ID | 100-200/s | 20-50ms | 100ms |
 | Update Order | 50-100/s | 50-100ms | 200ms |
 | Get Pending Events | 50-100/s | 30-60ms | 150ms |
+| Mark Event Unsent | 40-80/s | 40-80ms | 180ms |
+| Admin UI Page Load | 30-60/s | 100-200ms | 400ms |
 
 ## Troubleshooting
 

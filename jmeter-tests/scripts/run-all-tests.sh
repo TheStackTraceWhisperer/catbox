@@ -161,9 +161,41 @@ echo ""
 echo "Waiting 30 seconds before next test..."
 sleep 30
 
-# Test 3: End-to-End Stress Test
+# Test 3: Admin UI Load Test
 echo "-------------------------------"
-echo "Test 3: End-to-End Stress Test"
+echo "Test 3: Admin UI Load Test"
+echo "-------------------------------"
+echo "Running with 20 threads for 5 minutes..."
+echo ""
+
+docker run --rm \
+    $NETWORK_MODE \
+    -v "$JMETER_DIR/testplans:/tests" \
+    -v "$JMETER_DIR/testdata:/testdata" \
+    -v "$JMETER_DIR/results:/results" \
+    justb4/jmeter:5.6.3 \
+    -n -t "/tests/AdminUI_LoadTest.jmx" \
+    -Joutbox.service.host="$OUTBOX_HOST" \
+    -Joutbox.service.port="$OUTBOX_PORT" \
+    -Jnum.threads=20 \
+    -Jramp.up=20 \
+    -Jduration=300 \
+    -l "/results/admin_ui_${TIMESTAMP}.jtl" \
+    -e -o "/results/admin_ui_report_${TIMESTAMP}"
+
+echo ""
+echo "✓ Admin UI Load Test completed"
+echo "  Results: results/admin_ui_${TIMESTAMP}.jtl"
+echo "  Report: results/admin_ui_report_${TIMESTAMP}/index.html"
+echo ""
+
+# Wait a bit between tests
+echo "Waiting 30 seconds before next test..."
+sleep 30
+
+# Test 4: End-to-End Stress Test
+echo "-------------------------------"
+echo "Test 4: End-to-End Stress Test"
 echo "-------------------------------"
 echo "Running with 100 threads for 10 minutes..."
 echo ""
@@ -204,7 +236,10 @@ echo ""
 echo "2. Outbox Service Load Test:"
 echo "   Report: results/outbox_service_report_${TIMESTAMP}/index.html"
 echo ""
-echo "3. End-to-End Stress Test:"
+echo "3. Admin UI Load Test:"
+echo "   Report: results/admin_ui_report_${TIMESTAMP}/index.html"
+echo ""
+echo "4. End-to-End Stress Test:"
 echo "   Report: results/stress_test_report_${TIMESTAMP}/index.html"
 echo ""
 echo "Open the HTML reports in your browser to view detailed results."

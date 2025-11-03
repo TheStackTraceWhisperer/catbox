@@ -8,17 +8,18 @@ This document provides a comprehensive summary of the JMeter test suite implemen
 
 ### 1. Test Plans (JMX Files)
 
-Three comprehensive JMeter test plans were created:
+Four comprehensive JMeter test plans were created:
 
 #### a. OrderService_LoadTest.jmx
 - **Purpose**: Load testing the Order Service API endpoints
 - **Thread Groups**:
   - Order Creation (50 threads, 5 min): Tests POST /api/orders with realistic order data
   - Order Read Operations (50 threads, 5 min): Tests GET /api/orders to measure read performance
+  - Get Order By ID (50 threads, 5 min): Tests GET /api/orders/{id} endpoint
   - Order Update Operations (50 threads, 5 min): Tests PATCH /api/orders/{id}/status with various status values
 - **Features**:
   - CSV data-driven testing with 50 realistic customer/product combinations
-  - Response assertions (HTTP 201 for creation, HTTP 200 for reads)
+  - Response assertions (HTTP 201 for creation, HTTP 200 for reads, HTTP 200/404 for get by ID)
   - JSON path extraction for order IDs
   - Think times to simulate realistic user behavior
   - Configurable parameters (threads, ramp-up, duration)
@@ -28,21 +29,37 @@ Three comprehensive JMeter test plans were created:
 - **Thread Groups**:
   - Query Outbox Events (30 threads, 5 min): Tests GET /api/outbox-events and /api/outbox-events/pending
   - Search Outbox Events (30 threads, 5 min): Tests paginated search with various parameters
+  - Mark Event Unsent (30 threads, 5 min): Tests POST /api/outbox-events/{id}/mark-unsent endpoint
 - **Features**:
   - Tests all outbox query endpoints
   - Validates JSON response structures
   - Tests pagination functionality
+  - Tests event reprocessing functionality
   - Configurable parameters
 
-#### c. EndToEnd_StressTest.jmx
+#### c. AdminUI_LoadTest.jmx
+- **Purpose**: Load testing the Admin Web UI
+- **Thread Groups**:
+  - Admin UI Page Views (20 threads, 5 min): Tests GET /admin with various filters and pagination
+- **Features**:
+  - Tests page loads without filters
+  - Tests pagination functionality
+  - Tests pending-only filter
+  - HTML response validation
+  - Configurable parameters
+
+#### d. EndToEnd_StressTest.jmx
 - **Purpose**: Comprehensive stress test simulating high concurrent load
 - **Thread Groups**:
   - High Volume Order Creation (100 threads, 10 min): Continuous order creation
   - High Volume Order Updates (100 threads, 10 min): Continuous order status updates
+  - Get Order By ID - Stress (100 threads, 10 min): Continuous order retrieval by ID
   - Outbox Monitoring Load (50 threads, 10 min): Continuous monitoring of pending events
+  - Admin UI Page Load - Stress (100 threads, 10 min): Continuous admin UI page loads
 - **Features**:
   - Simulates realistic production load
   - Tests both services simultaneously
+  - Tests all major endpoints under stress
   - Monitors pending event accumulation
   - Configurable stress parameters (up to 200+ threads supported)
   - Generates timestamped results for comparison
@@ -110,14 +127,16 @@ Comprehensive documentation covering:
 ### Performance Testing Scenarios
 
 1. **Basic Load Testing**:
-   - 50 concurrent users creating/updating orders
+   - 50 concurrent users creating/reading/updating orders
    - 30 concurrent users querying outbox events
+   - 20 concurrent users accessing admin UI
    - Sustainable for 5-10 minutes
 
 2. **Stress Testing**:
    - 100-200 concurrent users across all operations
    - Tests system limits and breaking points
    - Monitors pending event accumulation
+   - Tests admin UI under high load
    - Sustainable for 10-30 minutes
 
 3. **Endurance Testing**:
@@ -149,8 +168,9 @@ Comprehensive documentation covering:
 ### Test Validation
 
 Each test includes multiple assertions:
-- HTTP response codes (201 for POST, 200 for GET/PATCH)
+- HTTP response codes (201 for POST, 200 for GET/PATCH, 204 for mark-unsent, 200/404 for get by ID)
 - JSON structure validation
+- HTML structure validation (for admin UI)
 - Required field presence (order ID, event data)
 - Data integrity checks
 
@@ -201,8 +221,11 @@ Based on the application architecture with Java 21 virtual threads:
 |----------|-------------------|--------------|-----------------|
 | POST /api/orders | 50-100 req/s | 50-100ms | 200ms |
 | GET /api/orders | 100-200 req/s | 20-50ms | 100ms |
+| GET /api/orders/{id} | 100-200 req/s | 20-50ms | 100ms |
 | PATCH /api/orders/{id}/status | 50-100 req/s | 50-100ms | 200ms |
 | GET /api/outbox-events/pending | 50-100 req/s | 30-60ms | 150ms |
+| POST /api/outbox-events/{id}/mark-unsent | 40-80 req/s | 40-80ms | 180ms |
+| GET /admin | 30-60 req/s | 100-200ms | 400ms |
 
 ### Stress Test Observations
 
@@ -251,25 +274,28 @@ Tests stress database operations:
 
 ```
 jmeter-tests/
-├── README.md (10KB - comprehensive documentation)
+├── README.md (comprehensive documentation)
+├── IMPLEMENTATION_SUMMARY.md (implementation details)
+├── QUICK_REFERENCE.md (quick reference guide)
 ├── results/.gitignore (excludes test results from git)
 ├── scripts/
-│   ├── run-all-tests.sh (5.3KB - run all tests sequentially)
-│   ├── run-test.sh (3.3KB - run individual tests)
-│   └── start-infrastructure.sh (1.3KB - start Docker services)
+│   ├── run-test.sh (run individual tests)
+│   ├── run-all-tests.sh (run all tests sequentially)
+│   └── start-infrastructure.sh (start Docker services)
 ├── testdata/
-│   └── orders.csv (1.6KB - 50 test records)
+│   └── orders.csv (50 test records)
 └── testplans/
-    ├── EndToEnd_StressTest.jmx (25KB - comprehensive stress test)
-    ├── OrderService_LoadTest.jmx (29KB - order service load test)
-    └── OutboxService_LoadTest.jmx (24KB - outbox service load test)
+    ├── OrderService_LoadTest.jmx (order service load test - includes get by ID)
+    ├── OutboxService_LoadTest.jmx (outbox service load test - includes mark-unsent)
+    ├── AdminUI_LoadTest.jmx (admin UI load test - NEW)
+    └── EndToEnd_StressTest.jmx (comprehensive stress test - includes all new endpoints)
 ```
 
 ## Benefits
 
 1. **No Installation Required**: Docker-based approach eliminates JMeter setup hassle
 2. **Cross-Platform Compatibility**: Works consistently on Linux, macOS, and Windows
-3. **Comprehensive Coverage**: Tests all major API endpoints and operations
+3. **Comprehensive Coverage**: Tests all major API endpoints and operations including new functionality
 4. **Realistic Scenarios**: Uses actual customer/product data with realistic think times
 5. **Scalability Testing**: Can easily scale from 10 to 200+ concurrent users
 6. **Automated Execution**: Scripts make it easy to run tests consistently
