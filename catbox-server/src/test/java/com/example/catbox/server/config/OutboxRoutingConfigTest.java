@@ -195,4 +195,62 @@ class OutboxRoutingConfigTest {
         // Then
         assertThat(rule.getStrategy()).isEqualTo(ClusterPublishingStrategy.ALL_MUST_SUCCEED);
     }
+
+    @Test
+    void getRoutingRule_throwsExceptionForInvalidClustersFormat() {
+        // Given
+        OutboxRoutingConfig config = new OutboxRoutingConfig();
+        config.setRules(Map.of(
+            "TestEvent", Map.of(
+                "clusters", 123 // Invalid: Integer instead of String/List/Map
+            )
+        ));
+        
+        // When/Then
+        assertThatThrownBy(() -> config.getRoutingRule("TestEvent"))
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessageContaining("Invalid 'clusters' format");
+    }
+
+    @Test
+    void getRoutingRule_handlesIndexedOptionalProperties() {
+        // Given
+        OutboxRoutingConfig config = new OutboxRoutingConfig();
+        Map<String, Object> optionalMap = new java.util.LinkedHashMap<>();
+        optionalMap.put("0", "cluster-c");
+        optionalMap.put("1", "cluster-d");
+        
+        config.setRules(Map.of(
+            "TestEvent", Map.of(
+                "clusters", List.of("cluster-a", "cluster-b"),
+                "optional", optionalMap
+            )
+        ));
+        
+        // When
+        RoutingRule rule = config.getRoutingRule("TestEvent");
+        
+        // Then
+        assertThat(rule).isNotNull();
+        assertThat(rule.getOptional()).containsExactly("cluster-c", "cluster-d");
+    }
+
+    @Test
+    void getRoutingRule_handlesSingleOptionalClusterAsString() {
+        // Given
+        OutboxRoutingConfig config = new OutboxRoutingConfig();
+        config.setRules(Map.of(
+            "TestEvent", Map.of(
+                "clusters", "cluster-a",
+                "optional", "cluster-b"
+            )
+        ));
+        
+        // When
+        RoutingRule rule = config.getRoutingRule("TestEvent");
+        
+        // Then
+        assertThat(rule).isNotNull();
+        assertThat(rule.getOptional()).containsExactly("cluster-b");
+    }
 }

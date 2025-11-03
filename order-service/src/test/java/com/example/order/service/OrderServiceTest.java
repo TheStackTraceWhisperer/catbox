@@ -21,6 +21,7 @@ import java.math.BigDecimal;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 @SpringBootTest(classes = {OrderServiceApplication.class, CatboxClientAutoConfiguration.class})
 @Transactional
@@ -123,5 +124,31 @@ class OrderServiceTest {
 
         // Then
         assertThat(orders).hasSizeGreaterThanOrEqualTo(2);
+    }
+
+    @Test
+    void testGetOrderById_Success() {
+        // Given
+        CreateOrderRequest request = new CreateOrderRequest("Charlie", "Mouse", new BigDecimal("19.99"));
+        Order createdOrder = orderService.createOrder(request);
+
+        // When
+        Order retrievedOrder = orderService.getOrderById(createdOrder.getId());
+
+        // Then
+        assertThat(retrievedOrder.getId()).isEqualTo(createdOrder.getId());
+        assertThat(retrievedOrder.getCustomerName()).isEqualTo("Charlie");
+        assertThat(retrievedOrder.getProductName()).isEqualTo("Mouse");
+    }
+
+    @Test
+    void testGetOrderById_ThrowsExceptionWhenNotFound() {
+        // Given
+        Long nonExistentId = 99999L;
+
+        // When & Then
+        assertThatThrownBy(() -> orderService.getOrderById(nonExistentId))
+                .isInstanceOf(com.example.order.exception.OrderNotFoundException.class)
+                .hasMessageContaining("Order not found: " + nonExistentId);
     }
 }

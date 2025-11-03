@@ -203,5 +203,33 @@ class OutboxArchivalServiceTest {
         assertThat(archived.getKafkaPartition()).isEqualTo(5);
         assertThat(archived.getKafkaOffset()).isEqualTo(123456L);
         assertThat(archived.getKafkaTimestamp()).isNotNull();
+    void manualArchive_returnsZeroWhenNoEventsToArchive() {
+        // Given - No old events
+        OutboxEvent event = new OutboxEvent("Order", "A1", "OrderCreated", "{}");
+        event.setSentAt(LocalDateTime.now().minusDays(1));
+        outboxEventRepository.save(event);
+
+        // When - Archive with 3-day retention
+        int archived = archivalService.manualArchive(3);
+
+        // Then
+        assertThat(archived).isEqualTo(0);
+        assertThat(outboxEventRepository.count()).isEqualTo(1);
+        assertThat(archiveEventRepository.count()).isEqualTo(0);
+    }
+
+    @Test
+    void manualArchive_returnsZeroForNegativeRetention() {
+        // Given
+        OutboxEvent event = new OutboxEvent("Order", "A1", "OrderCreated", "{}");
+        event.setSentAt(LocalDateTime.now().minusDays(10));
+        outboxEventRepository.save(event);
+
+        // When - Archive with invalid negative retention
+        int archived = archivalService.manualArchive(-5);
+
+        // Then
+        assertThat(archived).isEqualTo(0);
+        assertThat(outboxEventRepository.count()).isEqualTo(1); // Event not archived
     }
 }

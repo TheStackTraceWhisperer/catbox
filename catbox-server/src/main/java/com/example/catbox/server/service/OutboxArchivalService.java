@@ -5,6 +5,7 @@ import com.example.catbox.common.entity.OutboxEvent;
 import com.example.catbox.server.repository.OutboxArchiveEventRepository;
 import com.example.catbox.common.repository.OutboxEventRepository;
 import com.example.catbox.server.config.OutboxProcessingConfig;
+import com.example.catbox.server.metrics.OutboxMetricsService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -28,6 +29,7 @@ public class OutboxArchivalService {
     private final OutboxEventRepository outboxEventRepository;
     private final OutboxArchiveEventRepository archiveEventRepository;
     private final OutboxProcessingConfig processingConfig;
+    private final OutboxMetricsService metricsService;
 
     /**
      * Archives old sent events. Runs daily at 2 AM by default.
@@ -60,6 +62,9 @@ public class OutboxArchivalService {
         // Delete archived events from the main table
         outboxEventRepository.deleteAll(eventsToArchive);
 
+        // Record metrics
+        metricsService.recordArchival(eventsToArchive.size());
+
         log.info("Successfully archived {} events", eventsToArchive.size());
     }
 
@@ -91,6 +96,9 @@ public class OutboxArchivalService {
         archiveEventRepository.saveAll(archiveEvents);
 
         outboxEventRepository.deleteAll(eventsToArchive);
+
+        // Record metrics
+        metricsService.recordArchival(eventsToArchive.size());
 
         log.info("Manual archival completed: {} events archived", eventsToArchive.size());
         return eventsToArchive.size();
