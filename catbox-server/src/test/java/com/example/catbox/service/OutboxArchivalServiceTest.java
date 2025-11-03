@@ -182,4 +182,26 @@ class OutboxArchivalServiceTest {
         assertThat(archived.getSentAt()).isNotNull();
         assertThat(archived.getArchivedAt()).isNotNull();
     }
+
+    @Test
+    void archiveOldEvents_preservesKafkaMetadata() {
+        // Given - Event with Kafka metadata
+        OutboxEvent event = new OutboxEvent("Order", "A1", "OrderCreated", "{}");
+        event.setSentAt(LocalDateTime.now().minusDays(10));
+        event.setKafkaPartition(5);
+        event.setKafkaOffset(123456L);
+        event.setKafkaTimestamp(LocalDateTime.now().minusDays(10));
+        event = outboxEventRepository.save(event);
+        Long originalId = event.getId();
+
+        // When
+        archivalService.archiveOldEvents();
+
+        // Then - Kafka metadata should be preserved in archive
+        OutboxArchiveEvent archived = archiveEventRepository.findAll().get(0);
+        assertThat(archived.getOriginalEventId()).isEqualTo(originalId);
+        assertThat(archived.getKafkaPartition()).isEqualTo(5);
+        assertThat(archived.getKafkaOffset()).isEqualTo(123456L);
+        assertThat(archived.getKafkaTimestamp()).isNotNull();
+    }
 }

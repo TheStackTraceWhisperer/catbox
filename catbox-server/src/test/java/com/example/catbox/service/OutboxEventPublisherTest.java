@@ -224,4 +224,34 @@ class OutboxEventPublisherTest {
         assertThat(updated.getPermanentFailureCount()).isEqualTo(0);
         assertThat(updated.getLastError()).isNull();
     }
+
+    @Test
+    void publishEvent_capturesKafkaMetadata() throws Exception {
+        // Given
+        OutboxEvent event = outboxEventRepository.save(
+                new OutboxEvent("Order", "A1", "OrderCreated", "{}")
+        );
+        
+        @SuppressWarnings("unchecked")
+        KafkaTemplate<String, String> mockTemplate = Mockito.mock(KafkaTemplate.class);
+        
+        // Create a mock SendResult with specific metadata
+        int expectedPartition = 3;
+        long expectedOffset = 98765L;
+        SendResult<String, String> mockSendResult = createMockSendResult("OrderCreated", expectedPartition, expectedOffset);
+        CompletableFuture<SendResult<String, String>> future = CompletableFuture.completedFuture(mockSendResult);
+        
+        Mockito.when(kafkaTemplateFactory.getTemplate(eq("cluster-a"))).thenReturn(mockTemplate);
+        Mockito.when(mockTemplate.send(any(ProducerRecord.class))).thenReturn(future);
+
+        // When
+        publisher.publishEvent(event);
+
+        // Then - Verify Kafka metadata was captured
+        OutboxEvent updated = outboxEventRepository.findById(event.getId()).orElseThrow();
+        assertThat(updated.getSentAt()).isNotNull();
+        assertThat(updated.getKafkaPartition()).isEqualTo(expectedPartition);
+        assertThat(updated.getKafkaOffset()).isEqualTo(expectedOffset);
+        assertThat(updated.getKafkaTimestamp()).isNotNull();
+    }
 }
