@@ -19,6 +19,7 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 @SpringBootTest(classes = CatboxServerApplication.class)
 @Transactional
@@ -81,5 +82,52 @@ class OutboxServiceTest {
         OutboxEvent reloaded = outboxEventRepository.findById(e.getId()).orElseThrow();
         assertThat(reloaded.getSentAt()).isNull();
         assertThat(reloaded.getInProgressUntil()).isNull();
+    }
+
+    @Test
+    void getAllEvents_returnsAllEvents() {
+        List<OutboxEvent> events = outboxService.getAllEvents();
+        assertThat(events).hasSize(3);
+    }
+
+    @Test
+    void markUnsent_throwsExceptionWhenNotFound() {
+        // When & Then
+        assertThatThrownBy(() -> outboxService.markUnsent(99999L))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("OutboxEvent not found");
+    }
+
+    @Test
+    void findPaged_filtersWithBlankValues() {
+        // Test that blank string parameters are ignored
+        Page<OutboxService.OutboxEventSummaryDto> page = outboxService.findPaged(
+                0, 10, "  ", "", null, null, "createdAt", Sort.Direction.ASC
+        );
+        assertThat(page.getTotalElements()).isEqualTo(3);
+    }
+
+    @Test
+    void findPaged_filtersWithAggregateIdAndPending() {
+        outboxEventRepository.save(new OutboxEvent("Order", "A1", "OrderCreated", "{}"));
+        OutboxEvent sent = new OutboxEvent("Order", "A1", "OrderStatusChanged", "{}");
+        sent.setSentAt(java.time.LocalDateTime.now());
+        outboxEventRepository.save(sent);
+
+        Page<OutboxService.OutboxEventSummaryDto> page = outboxService.findPaged(
+                0, 10, null, null, "A1", true, "createdAt", Sort.Direction.DESC
+        );
+        // Should only return pending events for A1
+        assertThat(page.getTotalElements()).isEqualTo(2); // A1 from setup + new A1
+    }
+
+    @Test
+    void findPaged_withAllNullParameters() {
+        Page<OutboxService.OutboxEventSummaryDto> page = outboxService.findPaged(
+                null, null, null, null, null, null, null, null
+        );
+        assertThat(page.getTotalElements()).isEqualTo(3);
+        assertThat(page.getNumber()).isEqualTo(0); // Default page
+        assertThat(page.getSize()).isEqualTo(20); // Default size
     }
 }

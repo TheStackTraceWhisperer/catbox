@@ -21,6 +21,7 @@ import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 /**
  * Tests for the OutboxFailureHandler service that manages permanent failures
@@ -181,5 +182,13 @@ class OutboxFailureHandlerTest {
         OutboxEvent updated2 = outboxEventRepository.findById(event2.getId()).orElseThrow();
         assertThat(updated2.getPermanentFailureCount()).isEqualTo(1);
         assertThat(updated2.getLastError()).isEqualTo("Error 2");
+    }
+
+    @Test
+    void recordPermanentFailure_throwsExceptionWhenEventNotFound() {
+        // When & Then
+        assertThatThrownBy(() -> failureHandler.recordPermanentFailure(99999L, "Error"))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("Event not found");
     }
 }
