@@ -42,6 +42,7 @@ public class OutboxMetricsService {
     private Counter publishFailureCounter;
     private Counter archiveCounter;
     private Counter deadLetterCounter;
+    private Counter permanentFailureRetryCounter;
 
     // Timer for event processing duration
     private Timer eventProcessingTimer;
@@ -89,6 +90,11 @@ public class OutboxMetricsService {
         // Counter: Dead letter events
         deadLetterCounter = Counter.builder("outbox.events.deadletter")
                 .description("Total number of events moved to dead letter queue")
+                .register(meterRegistry);
+
+        // Counter: Permanent failure retries
+        permanentFailureRetryCounter = Counter.builder("outbox.events.permanent.failure.retry")
+                .description("Total number of permanent failure retries recorded")
                 .register(meterRegistry);
 
         // Timer: Event processing duration (from claim to publish)
@@ -184,6 +190,13 @@ public class OutboxMetricsService {
      */
     public void recordDeadLetter() {
         deadLetterCounter.increment();
+    }
+
+    /**
+     * Record a permanent failure retry attempt.
+     */
+    public void recordPermanentFailureRetry() {
+        permanentFailureRetryCounter.increment();
     }
 
     /**

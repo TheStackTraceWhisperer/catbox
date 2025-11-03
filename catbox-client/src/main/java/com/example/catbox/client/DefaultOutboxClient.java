@@ -16,6 +16,7 @@ class DefaultOutboxClient implements OutboxClient {
 
     private final OutboxEventRepository outboxEventRepository;
     private final ObjectMapper objectMapper;
+    private final CatboxClientMetricsService metricsService;
 
     @Override
     public void write(String aggregateType, String aggregateId, String eventType, Object payload) {
@@ -33,7 +34,13 @@ class DefaultOutboxClient implements OutboxClient {
             OutboxEvent event = new OutboxEvent(aggregateType, aggregateId, eventType, correlationId, jsonPayload);
             outboxEventRepository.save(event);
             
+            // 3. Record successful write metric
+            metricsService.recordOutboxWriteSuccess();
+            
         } catch (JsonProcessingException e) {
+            // Record failure metric before throwing exception
+            metricsService.recordOutboxWriteFailure();
+            
             // Fatal serialization error - propagate as unchecked exception
             throw new RuntimeException("Failed to serialize outbox event payload for: " + eventType, e);
         }

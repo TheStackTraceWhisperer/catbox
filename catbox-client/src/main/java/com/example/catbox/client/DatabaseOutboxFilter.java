@@ -31,6 +31,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class DatabaseOutboxFilter implements OutboxFilter {
 
     private final ProcessedMessageRepository repository;
+    private final CatboxClientMetricsService metricsService;
 
     @Override
     @Transactional(propagation = Propagation.REQUIRES_NEW)
@@ -53,6 +54,7 @@ public class DatabaseOutboxFilter implements OutboxFilter {
                 correlationId, consumerGroup)) {
             log.debug("Duplicate detected for correlationId: {} "
                     + "in consumerGroup: {}", correlationId, consumerGroup);
+            metricsService.recordFilterDeduped();
             return true;
         }
 
@@ -63,11 +65,13 @@ public class DatabaseOutboxFilter implements OutboxFilter {
             repository.save(message);
             log.trace("First time processing correlationId: {} "
                     + "in consumerGroup: {}", correlationId, consumerGroup);
+            metricsService.recordFilterUnique();
             return false;
         } catch (DataIntegrityViolationException e) {
             // Race condition: another instance processed it concurrently
             log.debug("Concurrent duplicate detected for correlationId: {} "
                     + "in consumerGroup: {}", correlationId, consumerGroup);
+            metricsService.recordFilterConcurrentDuplicate();
             return true;
         }
     }
@@ -93,6 +97,7 @@ public class DatabaseOutboxFilter implements OutboxFilter {
             repository.save(message);
             log.trace("Marked correlationId: {} as processed "
                     + "in consumerGroup: {}", correlationId, consumerGroup);
+            metricsService.recordFilterMarkProcessed();
         } catch (DataIntegrityViolationException e) {
             log.debug("CorrelationId: {} already marked as processed "
                     + "in consumerGroup: {}", correlationId, consumerGroup);
@@ -134,5 +139,6 @@ public class DatabaseOutboxFilter implements OutboxFilter {
                 correlationId, consumerGroup);
         log.info("Marked correlationId: {} as unprocessed "
                 + "in consumerGroup: {}", correlationId, consumerGroup);
+        metricsService.recordFilterMarkUnprocessed();
     }
 }

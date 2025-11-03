@@ -51,6 +51,9 @@ public class OutboxFailureHandler {
         log.warn("Recording permanent failure #{} for event: {}. Error: {}", 
                 currentCount, eventId, errorMessage);
 
+        // Record the retry metric
+        metricsService.recordPermanentFailureRetry();
+
         if (currentCount >= processingConfig.getMaxPermanentRetries()) {
             // Move to dead-letter queue
             log.error("Event {} exceeded max permanent retries ({}). Moving to dead-letter queue.", 
