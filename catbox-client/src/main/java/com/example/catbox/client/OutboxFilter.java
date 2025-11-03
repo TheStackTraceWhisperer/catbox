@@ -1,9 +1,9 @@
 package com.example.catbox.client;
 
 /**
- * Filter interface for detecting duplicate Kafka event listener messages.
- * Implementations track processed correlation IDs to prevent duplicate
- * processing.
+ * Filter interface for preventing duplicate processing of Kafka event
+ * listener messages. Implementations track processed correlation IDs to
+ * prevent duplicate processing.
  *
  * <p>Example usage in a Kafka listener:
  * <pre>

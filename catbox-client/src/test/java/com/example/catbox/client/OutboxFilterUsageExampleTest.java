@@ -129,7 +129,7 @@ class OutboxFilterUsageExampleTest {
         // - Validate the data
         // - Perform business logic
         // - Save to database
-        System.out.println("Processing message: " + message);
+        // For this example, we just acknowledge the message was processed
     }
     
     /**
@@ -156,13 +156,12 @@ class OutboxFilterUsageExampleTest {
          */
         public void handleOrderEvent(String message, Map<String, Object> headers) {
             String correlationId = (String) headers.get("correlationId");
-            
+
             if (outboxFilter.deduped(correlationId)) {
                 // Already processed, skip
-                System.out.println("Skipping duplicate message: " + correlationId);
                 return;
             }
-            
+
             // Process the message
             processOrderEvent(message);
         }
