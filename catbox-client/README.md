@@ -19,13 +19,13 @@ public void createOrder(Order order) {
 }
 ```
 
-### OutboxFilter - Deduplication for Kafka Consumers
+### OutboxFilter - Production-Ready Deduplication for Kafka Consumers
 
-The `OutboxFilter` provides a mechanism to deduplicate Kafka event listener messages based on correlation IDs. This is essential for implementing idempotent consumers that can handle at-least-once delivery semantics.
+The `OutboxFilter` provides a database-backed mechanism to deduplicate Kafka event listener messages based on correlation IDs and consumer groups. This is essential for implementing idempotent consumers that can handle at-least-once delivery semantics.
 
 #### Quick Start
 
-1. **Auto-Configuration**: The library automatically provides an `InMemoryOutboxFilter` bean when you include the dependency.
+1. **Auto-Configuration**: The library automatically provides a `DatabaseOutboxFilter` bean that persists processed message records to the database.
 
 2. **Usage in Kafka Listener**:
 
@@ -36,11 +36,11 @@ public class OrderEventConsumer {
     @Autowired
     private OutboxFilter outboxFilter;
     
-    @KafkaListener(topics = "OrderCreated")
+    @KafkaListener(topics = "OrderCreated", groupId = "order-processor")
     public void handleOrderEvent(String message, 
                                   @Header("correlationId") String correlationId) {
-        // Check if this message has already been processed
-        if (outboxFilter.deduped(correlationId)) {
+        // Check if this message has already been processed by this consumer group
+        if (outboxFilter.deduped(correlationId, "order-processor")) {
             // This message has already been processed, acknowledge and skip
             log.info("Skipping duplicate message with correlationId: {}", correlationId);
             return;
@@ -54,87 +54,116 @@ public class OrderEventConsumer {
 
 #### API Reference
 
-**`boolean deduped(String correlationId)`**
-- Checks if a correlation ID has been processed before
-- On first call with a correlation ID, returns `false` and records it
-- On subsequent calls with the same ID, returns `true`
-- Thread-safe for concurrent use
+**`boolean deduped(String correlationId, String consumerGroup)`**
+- Checks if a correlation ID has been processed by a specific consumer group
+- On first call with a correlation ID for a consumer group, returns `false` and records it
+- On subsequent calls with the same ID and group, returns `true`
+- Thread-safe for concurrent use across multiple consumer instances
+- Uses database for persistence (survives restarts)
 
-**`void markProcessed(String correlationId)`**
-- Manually marks a correlation ID as processed
+**`void markProcessed(String correlationId, String consumerGroup)`**
+- Manually marks a correlation ID as processed for a consumer group
 - Useful for pre-populating the filter or recovery scenarios
 
-**`boolean isProcessed(String correlationId)`**
-- Read-only check if correlation ID has been processed
+**`boolean isProcessed(String correlationId, String consumerGroup)`**
+- Read-only check if correlation ID has been processed by a consumer group
 - Does not record the correlation ID
 
-#### Default Implementation
+**`void markUnprocessed(String correlationId, String consumerGroup)`**
+- Removes a processed message record, allowing reprocessing
+- Available through the admin UI for manual intervention
 
-The default `InMemoryOutboxFilter` implementation:
-- Uses a `ConcurrentHashMap` for thread-safe operations
-- Stores correlation IDs in memory (state lost on restart)
-- Provides O(1) lookup performance
-- Suitable for development and non-critical use cases
+#### Default Implementation: DatabaseOutboxFilter
 
-#### Custom Implementation
+The default `DatabaseOutboxFilter` implementation:
+- **Persistent**: Uses a database table (`processed_messages`) for storage
+- **Multi-instance safe**: Works correctly across multiple consumer instances
+- **Per-consumer-group tracking**: Supports different consumer groups processing the same messages
+- **Production-ready**: Designed for high-concurrency environments
+- **Automatic archival**: Old records are archived to prevent unbounded growth
 
-For production use cases requiring persistence across restarts, you can provide your own implementation:
+Database schema:
+```sql
+CREATE TABLE processed_messages (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    correlation_id VARCHAR(255) NOT NULL,
+    consumer_group VARCHAR(100) NOT NULL,
+    processed_at TIMESTAMP NOT NULL,
+    event_type VARCHAR(100),
+    aggregate_type VARCHAR(100),
+    aggregate_id VARCHAR(100),
+    UNIQUE INDEX idx_correlation_consumer (correlation_id, consumer_group),
+    INDEX idx_processed_at (processed_at)
+);
+```
+
+#### Admin UI Management
+
+The Catbox admin UI (available at `/admin/processed-messages`) provides:
+- **View processed messages**: Browse all processed messages with filtering by consumer group and correlation ID
+- **Mark as unprocessed**: Manually remove processed message records to allow reprocessing
+- **Statistics**: View counts and trends
+
+Access the admin UI at: `http://localhost:8081/admin/processed-messages`
+
+#### Archival
+
+Old processed message records are automatically archived to prevent database growth:
+- Default retention: Same as outbox events (configurable via `outbox.archival.retention-days`)
+- Archive schedule: Daily at 3 AM (configurable via `outbox.processed-messages.archival.schedule`)
+- Archived records are moved to `processed_messages_archive` table
+
+#### Consumer Group Isolation
+
+Each consumer group maintains its own set of processed messages:
+```java
+// Different groups can process the same correlation ID independently
+OutboxFilter filter = ...;
+
+// Group 1 processes the message
+filter.deduped("corr-123", "group-1"); // returns false (first time)
+filter.deduped("corr-123", "group-1"); // returns true (duplicate)
+
+// Group 2 can also process the same message
+filter.deduped("corr-123", "group-2"); // returns false (first time for this group)
+filter.deduped("corr-123", "group-2"); // returns true (duplicate)
+```
+
+#### Testing with InMemoryOutboxFilter
+
+For testing, you can use the `InMemoryOutboxFilter`:
 
 ```java
-@Configuration
-public class OutboxFilterConfig {
-    
+@TestConfiguration
+public class TestConfig {
     @Bean
-    public OutboxFilter outboxFilter(OutboxEventRepository repository) {
-        return new DatabaseOutboxFilter(repository);
+    @Primary
+    public OutboxFilter outboxFilter() {
+        return new InMemoryOutboxFilter();
     }
-}
-
-public class DatabaseOutboxFilter implements OutboxFilter {
-    
-    private final OutboxEventRepository repository;
-    
-    public DatabaseOutboxFilter(OutboxEventRepository repository) {
-        this.repository = repository;
-    }
-    
-    @Override
-    public boolean deduped(String correlationId) {
-        if (correlationId == null || correlationId.isEmpty()) {
-            return false;
-        }
-        
-        // Check if correlation ID exists in database
-        boolean exists = repository.existsByCorrelationId(correlationId);
-        
-        if (!exists) {
-            // Create a processed event record
-            ProcessedEvent event = new ProcessedEvent(correlationId);
-            repository.save(event);
-            return false;
-        }
-        
-        return true;
-    }
-    
-    // Implement other methods...
 }
 ```
+
+**Note:** `InMemoryOutboxFilter` is deprecated for production use. It:
+- Stores correlation IDs in memory (state lost on restart)
+- Not suitable for multi-instance deployments
+- Should only be used for testing and development
 
 #### Use Cases
 
 1. **Kafka Consumer Idempotency**: Prevent duplicate processing when Kafka delivers the same message multiple times
-2. **Multi-Instance Deployments**: Ensure only one instance processes a given correlation ID
+2. **Multi-Instance Deployments**: Ensure only one instance processes a given message per consumer group
 3. **Recovery After Failures**: Track which messages have been successfully processed
 4. **Event Replay**: Skip already-processed events during event replay scenarios
+5. **Manual Reprocessing**: Mark messages as unprocessed through the admin UI to trigger reprocessing
 
 #### Best Practices
 
-1. **Always use correlation IDs**: Ensure your outbox events have unique correlation IDs
-2. **Persistent implementation for production**: Use a database-backed filter for production environments
-3. **Cleanup strategy**: Implement a cleanup strategy to prevent unbounded growth of processed IDs
-4. **Monitoring**: Monitor the filter's size and performance
-5. **Null handling**: The filter handles null/empty correlation IDs gracefully
+1. **Always use consumer groups**: Pass the Kafka consumer group ID to the filter
+2. **Use correlation IDs**: Ensure your outbox events have unique correlation IDs
+3. **Monitor the admin UI**: Regularly check processed message counts and trends
+4. **Configure archival**: Set appropriate retention periods for your use case
+5. **Handle null correlation IDs**: The filter treats null/empty correlation IDs as not processed
 
 #### Example with Correlation ID Generation
 
@@ -179,4 +208,17 @@ Add the dependency to your `pom.xml`:
 
 The library will auto-configure and provide:
 - `OutboxClient` bean
-- `OutboxFilter` bean (InMemoryOutboxFilter by default)
+- `OutboxFilter` bean (DatabaseOutboxFilter by default)
+
+## Configuration
+
+```yaml
+# Archival configuration (applies to both outbox events and processed messages)
+outbox:
+  archival:
+    retention-days: 30  # Keep records for 30 days before archiving
+    schedule: "0 0 2 * * *"  # Run daily at 2 AM
+  processed-messages:
+    archival:
+      schedule: "0 0 3 * * *"  # Run daily at 3 AM (after outbox archival)
+```
