@@ -5,13 +5,19 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 
+/**
+ * Auto-configuration for Catbox client components.
+ */
 @Configuration
 @ComponentScan
 public class CatboxClientAutoConfiguration {
-    
+
     /**
-     * Provides a default in-memory OutboxFilter bean if no other implementation is configured.
-     * Applications can override this by providing their own OutboxFilter bean.
+     * Provides a default in-memory OutboxFilter bean if no other
+     * implementation is configured. Applications can override this by
+     * providing their own OutboxFilter bean.
+     *
+     * @return the default OutboxFilter implementation
      */
     @Bean
     @ConditionalOnMissingBean
