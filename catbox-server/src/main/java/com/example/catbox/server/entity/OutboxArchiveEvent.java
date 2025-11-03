@@ -49,6 +49,15 @@ public class OutboxArchiveEvent {
     @Column(nullable = false)
     private LocalDateTime archivedAt;
 
+    @Column
+    private Integer kafkaPartition;
+
+    @Column
+    private Long kafkaOffset;
+
+    @Column
+    private LocalDateTime kafkaTimestamp;
+
     @PrePersist
     protected void onArchive() {
         archivedAt = LocalDateTime.now();
@@ -63,5 +72,8 @@ public class OutboxArchiveEvent {
         this.payload = event.getPayload();
         this.createdAt = event.getCreatedAt();
         this.sentAt = event.getSentAt();
+        this.kafkaPartition = event.getKafkaPartition();
+        this.kafkaOffset = event.getKafkaOffset();
+        this.kafkaTimestamp = event.getKafkaTimestamp();
     }
 }
