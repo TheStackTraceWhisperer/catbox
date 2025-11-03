@@ -151,6 +151,6 @@ Before deploying to production:
 ## Additional Resources
 
 - [Main Project README](../README.md)
-- [Testing Guide](../TESTING.md)
+- [Testing Guide](../docs/testing.md)
 - [Kafka Security Documentation](kafka-security/README.md)
 - [Keycloak Configuration](keycloak/README.md)
