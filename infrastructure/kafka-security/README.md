@@ -110,6 +110,8 @@ For production use:
 5. **Enable mTLS** (mutual TLS) for additional security
 6. **Configure proper ACLs** based on your application needs
 
+For comprehensive production deployment guidance, see the [Production Deployment Guide](../../docs/production-deployment.md).
+
 ## Security Best Practices
 
 1. **Principle of Least Privilege**: Grant only necessary permissions via ACLs

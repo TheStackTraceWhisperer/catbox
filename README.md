@@ -97,6 +97,7 @@ For detailed architecture information, see [Architecture Documentation](docs/arc
 - **[API Reference](docs/api-reference.md)** - REST API endpoints and examples
 - **[Docker Setup](docs/docker-setup.md)** - Infrastructure services and Docker Compose
 - **[Security](docs/security.md)** - Kafka SSL/SASL and Keycloak OAuth2 configuration
+- **[Production Deployment](docs/production-deployment.md)** - Production best practices and recommendations
 - **[Monitoring](docs/monitoring.md)** - Metrics, dashboards, and observability
 - **[Multi-Cluster Routing](docs/multi-cluster-routing.md)** - Advanced Kafka routing strategies
 - **[Virtual Threads](docs/virtual-threads.md)** - Java 21 virtual threads implementation
