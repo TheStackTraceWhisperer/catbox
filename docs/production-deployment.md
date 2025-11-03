@@ -237,16 +237,37 @@ spring:
 **Recommended JVM settings for production:**
 
 ```bash
+# Basic JVM settings
 JAVA_OPTS="-Xms2g -Xmx2g \
   -XX:+UseG1GC \
   -XX:MaxGCPauseMillis=200 \
   -XX:+ExitOnOutOfMemoryError \
   -XX:+HeapDumpOnOutOfMemoryError \
-  -XX:HeapDumpPath=/var/log/catbox/heap_dump.hprof \
+  -XX:HeapDumpPath=/var/log/catbox/heap_dump.hprof"
+
+# JMX settings for production monitoring (with authentication and SSL)
+# IMPORTANT: For production, enable JMX authentication and SSL
+# Development/testing only (unsecured):
+# JAVA_OPTS="$JAVA_OPTS \
+#   -Dcom.sun.management.jmxremote \
+#   -Dcom.sun.management.jmxremote.port=9010 \
+#   -Dcom.sun.management.jmxremote.authenticate=false \
+#   -Dcom.sun.management.jmxremote.ssl=false"
+
+# Production (secured):
+JAVA_OPTS="$JAVA_OPTS \
   -Dcom.sun.management.jmxremote \
   -Dcom.sun.management.jmxremote.port=9010 \
-  -Dcom.sun.management.jmxremote.authenticate=false \
-  -Dcom.sun.management.jmxremote.ssl=false"
+  -Dcom.sun.management.jmxremote.rmi.port=9010 \
+  -Dcom.sun.management.jmxremote.authenticate=true \
+  -Dcom.sun.management.jmxremote.password.file=/etc/catbox/jmxremote.password \
+  -Dcom.sun.management.jmxremote.access.file=/etc/catbox/jmxremote.access \
+  -Dcom.sun.management.jmxremote.ssl=true \
+  -Dcom.sun.management.jmxremote.registry.ssl=true \
+  -Djavax.net.ssl.keyStore=/etc/catbox/keystore.jks \
+  -Djavax.net.ssl.keyStorePassword=\${JMX_KEYSTORE_PASSWORD} \
+  -Djavax.net.ssl.trustStore=/etc/catbox/truststore.jks \
+  -Djavax.net.ssl.trustStorePassword=\${JMX_TRUSTSTORE_PASSWORD}"
 ```
 
 ### Logging
@@ -439,5 +460,5 @@ For regulated industries:
 
 - [Kafka Production Recommendations](https://kafka.apache.org/documentation/#prodconfig)
 - [Spring Boot Production Features](https://docs.spring.io/spring-boot/docs/current/reference/html/actuator.html)
-- [Azure SQL Best Practices](https://docs.microsoft.com/en-us/azure/azure-sql/database/performance-guidance)
+- [Azure SQL Best Practices](https://learn.microsoft.com/en-us/azure/azure-sql/database/performance-guidance)
 - [Kubernetes Best Practices](https://kubernetes.io/docs/concepts/configuration/overview/)
