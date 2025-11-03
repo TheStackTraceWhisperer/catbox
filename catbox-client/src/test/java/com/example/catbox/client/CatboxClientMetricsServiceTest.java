@@ -1,15 +1,13 @@
 package com.example.catbox.client;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
-/**
- * Tests for CatboxClientMetricsService.
- */
+/** Tests for CatboxClientMetricsService. */
 class CatboxClientMetricsServiceTest {
 
   private CatboxClientMetricsService metricsService;
@@ -29,7 +27,8 @@ class CatboxClientMetricsServiceTest {
     assertThat(meterRegistry.find("catbox.client.outbox.write.failure").counter()).isNotNull();
     assertThat(meterRegistry.find("catbox.client.filter.deduped").counter()).isNotNull();
     assertThat(meterRegistry.find("catbox.client.filter.unique").counter()).isNotNull();
-    assertThat(meterRegistry.find("catbox.client.filter.concurrent.duplicate").counter()).isNotNull();
+    assertThat(meterRegistry.find("catbox.client.filter.concurrent.duplicate").counter())
+        .isNotNull();
     assertThat(meterRegistry.find("catbox.client.filter.mark.processed").counter()).isNotNull();
     assertThat(meterRegistry.find("catbox.client.filter.mark.unprocessed").counter()).isNotNull();
   }
@@ -41,7 +40,8 @@ class CatboxClientMetricsServiceTest {
     metricsService.recordOutboxWriteSuccess();
 
     // Then
-    assertThat(meterRegistry.find("catbox.client.outbox.write.success").counter().count()).isEqualTo(2.0);
+    assertThat(meterRegistry.find("catbox.client.outbox.write.success").counter().count())
+        .isEqualTo(2.0);
   }
 
   @Test
@@ -50,7 +50,8 @@ class CatboxClientMetricsServiceTest {
     metricsService.recordOutboxWriteFailure();
 
     // Then
-    assertThat(meterRegistry.find("catbox.client.outbox.write.failure").counter().count()).isEqualTo(1.0);
+    assertThat(meterRegistry.find("catbox.client.outbox.write.failure").counter().count())
+        .isEqualTo(1.0);
   }
 
   @Test
@@ -79,7 +80,8 @@ class CatboxClientMetricsServiceTest {
     metricsService.recordFilterConcurrentDuplicate();
 
     // Then
-    assertThat(meterRegistry.find("catbox.client.filter.concurrent.duplicate").counter().count()).isEqualTo(1.0);
+    assertThat(meterRegistry.find("catbox.client.filter.concurrent.duplicate").counter().count())
+        .isEqualTo(1.0);
   }
 
   @Test
@@ -89,7 +91,8 @@ class CatboxClientMetricsServiceTest {
     metricsService.recordFilterMarkProcessed();
 
     // Then
-    assertThat(meterRegistry.find("catbox.client.filter.mark.processed").counter().count()).isEqualTo(2.0);
+    assertThat(meterRegistry.find("catbox.client.filter.mark.processed").counter().count())
+        .isEqualTo(2.0);
   }
 
   @Test
@@ -98,6 +101,7 @@ class CatboxClientMetricsServiceTest {
     metricsService.recordFilterMarkUnprocessed();
 
     // Then
-    assertThat(meterRegistry.find("catbox.client.filter.mark.unprocessed").counter().count()).isEqualTo(1.0);
+    assertThat(meterRegistry.find("catbox.client.filter.mark.unprocessed").counter().count())
+        .isEqualTo(1.0);
   }
 }

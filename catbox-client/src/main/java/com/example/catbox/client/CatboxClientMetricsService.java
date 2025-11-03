@@ -8,8 +8,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 /**
- * Service that tracks custom metrics for the catbox client operations.
- * Provides insights into client-side outbox writes and filter operations.
+ * Service that tracks custom metrics for the catbox client operations. Provides insights into
+ * client-side outbox writes and filter operations.
  */
 @Slf4j
 @Service
