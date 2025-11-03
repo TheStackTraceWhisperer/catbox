@@ -3,6 +3,7 @@ package com.example.orderprocessor.service;
 import com.example.orderprocessor.model.OrderCreatedPayload;
 import com.example.orderprocessor.model.OrderStatusChangedPayload;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.util.Random;
@@ -26,13 +27,16 @@ public class OrderEventProcessingService {
     private final AtomicInteger processedOrderStatusChangedCount = new AtomicInteger(0);
     private final AtomicInteger failureCount = new AtomicInteger(0);
     private final Random random = new Random();
+    
+    @Value("${order.processor.simulate-failures:true}")
+    private boolean simulateFailures;
 
     /**
      * Process an OrderCreated event.
      * 
      * <p>Simulates:
      * <ul>
-     *   <li>10% chance of intermittent failure (for retry testing)</li>
+     *   <li>10% chance of intermittent failure (for retry testing) - if enabled</li>
      *   <li>Otherwise processes successfully with simulated business logic</li>
      * </ul>
      * 
@@ -44,8 +48,8 @@ public class OrderEventProcessingService {
         log.info("Processing OrderCreated event - correlationId: {}, orderId: {}, customer: {}", 
             correlationId, payload.orderId(), payload.customerName());
 
-        // Simulate intermittent failures (10% chance)
-        if (shouldSimulateFailure()) {
+        // Simulate intermittent failures (10% chance) if enabled
+        if (simulateFailures && shouldSimulateFailure()) {
             failureCount.incrementAndGet();
             log.warn("Simulated intermittent failure for OrderCreated - correlationId: {}", correlationId);
             throw new ProcessingException("Simulated intermittent failure for testing");
@@ -64,7 +68,7 @@ public class OrderEventProcessingService {
      * 
      * <p>Simulates:
      * <ul>
-     *   <li>10% chance of intermittent failure (for retry testing)</li>
+     *   <li>10% chance of intermittent failure (for retry testing) - if enabled</li>
      *   <li>Otherwise processes successfully with simulated business logic</li>
      * </ul>
      * 
@@ -76,8 +80,8 @@ public class OrderEventProcessingService {
         log.info("Processing OrderStatusChanged event - correlationId: {}, orderId: {}, {} -> {}", 
             correlationId, payload.orderId(), payload.oldStatus(), payload.newStatus());
 
-        // Simulate intermittent failures (10% chance)
-        if (shouldSimulateFailure()) {
+        // Simulate intermittent failures (10% chance) if enabled
+        if (simulateFailures && shouldSimulateFailure()) {
             failureCount.incrementAndGet();
             log.warn("Simulated intermittent failure for OrderStatusChanged - correlationId: {}", correlationId);
             throw new ProcessingException("Simulated intermittent failure for testing");

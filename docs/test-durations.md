@@ -1920,3 +1920,521 @@ This report aggregates test durations across all modules in the build.
 
 ---
 
+## Module: catbox-server
+
+### Summary Statistics
+
+- **Test Classes:** 22
+- **Test Methods:** 105
+- **Passed:** 105
+- **Failed:** 0
+- **Total Test Duration:** 14.74s
+- **Module Execution Time:** 2m 17s
+- **Average Test Duration:** 140ms
+
+### Test Details
+
+### AdminControllerTest
+
+**Class Total Duration:** 630ms
+
+| Test Method | Duration | Status |
+|-------------|----------|--------|
+| adminPage_WithPendingOnlyFilter_ShouldReturnOnlyPending | 447ms | ✅ |
+| adminPage_WithPagination_ShouldReturnPagedResults | 84ms | ✅ |
+| adminPage_WithFilters_ShouldReturnFilteredResults | 29ms | ✅ |
+| adminPage_WithSorting_ShouldReturnSortedResults | 29ms | ✅ |
+| adminPage_ShouldReturnAdminView | 23ms | ✅ |
+| adminPage_WithDefaultParameters_ShouldUseDefaults | 18ms | ✅ |
+
+### CatboxApplicationTests
+
+**Class Total Duration:** 5ms
+
+| Test Method | Duration | Status |
+|-------------|----------|--------|
+| contextLoads | 5ms | ✅ |
+
+### CorrelationIdTest
+
+**Class Total Duration:** 135ms
+
+| Test Method | Duration | Status |
+|-------------|----------|--------|
+| publishEvent_withCorrelationId_sendsCorrelationIdInKafkaHeader | 58ms | ✅ |
+| publishEvent_withoutCorrelationId_sendsWithoutHeader | 54ms | ✅ |
+| createEvent_withCorrelationId_storesInDatabase | 23ms | ✅ |
+
+### DynamicKafkaTemplateFactoryEvictionTest
+
+**Class Total Duration:** 1.03s
+
+| Test Method | Duration | Status |
+|-------------|----------|--------|
+| testConcurrentAccessDoesNotCauseExceptions | 1.01s | ✅ |
+| testBeanNamingConvention | 9ms | ✅ |
+| testTemplateCreationAndCaching | 4ms | ✅ |
+| testTemplateReCreationAfterManualRemoval | 4ms | ✅ |
+| testEvictionHandlesEmptyCache | 3ms | ✅ |
+| testMultipleEvictionCallsDontCauseIssues | 3ms | ✅ |
+
+### DynamicKafkaTemplateFactoryProxyTest
+
+**Class Total Duration:** 89ms
+
+| Test Method | Duration | Status |
+|-------------|----------|--------|
+| testMultipleCallsDoNotDuplicateBeans | 47ms | ✅ |
+| testTemplateCanBeRetrievedDirectlyFromContext | 14ms | ✅ |
+| testDynamicallyCreatedTemplateHasSpringLifecycle | 7ms | ✅ |
+| testKafkaTemplateIsSpringManagedBean | 7ms | ✅ |
+| testKafkaTemplateIsSingleton | 7ms | ✅ |
+| testProducerFactoryIsSpringManagedBean | 7ms | ✅ |
+
+### DynamicKafkaTemplateFactorySslBundlePositiveTest
+
+**Class Total Duration:** 58ms
+
+| Test Method | Duration | Status |
+|-------------|----------|--------|
+| testClusterWithSslBundleHasSslConfiguration | 58ms | ✅ |
+
+### DynamicKafkaTemplateFactorySslBundleTest
+
+**Class Total Duration:** 21ms
+
+| Test Method | Duration | Status |
+|-------------|----------|--------|
+| testMissingClusterThrowsException | 11ms | ✅ |
+| testClusterWithoutSslBundleDoesNotHaveSslConfig | 10ms | ✅ |
+
+### E2EPollerMultiClusterTest
+
+**Class Total Duration:** 6.57s
+
+| Test Method | Duration | Status |
+|-------------|----------|--------|
+| testPollerRoutesEventsToCorrectClusters | 6.57s | ✅ |
+
+### E2EPollerTest
+
+**Class Total Duration:** 2.64s
+
+| Test Method | Duration | Status |
+|-------------|----------|--------|
+| testPollerClaimsAndPublishesEvent | 2.64s | ✅ |
+
+### OutboxArchivalServiceTest
+
+**Class Total Duration:** 476ms
+
+| Test Method | Duration | Status |
+|-------------|----------|--------|
+| archiveOldEvents_preservesKafkaMetadata | 123ms | ✅ |
+| archiveOldEvents_movesOldSentEventsToArchive | 90ms | ✅ |
+| manualArchive_returnsZeroWhenNoEventsToArchive | 59ms | ✅ |
+| manualArchive_returnsZeroForInvalidRetention | 57ms | ✅ |
+| archiveOldEvents_preservesAllEventData | 45ms | ✅ |
+| manualArchive_archivesWithCustomRetention | 45ms | ✅ |
+| manualArchive_returnsZeroForNegativeRetention | 30ms | ✅ |
+| archiveOldEvents_doesNothingWhenNoOldEvents | 27ms | ✅ |
+
+### OutboxControllerTest
+
+**Class Total Duration:** 422ms
+
+| Test Method | Duration | Status |
+|-------------|----------|--------|
+| markOutboxUnsent_ShouldMarkEventAsUnsent | 190ms | ✅ |
+| getPendingOutboxEvents_ShouldReturnOnlyPending | 131ms | ✅ |
+| searchOutbox_WithFilters_ShouldReturnFilteredResults | 80ms | ✅ |
+| getAllOutboxEvents_ShouldReturnAllEvents | 21ms | ✅ |
+
+### OutboxEventClaimTest
+
+**Class Total Duration:** 96ms
+
+| Test Method | Duration | Status |
+|-------------|----------|--------|
+| testClaimPendingEvents_claimsExpiredInProgressEvents | 31ms | ✅ |
+| testClaimPendingEvents_respectsBatchSize | 15ms | ✅ |
+| testClaimPendingEvents_skipsEventsInProgress | 13ms | ✅ |
+| testClaimPendingEvents_claimsEventsSuccessfully | 13ms | ✅ |
+| testClaimPendingEvents_skipsAlreadySentEvents | 13ms | ✅ |
+| testClaimPendingEvents_ordersEventsByCreatedAt | 11ms | ✅ |
+
+### OutboxEventClaimerConcurrencyTest
+
+**Class Total Duration:** 723ms
+
+| Test Method | Duration | Status |
+|-------------|----------|--------|
+| testConcurrentClaimersDoNotProcessSameEvents | 723ms | ✅ |
+
+### OutboxEventPublisherMultiClusterTest
+
+**Class Total Duration:** 219ms
+
+| Test Method | Duration | Status |
+|-------------|----------|--------|
+| allMustSucceed_successWhenAllClustersSucceed | 58ms | ✅ |
+| optionalClusters_failsWhenRequiredClusterFails | 36ms | ✅ |
+| atLeastOne_failsWhenAllClustersFail | 35ms | ✅ |
+| optionalClusters_successWhenRequiredSucceedsOptionalFails | 31ms | ✅ |
+| atLeastOne_successWhenOnlyOneClusterSucceeds | 30ms | ✅ |
+| allMustSucceed_failsWhenOneClusterFails | 29ms | ✅ |
+
+### OutboxEventPublisherTest
+
+**Class Total Duration:** 687ms
+
+| Test Method | Duration | Status |
+|-------------|----------|--------|
+| publishEvent_resetsFailureCountOnSuccess | 358ms | ✅ |
+| publishEvent_movesToDeadLetterAfterMaxPermanentRetries | 137ms | ✅ |
+| publishEvent_handlesPermanentFailure_kafkaException | 52ms | ✅ |
+| publishEvent_capturesKafkaMetadata | 48ms | ✅ |
+| publishEvent_successfullySendsAndMarksSent | 47ms | ✅ |
+| publishEvent_handlesPermanentFailure_noRoute | 45ms | ✅ |
+
+### OutboxFailureHandlerTest
+
+**Class Total Duration:** 248ms
+
+| Test Method | Duration | Status |
+|-------------|----------|--------|
+| recordPermanentFailure_movesToDeadLetterAfterMaxRetries | 83ms | ✅ |
+| recordPermanentFailure_handlesMultipleEvents | 58ms | ✅ |
+| recordPermanentFailure_incrementsFailureCount | 37ms | ✅ |
+| recordPermanentFailure_throwsExceptionWhenEventNotFound | 28ms | ✅ |
+| resetFailureCount_clearsFailureData | 28ms | ✅ |
+| resetFailureCount_doesNothingWhenCountIsZero | 14ms | ✅ |
+
+### OutboxMetricsServiceTest
+
+**Class Total Duration:** 414ms
+
+| Test Method | Duration | Status |
+|-------------|----------|--------|
+| recordDeadLetter_incrementsCounter | 85ms | ✅ |
+| updateArchivalMetrics_countsDeadLetterCorrectly | 84ms | ✅ |
+| updatePendingEventsMetrics_calculatesOldestAge | 56ms | ✅ |
+| updatePendingEventsMetrics_whenNoEvents_setsToZero | 30ms | ✅ |
+| updatePendingEventsMetrics_countsCorrectly | 28ms | ✅ |
+| updateArchivalMetrics_countsCorrectly | 27ms | ✅ |
+| updateArchivalMetrics_whenNoEvents_setsToZero | 23ms | ✅ |
+| recordPublishSuccess_incrementsCounter | 20ms | ✅ |
+| recordPublishFailure_incrementsCounter | 17ms | ✅ |
+| recordProcessingDuration_recordsTimer | 16ms | ✅ |
+| recordArchival_incrementsCounter | 14ms | ✅ |
+| metricsAreRegistered | 14ms | ✅ |
+
+### OutboxProcessingConfigTest
+
+**Class Total Duration:** 9ms
+
+| Test Method | Duration | Status |
+|-------------|----------|--------|
+| config_loadsDefaultPermanentFailureExceptions | 3ms | ✅ |
+| config_hasExistingProcessingSettings | 3ms | ✅ |
+| config_loadsMaxPermanentRetries | 3ms | ✅ |
+
+### OutboxRoutingConfigTest
+
+**Class Total Duration:** 6ms
+
+| Test Method | Duration | Status |
+|-------------|----------|--------|
+| getRoutingRule_handlesOptionalClusters | 2ms | ✅ |
+| getRoutingRule_throwsExceptionForInvalidFormat | 1ms | ✅ |
+| getRoutingRule_handlesIndexedPropertiesFromDynamicRegistry | 1ms | ✅ |
+| getRoutingRule_handlesIndexedOptionalProperties | 1ms | ✅ |
+| getRoutingRule_throwsExceptionForInvalidClustersFormat | 1ms | ✅ |
+| getRoutingRule_handlesStrategyWithHyphens | 0ms | ✅ |
+| getRoutingRule_handlesSingleOptionalClusterAsString | 0ms | ✅ |
+| getRoutingRule_handlesStrategyWithUnderscores | 0ms | ✅ |
+| getRoutingRule_defaultsToAllMustSucceedWhenStrategyNotSpecified | 0ms | ✅ |
+| getRoutingRule_handlesMultipleClustersWithStrategy | 0ms | ✅ |
+| getRoutingRule_returnsNullForUnknownEventType | 0ms | ✅ |
+| getRoutingRule_handlesSingleClusterAsString | 0ms | ✅ |
+| getRoutingRule_handlesBackwardCompatibleStringFormat | 0ms | ✅ |
+
+### OutboxServiceTest
+
+**Class Total Duration:** 248ms
+
+| Test Method | Duration | Status |
+|-------------|----------|--------|
+| findPaged_filtersWithAggregateIdAndPending | 63ms | ✅ |
+| findPaged_filtersAndSorts | 37ms | ✅ |
+| markUnsent_clearsSentAtAndLease | 30ms | ✅ |
+| markUnsent_throwsExceptionWhenNotFound | 29ms | ✅ |
+| findPaged_filtersWithBlankValues | 26ms | ✅ |
+| getAllEvents_returnsAllEvents | 22ms | ✅ |
+| getPendingEvents_returnsAllUnsent | 21ms | ✅ |
+| findPaged_withAllNullParameters | 20ms | ✅ |
+
+### SecurityConfigTest
+
+**Class Total Duration:** 4ms
+
+| Test Method | Duration | Status |
+|-------------|----------|--------|
+| shouldLoadSecurityFilterChain | 2ms | ✅ |
+| shouldHaveDisabledSecurityByDefault | 2ms | ✅ |
+
+### SecurityConfigurationTest
+
+**Class Total Duration:** 7ms
+
+| Test Method | Duration | Status |
+|-------------|----------|--------|
+| testSecureClusterConfiguration | 3ms | ✅ |
+| testSaslConfigurationProperties | 2ms | ✅ |
+| testSslBundleIsConfigured | 2ms | ✅ |
+
+
+---
+
+## Module: order-service
+
+### Summary Statistics
+
+- **Test Classes:** 6
+- **Test Methods:** 21
+- **Passed:** 21
+- **Failed:** 0
+- **Total Test Duration:** 1.67s
+- **Module Execution Time:** 25.66s
+- **Average Test Duration:** 79ms
+
+### Test Details
+
+### OrderControllerTest
+
+**Class Total Duration:** 471ms
+
+| Test Method | Duration | Status |
+|-------------|----------|--------|
+| getAllOrders_ShouldReturnAllOrders | 237ms | ✅ |
+| updateOrderStatus_WithNullStatus_ShouldReturnBadRequest | 89ms | ✅ |
+| createOrder_ShouldReturnCreatedOrder | 60ms | ✅ |
+| getOrderById_ShouldReturnOrder | 40ms | ✅ |
+| updateOrderStatus_ShouldUpdateAndReturnOrder | 24ms | ✅ |
+| updateOrderStatus_WithBlankStatus_ShouldReturnBadRequest | 21ms | ✅ |
+
+### OrderNotFoundExceptionTest
+
+**Class Total Duration:** 183ms
+
+| Test Method | Duration | Status |
+|-------------|----------|--------|
+| shouldCreateExceptionWithCorrectMessage | 178ms | ✅ |
+| shouldBeRuntimeException | 5ms | ✅ |
+
+### OrderServiceFailureTest
+
+**Class Total Duration:** 228ms
+
+| Test Method | Duration | Status |
+|-------------|----------|--------|
+| testOrderCreationFailsWhenOutboxWriteFails | 228ms | ✅ |
+
+### OrderServiceTest
+
+**Class Total Duration:** 760ms
+
+| Test Method | Duration | Status |
+|-------------|----------|--------|
+| testGetAllOrders | 645ms | ✅ |
+| testCreateOrder_CreatesOrderAndOutboxEvent | 49ms | ✅ |
+| testUpdateOrderStatus_CreatesOutboxEvent | 31ms | ✅ |
+| testGetOrderById_ThrowsExceptionWhenNotFound | 18ms | ✅ |
+| testGetOrderById_Success | 17ms | ✅ |
+
+### OrderTest
+
+**Class Total Duration:** 10ms
+
+| Test Method | Duration | Status |
+|-------------|----------|--------|
+| shouldCreateOrderWithConstructor | 4ms | ✅ |
+| onCreate_shouldNotOverrideExistingStatus | 3ms | ✅ |
+| onCreate_shouldSetDefaultStatus | 2ms | ✅ |
+| shouldSupportSettersAndGetters | 1ms | ✅ |
+
+### UpdateStatusRequestTest
+
+**Class Total Duration:** 22ms
+
+| Test Method | Duration | Status |
+|-------------|----------|--------|
+| shouldSupportEquality | 19ms | ✅ |
+| shouldCreateRequestWithStatus | 2ms | ✅ |
+| shouldHandleNullStatus | 1ms | ✅ |
+
+
+---
+
+## Module: order-processor
+
+### Summary Statistics
+
+- **Test Classes:** 3
+- **Test Methods:** 16
+- **Passed:** 15
+- **Failed:** 1
+- **Total Test Duration:** 17.81s
+- **Module Execution Time:** 34.93s
+- **Average Test Duration:** 1.11s
+
+### Test Details
+
+### OrderEventListenerTest
+
+**Class Total Duration:** 2.16s
+
+| Test Method | Duration | Status |
+|-------------|----------|--------|
+| testHandleOrderCreated_DuplicateMessage_SkippedAndAcknowledged | 2.02s | ✅ |
+| testHandleOrderCreated_UnexpectedException_Acknowledged | 58ms | ✅ |
+| testHandleOrderCreated_NullCorrelationId_ProcessedAndAcknowledged | 34ms | ✅ |
+| testHandleOrderCreated_ProcessingException_NotAcknowledged | 16ms | ✅ |
+| testHandleOrderCreated_NewMessage_ProcessedAndAcknowledged | 13ms | ✅ |
+| testHandleOrderStatusChanged_NewMessage_ProcessedAndAcknowledged | 10ms | ✅ |
+| testHandleOrderStatusChanged_DuplicateMessage_SkippedAndAcknowledged | 9ms | ✅ |
+
+### OrderEventProcessingServiceTest
+
+**Class Total Duration:** 1.24s
+
+| Test Method | Duration | Status |
+|-------------|----------|--------|
+| testProcessOrderCreated_Success | 639ms | ✅ |
+| testProcessOrderStatusChanged_Success | 426ms | ✅ |
+| testCounters_TrackProcessedEvents | 120ms | ✅ |
+| testResetCounters | 52ms | ✅ |
+
+### OrderProcessorE2ETest
+
+**Class Total Duration:** 14.42s
+
+| Test Method | Duration | Status |
+|-------------|----------|--------|
+| testHappyPath_SingleMessage_ProcessedSuccessfully | 10.06s | ❌ |
+| testDeduplication_DuplicateMessages_ProcessedOnlyOnce | 2.14s | ✅ |
+| testMixedScenario_UniqueAndDuplicateMessages | 1.86s | ✅ |
+| testMultipleUniqueMessages_AllProcessed | 231ms | ✅ |
+| testMessageWithoutCorrelationId_StillProcessed | 120ms | ✅ |
+
+
+---
+
+## Module: order-processor
+
+### Summary Statistics
+
+- **Test Classes:** 3
+- **Test Methods:** 16
+- **Passed:** 15
+- **Failed:** 1
+- **Total Test Duration:** 17.98s
+- **Module Execution Time:** 34.77s
+- **Average Test Duration:** 1.12s
+
+### Test Details
+
+### OrderEventListenerTest
+
+**Class Total Duration:** 2.43s
+
+| Test Method | Duration | Status |
+|-------------|----------|--------|
+| testHandleOrderCreated_DuplicateMessage_SkippedAndAcknowledged | 2.28s | ✅ |
+| testHandleOrderCreated_UnexpectedException_Acknowledged | 72ms | ✅ |
+| testHandleOrderCreated_NullCorrelationId_ProcessedAndAcknowledged | 37ms | ✅ |
+| testHandleOrderCreated_ProcessingException_NotAcknowledged | 17ms | ✅ |
+| testHandleOrderCreated_NewMessage_ProcessedAndAcknowledged | 12ms | ✅ |
+| testHandleOrderStatusChanged_NewMessage_ProcessedAndAcknowledged | 10ms | ✅ |
+| testHandleOrderStatusChanged_DuplicateMessage_SkippedAndAcknowledged | 8ms | ✅ |
+
+### OrderEventProcessingServiceTest
+
+**Class Total Duration:** 1.31s
+
+| Test Method | Duration | Status |
+|-------------|----------|--------|
+| testProcessOrderCreated_Success | 733ms | ✅ |
+| testProcessOrderStatusChanged_Success | 452ms | ✅ |
+| testCounters_TrackProcessedEvents | 104ms | ✅ |
+| testResetCounters | 19ms | ✅ |
+
+### OrderProcessorE2ETest
+
+**Class Total Duration:** 14.24s
+
+| Test Method | Duration | Status |
+|-------------|----------|--------|
+| testMixedScenario_UniqueAndDuplicateMessages | 11.54s | ❌ |
+| testDeduplication_DuplicateMessages_ProcessedOnlyOnce | 2.12s | ✅ |
+| testMultipleUniqueMessages_AllProcessed | 335ms | ✅ |
+| testMessageWithoutCorrelationId_StillProcessed | 124ms | ✅ |
+| testHappyPath_SingleMessage_ProcessedSuccessfully | 122ms | ✅ |
+
+
+---
+
+## Module: order-processor
+
+### Summary Statistics
+
+- **Test Classes:** 3
+- **Test Methods:** 16
+- **Passed:** 16
+- **Failed:** 0
+- **Total Test Duration:** 8.68s
+- **Module Execution Time:** 25.81s
+- **Average Test Duration:** 542ms
+
+### Test Details
+
+### OrderEventListenerTest
+
+**Class Total Duration:** 2.48s
+
+| Test Method | Duration | Status |
+|-------------|----------|--------|
+| testHandleOrderCreated_DuplicateMessage_SkippedAndAcknowledged | 2.33s | ✅ |
+| testHandleOrderCreated_UnexpectedException_Acknowledged | 77ms | ✅ |
+| testHandleOrderCreated_NullCorrelationId_ProcessedAndAcknowledged | 35ms | ✅ |
+| testHandleOrderCreated_ProcessingException_NotAcknowledged | 16ms | ✅ |
+| testHandleOrderCreated_NewMessage_ProcessedAndAcknowledged | 12ms | ✅ |
+| testHandleOrderStatusChanged_NewMessage_ProcessedAndAcknowledged | 10ms | ✅ |
+| testHandleOrderStatusChanged_DuplicateMessage_SkippedAndAcknowledged | 7ms | ✅ |
+
+### OrderEventProcessingServiceTest
+
+**Class Total Duration:** 1.43s
+
+| Test Method | Duration | Status |
+|-------------|----------|--------|
+| testProcessOrderCreated_Success | 677ms | ✅ |
+| testProcessOrderStatusChanged_Success | 579ms | ✅ |
+| testCounters_TrackProcessedEvents | 125ms | ✅ |
+| testResetCounters | 48ms | ✅ |
+
+### OrderProcessorE2ETest
+
+**Class Total Duration:** 4.76s
+
+| Test Method | Duration | Status |
+|-------------|----------|--------|
+| testDeduplication_DuplicateMessages_ProcessedOnlyOnce | 2.13s | ✅ |
+| testMixedScenario_UniqueAndDuplicateMessages | 2.06s | ✅ |
+| testMultipleUniqueMessages_AllProcessed | 331ms | ✅ |
+| testHappyPath_SingleMessage_ProcessedSuccessfully | 126ms | ✅ |
+| testMessageWithoutCorrelationId_StillProcessed | 119ms | ✅ |
+
+
+---
+

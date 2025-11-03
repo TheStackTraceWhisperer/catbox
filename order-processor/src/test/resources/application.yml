@@ -8,6 +8,10 @@ spring:
     consumer:
       auto-offset-reset: earliest
 
+order:
+  processor:
+    simulate-failures: false  # Disable random failures for reliable tests
+
 logging:
   level:
     com.example.orderprocessor: DEBUG
