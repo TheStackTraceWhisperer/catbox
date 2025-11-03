@@ -103,7 +103,10 @@ public class OutboxMetricsService {
      * Update pending events metrics on a schedule.
      * Runs every 10 seconds to keep metrics current.
      */
-    @Scheduled(fixedDelay = 10000, initialDelay = 5000)
+    @Scheduled(
+            fixedDelayString = "${outbox.metrics.pending-events-update-delay:10s}",
+            initialDelayString = "${outbox.metrics.pending-events-initial-delay:5s}"
+    )
     public void updatePendingEventsMetrics() {
         try {
             // Count pending events (those without sentAt timestamp)
@@ -132,7 +135,10 @@ public class OutboxMetricsService {
      * Update archive and dead letter metrics on a schedule.
      * Runs every 30 seconds to keep metrics current.
      */
-    @Scheduled(fixedDelay = 30000, initialDelay = 10000)
+    @Scheduled(
+            fixedDelayString = "${outbox.metrics.archival-update-delay:30s}",
+            initialDelayString = "${outbox.metrics.archival-initial-delay:10s}"
+    )
     public void updateArchivalMetrics() {
         try {
             // Count archived events
