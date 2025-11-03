@@ -111,6 +111,11 @@
             <artifactId>awaitility</artifactId>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>com.example</groupId>
+            <artifactId>catbox-test-listener</artifactId>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
     
     <build>

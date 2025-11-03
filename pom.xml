@@ -28,6 +28,7 @@
     <modules>
         <module>catbox-common</module>
         <module>catbox-client</module>
+        <module>catbox-test-listener</module>
         <module>catbox-server</module>
         <module>order-service</module>
         <module>coverage-report</module>
@@ -47,6 +48,12 @@
                 <groupId>com.example</groupId>
                 <artifactId>catbox-client</artifactId>
                 <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.example</groupId>
+                <artifactId>catbox-test-listener</artifactId>
+                <version>${project.version}</version>
+                <scope>test</scope>
             </dependency>
 
             <!-- Database -->
