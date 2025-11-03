@@ -18,6 +18,7 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 
 import java.time.LocalDateTime;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -116,7 +117,7 @@ class OutboxControllerTest {
 
         // Verify event is marked as unsent
         OutboxEvent reloadedEvent = outboxEventRepository.findById(savedEvent.getId()).orElseThrow();
-        assert reloadedEvent.getSentAt() == null;
-        assert reloadedEvent.getInProgressUntil() == null;
+        assertThat(reloadedEvent.getSentAt()).isNull();
+        assertThat(reloadedEvent.getInProgressUntil()).isNull();
     }
 }

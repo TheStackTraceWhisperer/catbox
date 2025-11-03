@@ -19,6 +19,7 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 @SpringBootTest(classes = CatboxServerApplication.class)
 @Transactional
@@ -92,12 +93,9 @@ class OutboxServiceTest {
     @Test
     void markUnsent_throwsExceptionWhenNotFound() {
         // When & Then
-        try {
-            outboxService.markUnsent(99999L);
-            org.junit.jupiter.api.Assertions.fail("Expected IllegalArgumentException to be thrown");
-        } catch (IllegalArgumentException e) {
-            assertThat(e.getMessage()).contains("OutboxEvent not found");
-        }
+        assertThatThrownBy(() -> outboxService.markUnsent(99999L))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("OutboxEvent not found");
     }
 
     @Test

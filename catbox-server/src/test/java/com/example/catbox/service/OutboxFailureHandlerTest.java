@@ -21,6 +21,7 @@ import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 /**
  * Tests for the OutboxFailureHandler service that manages permanent failures
@@ -186,11 +187,8 @@ class OutboxFailureHandlerTest {
     @Test
     void recordPermanentFailure_throwsExceptionWhenEventNotFound() {
         // When & Then
-        try {
-            failureHandler.recordPermanentFailure(99999L, "Error");
-            org.junit.jupiter.api.Assertions.fail("Expected IllegalArgumentException to be thrown");
-        } catch (IllegalArgumentException e) {
-            assertThat(e.getMessage()).contains("Event not found");
-        }
+        assertThatThrownBy(() -> failureHandler.recordPermanentFailure(99999L, "Error"))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("Event not found");
     }
 }

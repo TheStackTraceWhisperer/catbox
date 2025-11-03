@@ -21,6 +21,7 @@ import java.math.BigDecimal;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 @SpringBootTest(classes = {OrderServiceApplication.class, CatboxClientAutoConfiguration.class})
 @Transactional
@@ -146,11 +147,8 @@ class OrderServiceTest {
         Long nonExistentId = 99999L;
 
         // When & Then
-        try {
-            orderService.getOrderById(nonExistentId);
-            org.junit.jupiter.api.Assertions.fail("Expected OrderNotFoundException to be thrown");
-        } catch (com.example.order.exception.OrderNotFoundException e) {
-            assertThat(e.getMessage()).contains("Order not found: " + nonExistentId);
-        }
+        assertThatThrownBy(() -> orderService.getOrderById(nonExistentId))
+                .isInstanceOf(com.example.order.exception.OrderNotFoundException.class)
+                .hasMessageContaining("Order not found: " + nonExistentId);
     }
 }
