@@ -1,8 +1,10 @@
 package com.example.catbox.client;
 
+import com.example.catbox.common.repository.ProcessedMessageRepository;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.mock;
 
 /**
  * Tests for CatboxClientAutoConfiguration.
@@ -10,26 +12,18 @@ import static org.assertj.core.api.Assertions.assertThat;
 class CatboxClientAutoConfigurationTest {
 
     @Test
-    void createDefaultOutboxFilter_createsInMemoryImplementation() {
+    void createDefaultOutboxFilter_createsDatabaseImplementation() {
         // Given
-        CatboxClientAutoConfiguration config = new CatboxClientAutoConfiguration();
+        CatboxClientAutoConfiguration config =
+                new CatboxClientAutoConfiguration();
+        ProcessedMessageRepository mockRepository =
+                mock(ProcessedMessageRepository.class);
 
         // When
-        OutboxFilter filter = config.outboxFilter();
+        OutboxFilter filter = config.outboxFilter(mockRepository);
 
         // Then
         assertThat(filter).isNotNull();
-        assertThat(filter).isInstanceOf(InMemoryOutboxFilter.class);
-    }
-
-    @Test
-    void defaultOutboxFilter_worksCorrectly() {
-        // Given
-        CatboxClientAutoConfiguration config = new CatboxClientAutoConfiguration();
-        OutboxFilter filter = config.outboxFilter();
-
-        // When/Then
-        assertThat(filter.deduped("test-id")).isFalse();
-        assertThat(filter.deduped("test-id")).isTrue();
+        assertThat(filter).isInstanceOf(DatabaseOutboxFilter.class);
     }
 }
