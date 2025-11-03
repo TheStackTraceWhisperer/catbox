@@ -22,33 +22,74 @@ if [ ! -f "compose.yaml" ]; then
     exit 1
 fi
 
+# Check dependencies
+echo "Step 0: Checking dependencies..."
+echo "--------------------------------"
+
+echo -n "Checking python3... "
+if command -v python3 &> /dev/null; then
+    echo -e "${GREEN}✓${NC}"
+else
+    echo -e "${RED}✗ python3 not found${NC}"
+    echo "Please install Python 3 to use this validation script."
+    exit 1
+fi
+
+echo -n "Checking PyYAML module... "
+if python3 -c "import yaml" 2>/dev/null; then
+    echo -e "${GREEN}✓${NC}"
+else
+    echo -e "${YELLOW}⚠ PyYAML not installed${NC}"
+    echo "YAML validation will be skipped. Install with: pip3 install pyyaml"
+    SKIP_YAML_VALIDATION=true
+fi
+
+echo -n "Checking docker... "
+if command -v docker &> /dev/null; then
+    echo -e "${GREEN}✓${NC}"
+else
+    echo -e "${YELLOW}⚠ docker not found (required to start services)${NC}"
+fi
+
+echo -n "Checking docker compose... "
+if docker compose version &> /dev/null; then
+    echo -e "${GREEN}✓${NC}"
+else
+    echo -e "${YELLOW}⚠ docker compose not available${NC}"
+fi
+
+echo ""
 echo "Step 1: Validating configuration files..."
 echo "-------------------------------------------"
 
+# Function to validate YAML
+validate_yaml() {
+    local file=$1
+    local name=$2
+    
+    echo -n "Checking $name... "
+    
+    if [ "$SKIP_YAML_VALIDATION" = true ]; then
+        if [ -f "$file" ]; then
+            echo -e "${GREEN}✓ (exists)${NC}"
+        else
+            echo -e "${RED}✗ File not found${NC}"
+            return 1
+        fi
+    else
+        if python3 -c "import yaml; yaml.safe_load(open('$file'))" 2>/dev/null; then
+            echo -e "${GREEN}✓${NC}"
+        else
+            echo -e "${RED}✗ Invalid YAML${NC}"
+            return 1
+        fi
+    fi
+}
+
 # Validate YAML files
-echo -n "Checking prometheus.yml... "
-if python3 -c "import yaml; yaml.safe_load(open('monitoring/prometheus/prometheus.yml'))" 2>/dev/null; then
-    echo -e "${GREEN}✓${NC}"
-else
-    echo -e "${RED}✗ Invalid YAML${NC}"
-    exit 1
-fi
-
-echo -n "Checking alertmanager.yml... "
-if python3 -c "import yaml; yaml.safe_load(open('monitoring/alertmanager/alertmanager.yml'))" 2>/dev/null; then
-    echo -e "${GREEN}✓${NC}"
-else
-    echo -e "${RED}✗ Invalid YAML${NC}"
-    exit 1
-fi
-
-echo -n "Checking alert-rules.yml... "
-if python3 -c "import yaml; yaml.safe_load(open('monitoring/alertmanager/alert-rules.yml'))" 2>/dev/null; then
-    echo -e "${GREEN}✓${NC}"
-else
-    echo -e "${RED}✗ Invalid YAML${NC}"
-    exit 1
-fi
+validate_yaml "monitoring/prometheus/prometheus.yml" "prometheus.yml"
+validate_yaml "monitoring/alertmanager/alertmanager.yml" "alertmanager.yml"
+validate_yaml "monitoring/alertmanager/alert-rules.yml" "alert-rules.yml"
 
 echo ""
 echo "Step 2: Validating Docker Compose configuration..."
@@ -159,19 +200,23 @@ echo ""
 echo "Step 7: Validating alert rule structure..."
 echo "-------------------------------------------"
 
-# Count alert rules
-rule_count=$(python3 -c "import yaml; data=yaml.safe_load(open('monitoring/alertmanager/alert-rules.yml')); print(sum(len(g['rules']) for g in data['groups']))")
-group_count=$(python3 -c "import yaml; data=yaml.safe_load(open('monitoring/alertmanager/alert-rules.yml')); print(len(data['groups']))")
-
-echo -e "${GREEN}✓${NC} Found $group_count alert groups with $rule_count total rules"
-
-# List alert groups
-python3 << 'EOF'
+if [ "$SKIP_YAML_VALIDATION" != true ]; then
+    # Count alert rules
+    rule_count=$(python3 -c "import yaml; data=yaml.safe_load(open('monitoring/alertmanager/alert-rules.yml')); print(sum(len(g['rules']) for g in data['groups']))")
+    group_count=$(python3 -c "import yaml; data=yaml.safe_load(open('monitoring/alertmanager/alert-rules.yml')); print(len(data['groups']))")
+    
+    echo -e "${GREEN}✓${NC} Found $group_count alert groups with $rule_count total rules"
+    
+    # List alert groups
+    python3 << 'EOF'
 import yaml
 data = yaml.safe_load(open('monitoring/alertmanager/alert-rules.yml'))
 for group in data['groups']:
     print(f"  - {group['name']}: {len(group['rules'])} rules")
 EOF
+else
+    echo -e "${YELLOW}⚠${NC} Skipping alert rule structure validation (PyYAML not installed)"
+fi
 
 echo ""
 echo "================================================"

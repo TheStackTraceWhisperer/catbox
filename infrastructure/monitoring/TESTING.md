@@ -284,6 +284,6 @@ This testing guide covers:
 - ✅ Troubleshooting common issues
 
 For more information, see:
-- [Monitoring Documentation](../docs/monitoring.md)
-- [Docker Setup](../docs/docker-setup.md)
-- [Infrastructure README](../infrastructure/README.md)
+- [Monitoring Documentation](../../docs/monitoring.md)
+- [Docker Setup](../../docs/docker-setup.md)
+- [Infrastructure README](../README.md)
