@@ -120,6 +120,13 @@ outbox:
   archival:
     schedule: "0 0 2 * * *"  # Daily at 2 AM (can be customized using cron expression)
 
+  metrics:
+    # Scheduled task configurations for metrics updates
+    pending-events-update-delay: 10s      # How often to update pending events metrics
+    pending-events-initial-delay: 5s      # Initial delay before first update
+    archival-update-delay: 30s            # How often to update archival and dead letter metrics
+    archival-initial-delay: 10s           # Initial delay before first archival metrics update
+
 server:
   port: 8081
 

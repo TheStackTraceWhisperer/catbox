@@ -5,6 +5,7 @@ import com.example.catbox.common.entity.OutboxEvent;
 import com.example.catbox.server.repository.OutboxDeadLetterEventRepository;
 import com.example.catbox.common.repository.OutboxEventRepository;
 import com.example.catbox.server.config.OutboxProcessingConfig;
+import com.example.catbox.server.metrics.OutboxMetricsService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -24,6 +25,7 @@ public class OutboxFailureHandler {
     private final OutboxEventRepository outboxEventRepository;
     private final OutboxDeadLetterEventRepository deadLetterRepository;
     private final OutboxProcessingConfig processingConfig;
+    private final OutboxMetricsService metricsService;
 
     /**
      * Records a permanent failure for an event.
@@ -59,6 +61,9 @@ public class OutboxFailureHandler {
             
             // Delete from outbox
             outboxEventRepository.delete(event);
+            
+            // Record metrics
+            metricsService.recordDeadLetter();
             
             log.info("Event {} moved to dead-letter queue with ID: {}", eventId, deadLetter.getId());
         } else {

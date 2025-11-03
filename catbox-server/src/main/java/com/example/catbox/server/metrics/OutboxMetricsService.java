@@ -1,6 +1,8 @@
 package com.example.catbox.server.metrics;
 
 import com.example.catbox.common.repository.OutboxEventRepository;
+import com.example.catbox.server.repository.OutboxArchiveEventRepository;
+import com.example.catbox.server.repository.OutboxDeadLetterEventRepository;
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.Gauge;
 import io.micrometer.core.instrument.MeterRegistry;
@@ -25,15 +27,21 @@ import java.util.concurrent.atomic.AtomicLong;
 public class OutboxMetricsService {
 
     private final OutboxEventRepository outboxEventRepository;
+    private final OutboxArchiveEventRepository archiveEventRepository;
+    private final OutboxDeadLetterEventRepository deadLetterEventRepository;
     private final MeterRegistry meterRegistry;
 
     // Gauges - updated periodically
     private final AtomicLong pendingEventsCount = new AtomicLong(0);
     private final AtomicLong oldestEventAgeSeconds = new AtomicLong(0);
+    private final AtomicLong archivedEventsCount = new AtomicLong(0);
+    private final AtomicLong deadLetterEventsCount = new AtomicLong(0);
 
     // Counters for success/failure
     private Counter publishSuccessCounter;
     private Counter publishFailureCounter;
+    private Counter archiveCounter;
+    private Counter deadLetterCounter;
 
     // Timer for event processing duration
     private Timer eventProcessingTimer;
@@ -53,6 +61,16 @@ public class OutboxMetricsService {
                 .description("Age in seconds of the oldest unsent event in the outbox")
                 .register(meterRegistry);
 
+        // Gauge: Number of archived events
+        Gauge.builder("outbox.events.archived.total", archivedEventsCount, AtomicLong::get)
+                .description("Total number of events in the archive table")
+                .register(meterRegistry);
+
+        // Gauge: Number of dead letter events
+        Gauge.builder("outbox.events.deadletter.total", deadLetterEventsCount, AtomicLong::get)
+                .description("Total number of events in the dead letter queue")
+                .register(meterRegistry);
+
         // Counter: Successful publishes
         publishSuccessCounter = Counter.builder("outbox.events.published.success")
                 .description("Total number of events successfully published to Kafka")
@@ -61,6 +79,16 @@ public class OutboxMetricsService {
         // Counter: Failed publishes
         publishFailureCounter = Counter.builder("outbox.events.published.failure")
                 .description("Total number of events that failed to publish to Kafka")
+                .register(meterRegistry);
+
+        // Counter: Archived events
+        archiveCounter = Counter.builder("outbox.events.archived")
+                .description("Total number of events archived")
+                .register(meterRegistry);
+
+        // Counter: Dead letter events
+        deadLetterCounter = Counter.builder("outbox.events.deadletter")
+                .description("Total number of events moved to dead letter queue")
                 .register(meterRegistry);
 
         // Timer: Event processing duration (from claim to publish)
@@ -75,7 +103,10 @@ public class OutboxMetricsService {
      * Update pending events metrics on a schedule.
      * Runs every 10 seconds to keep metrics current.
      */
-    @Scheduled(fixedDelay = 10000, initialDelay = 5000)
+    @Scheduled(
+            fixedDelayString = "${outbox.metrics.pending-events-update-delay:10s}",
+            initialDelayString = "${outbox.metrics.pending-events-initial-delay:5s}"
+    )
     public void updatePendingEventsMetrics() {
         try {
             // Count pending events (those without sentAt timestamp)
@@ -101,6 +132,31 @@ public class OutboxMetricsService {
     }
 
     /**
+     * Update archive and dead letter metrics on a schedule.
+     * Runs every 30 seconds to keep metrics current.
+     */
+    @Scheduled(
+            fixedDelayString = "${outbox.metrics.archival-update-delay:30s}",
+            initialDelayString = "${outbox.metrics.archival-initial-delay:10s}"
+    )
+    public void updateArchivalMetrics() {
+        try {
+            // Count archived events
+            long archivedCount = archiveEventRepository.count();
+            archivedEventsCount.set(archivedCount);
+
+            // Count dead letter events
+            long deadLetterCount = deadLetterEventRepository.count();
+            deadLetterEventsCount.set(deadLetterCount);
+
+            log.debug("Updated archival metrics: archived={}, deadLetter={}", 
+                        archivedCount, deadLetterCount);
+        } catch (Exception e) {
+            log.error("Error updating archival metrics", e);
+        }
+    }
+
+    /**
      * Record a successful event publish.
      */
     public void recordPublishSuccess() {
@@ -112,6 +168,22 @@ public class OutboxMetricsService {
      */
     public void recordPublishFailure() {
         publishFailureCounter.increment();
+    }
+
+    /**
+     * Record event archival.
+     * 
+     * @param count Number of events archived
+     */
+    public void recordArchival(int count) {
+        archiveCounter.increment(count);
+    }
+
+    /**
+     * Record event moved to dead letter queue.
+     */
+    public void recordDeadLetter() {
+        deadLetterCounter.increment();
     }
 
     /**
