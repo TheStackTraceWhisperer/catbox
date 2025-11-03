@@ -129,9 +129,9 @@ filter.deduped("corr-123", "group-2"); // returns false (first time for this gro
 filter.deduped("corr-123", "group-2"); // returns true (duplicate)
 ```
 
-#### Testing with InMemoryOutboxFilter
+#### Testing
 
-For testing, you can use the `InMemoryOutboxFilter`:
+For testing, you can create a simple test implementation or use mocks:
 
 ```java
 @TestConfiguration
@@ -139,15 +139,32 @@ public class TestConfig {
     @Bean
     @Primary
     public OutboxFilter outboxFilter() {
-        return new InMemoryOutboxFilter();
+        // Return a mock or simple test implementation
+        return Mockito.mock(OutboxFilter.class);
     }
 }
 ```
 
-**Note:** `InMemoryOutboxFilter` is deprecated for production use. It:
-- Stores correlation IDs in memory (state lost on restart)
-- Not suitable for multi-instance deployments
-- Should only be used for testing and development
+Alternatively, use an in-memory test implementation:
+
+```java
+// Simple test implementation for unit tests
+public class TestOutboxFilter implements OutboxFilter {
+    private final Map<String, Set<String>> processedIdsByGroup = new HashMap<>();
+
+    @Override
+    public boolean deduped(String correlationId, String consumerGroup) {
+        if (correlationId == null || consumerGroup == null) return false;
+        Set<String> ids = processedIdsByGroup
+            .computeIfAbsent(consumerGroup, k -> new HashSet<>());
+        return !ids.add(correlationId);
+    }
+    
+    // Implement other methods...
+}
+```
+
+For integration tests, use the real `DatabaseOutboxFilter` with a test database.
 
 #### Use Cases
 

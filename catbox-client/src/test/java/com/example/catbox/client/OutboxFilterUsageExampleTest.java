@@ -2,13 +2,17 @@ package com.example.catbox.client;
 
 import org.junit.jupiter.api.Test;
 
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * Example demonstrating how to use OutboxFilter in a Kafka consumer.
- * This test simulates a typical Kafka consumer scenario.
+ * This test simulates a typical Kafka consumer scenario using a simple
+ * test implementation.
  */
 class OutboxFilterUsageExampleTest {
 
@@ -17,7 +21,7 @@ class OutboxFilterUsageExampleTest {
     @Test
     void demonstrateKafkaConsumerDeduplication() {
         // Given: A filter and some simulated Kafka messages
-        OutboxFilter filter = new InMemoryOutboxFilter();
+        OutboxFilter filter = new TestOutboxFilter();
 
         // Simulate messages with correlation IDs from Kafka headers
         String message1 = "{\"orderId\": \"123\", \"status\": \"CREATED\"}";
@@ -51,9 +55,8 @@ class OutboxFilterUsageExampleTest {
 
     @Test
     void demonstrateMultipleConsumerGroups() {
-        // Given: A shared filter (in production, this would be
-        // database-backed)
-        OutboxFilter filter = new InMemoryOutboxFilter();
+        // Given: A shared filter
+        OutboxFilter filter = new TestOutboxFilter();
 
         String correlationId = "shared-corr-id-001";
 
@@ -74,8 +77,7 @@ class OutboxFilterUsageExampleTest {
     @Test
     void demonstratePrePopulationForRecovery() {
         // Given: A filter and some already-processed correlation IDs
-        // (e.g., loaded from database during startup)
-        OutboxFilter filter = new InMemoryOutboxFilter();
+        OutboxFilter filter = new TestOutboxFilter();
 
         // Pre-populate with already processed IDs
         filter.markProcessed("already-processed-1", CONSUMER_GROUP);
@@ -100,7 +102,7 @@ class OutboxFilterUsageExampleTest {
     @Test
     void demonstrateReadOnlyCheck() {
         // Given: A filter with some processed IDs
-        OutboxFilter filter = new InMemoryOutboxFilter();
+        OutboxFilter filter = new TestOutboxFilter();
         filter.deduped("processed-id", CONSUMER_GROUP);
 
         // When: Checking if an ID is processed without marking it
@@ -121,7 +123,7 @@ class OutboxFilterUsageExampleTest {
     @Test
     void demonstrateMarkUnprocessed() {
         // Given: A filter with a processed message
-        OutboxFilter filter = new InMemoryOutboxFilter();
+        OutboxFilter filter = new TestOutboxFilter();
         filter.deduped("correlation-id-1", CONSUMER_GROUP);
         assertThat(filter.isProcessed("correlation-id-1", CONSUMER_GROUP))
                 .isTrue();
@@ -139,7 +141,7 @@ class OutboxFilterUsageExampleTest {
     @Test
     void demonstrateNullAndEmptyCorrelationIdHandling() {
         // Given: A filter
-        OutboxFilter filter = new InMemoryOutboxFilter();
+        OutboxFilter filter = new TestOutboxFilter();
 
         // When: Messages arrive without correlation IDs
         boolean nullResult = filter.deduped(null, CONSUMER_GROUP);
@@ -162,6 +164,68 @@ class OutboxFilterUsageExampleTest {
         // - Perform business logic
         // - Save to database
         // For this example, we just acknowledge the message was processed
+    }
+
+    /**
+     * Simple test implementation of OutboxFilter for demonstration purposes.
+     * In production, use DatabaseOutboxFilter.
+     */
+    private static class TestOutboxFilter implements OutboxFilter {
+        private final Map<String, Set<String>> processedIdsByGroup =
+                new HashMap<>();
+
+        @Override
+        public boolean deduped(final String correlationId,
+                              final String consumerGroup) {
+            if (correlationId == null || correlationId.isEmpty()
+                    || consumerGroup == null || consumerGroup.isEmpty()) {
+                return false;
+            }
+
+            Set<String> processedIds = processedIdsByGroup
+                    .computeIfAbsent(consumerGroup, k -> new HashSet<>());
+            return !processedIds.add(correlationId);
+        }
+
+        @Override
+        public void markProcessed(final String correlationId,
+                                 final String consumerGroup) {
+            if (correlationId == null || correlationId.isEmpty()
+                    || consumerGroup == null || consumerGroup.isEmpty()) {
+                return;
+            }
+
+            processedIdsByGroup
+                    .computeIfAbsent(consumerGroup, k -> new HashSet<>())
+                    .add(correlationId);
+        }
+
+        @Override
+        public boolean isProcessed(final String correlationId,
+                                  final String consumerGroup) {
+            if (correlationId == null || correlationId.isEmpty()
+                    || consumerGroup == null || consumerGroup.isEmpty()) {
+                return false;
+            }
+
+            Set<String> processedIds = processedIdsByGroup.get(consumerGroup);
+            return processedIds != null
+                    && processedIds.contains(correlationId);
+        }
+
+        @Override
+        public void markUnprocessed(final String correlationId,
+                                   final String consumerGroup) {
+            if (correlationId == null || correlationId.isEmpty()
+                    || consumerGroup == null || consumerGroup.isEmpty()) {
+                return;
+            }
+
+            Set<String> processedIds = processedIdsByGroup.get(consumerGroup);
+            if (processedIds != null) {
+                processedIds.remove(correlationId);
+            }
+        }
     }
 
     /**
