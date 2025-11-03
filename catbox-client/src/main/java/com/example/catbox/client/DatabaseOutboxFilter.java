@@ -1,5 +1,6 @@
 package com.example.catbox.client;
 
+import com.example.catbox.client.metrics.CatboxClientMetricsService;
 import com.example.catbox.common.entity.ProcessedMessage;
 import com.example.catbox.common.repository.ProcessedMessageRepository;
 import lombok.RequiredArgsConstructor;
@@ -10,129 +11,133 @@ import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 /**
- * Database-backed implementation of {@link OutboxFilter} that tracks
- * processed correlation IDs per consumer group using a database table.
+ * Database-backed implementation of {@link OutboxFilter} that tracks processed correlation IDs per
+ * consumer group using a database table.
  *
- * <p>This implementation stores processed messages in the database, which
- * means:
+ * <p>This implementation stores processed messages in the database, which means:
+ *
  * <ul>
- *   <li>State survives application restarts</li>
- *   <li>Works correctly in multi-instance deployments</li>
- *   <li>Supports per-consumer-group tracking</li>
- *   <li>Can be archived for long-term auditing</li>
+ *   <li>State survives application restarts
+ *   <li>Works correctly in multi-instance deployments
+ *   <li>Supports per-consumer-group tracking
+ *   <li>Can be archived for long-term auditing
  * </ul>
  *
- * <p>Thread-safe and designed for concurrent use across multiple consumer
- * instances.
+ * <p>Thread-safe and designed for concurrent use across multiple consumer instances.
  */
 @Slf4j
 @Component
 @RequiredArgsConstructor
 public class DatabaseOutboxFilter implements OutboxFilter {
 
-    private final ProcessedMessageRepository repository;
+  private final ProcessedMessageRepository repository;
+  private final CatboxClientMetricsService metricsService;
 
-    @Override
-    @Transactional(propagation = Propagation.REQUIRES_NEW)
-    public boolean deduped(final String correlationId,
-                          final String consumerGroup) {
-        if (correlationId == null || correlationId.isEmpty()) {
-            log.warn("Received null or empty correlationId, "
-                    + "treating as not processed");
-            return false;
-        }
-
-        if (consumerGroup == null || consumerGroup.isEmpty()) {
-            log.warn("Received null or empty consumerGroup, "
-                    + "treating as not processed");
-            return false;
-        }
-
-        // Check if already processed
-        if (repository.existsByCorrelationIdAndConsumerGroup(
-                correlationId, consumerGroup)) {
-            log.debug("Duplicate detected for correlationId: {} "
-                    + "in consumerGroup: {}", correlationId, consumerGroup);
-            return true;
-        }
-
-        // Try to mark as processed
-        try {
-            ProcessedMessage message = new ProcessedMessage(
-                    correlationId, consumerGroup);
-            repository.save(message);
-            log.trace("First time processing correlationId: {} "
-                    + "in consumerGroup: {}", correlationId, consumerGroup);
-            return false;
-        } catch (DataIntegrityViolationException e) {
-            // Race condition: another instance processed it concurrently
-            log.debug("Concurrent duplicate detected for correlationId: {} "
-                    + "in consumerGroup: {}", correlationId, consumerGroup);
-            return true;
-        }
+  @Override
+  @Transactional(propagation = Propagation.REQUIRES_NEW)
+  public boolean deduped(final String correlationId, final String consumerGroup) {
+    if (correlationId == null || correlationId.isEmpty()) {
+      log.warn("Received null or empty correlationId, " + "treating as not processed");
+      return false;
     }
 
-    @Override
-    @Transactional(propagation = Propagation.REQUIRES_NEW)
-    public void markProcessed(final String correlationId,
-                             final String consumerGroup) {
-        if (correlationId == null || correlationId.isEmpty()) {
-            log.warn("Attempted to mark null or empty correlationId "
-                    + "as processed");
-            return;
-        }
-
-        if (consumerGroup == null || consumerGroup.isEmpty()) {
-            log.warn("Attempted to mark with null or empty consumerGroup");
-            return;
-        }
-
-        try {
-            ProcessedMessage message = new ProcessedMessage(
-                    correlationId, consumerGroup);
-            repository.save(message);
-            log.trace("Marked correlationId: {} as processed "
-                    + "in consumerGroup: {}", correlationId, consumerGroup);
-        } catch (DataIntegrityViolationException e) {
-            log.debug("CorrelationId: {} already marked as processed "
-                    + "in consumerGroup: {}", correlationId, consumerGroup);
-        }
+    if (consumerGroup == null || consumerGroup.isEmpty()) {
+      log.warn("Received null or empty consumerGroup, " + "treating as not processed");
+      return false;
     }
 
-    @Override
-    @Transactional(readOnly = true)
-    public boolean isProcessed(final String correlationId,
-                              final String consumerGroup) {
-        if (correlationId == null || correlationId.isEmpty()) {
-            return false;
-        }
-
-        if (consumerGroup == null || consumerGroup.isEmpty()) {
-            return false;
-        }
-
-        return repository.existsByCorrelationIdAndConsumerGroup(
-                correlationId, consumerGroup);
+    // Check if already processed
+    if (repository.existsByCorrelationIdAndConsumerGroup(correlationId, consumerGroup)) {
+      log.debug(
+          "Duplicate detected for correlationId: {} " + "in consumerGroup: {}",
+          correlationId,
+          consumerGroup);
+      metricsService.recordFilterDeduped();
+      return true;
     }
 
-    @Override
-    @Transactional(propagation = Propagation.REQUIRES_NEW)
-    public void markUnprocessed(final String correlationId,
-                               final String consumerGroup) {
-        if (correlationId == null || correlationId.isEmpty()) {
-            log.warn("Attempted to mark null or empty correlationId "
-                    + "as unprocessed");
-            return;
-        }
-
-        if (consumerGroup == null || consumerGroup.isEmpty()) {
-            log.warn("Attempted to unmark with null or empty consumerGroup");
-            return;
-        }
-
-        repository.deleteByCorrelationIdAndConsumerGroup(
-                correlationId, consumerGroup);
-        log.info("Marked correlationId: {} as unprocessed "
-                + "in consumerGroup: {}", correlationId, consumerGroup);
+    // Try to mark as processed
+    try {
+      ProcessedMessage message = new ProcessedMessage(correlationId, consumerGroup);
+      repository.save(message);
+      log.trace(
+          "First time processing correlationId: {} " + "in consumerGroup: {}",
+          correlationId,
+          consumerGroup);
+      metricsService.recordFilterUnique();
+      return false;
+    } catch (DataIntegrityViolationException e) {
+      // Race condition: another instance processed it concurrently
+      log.debug(
+          "Concurrent duplicate detected for correlationId: {} " + "in consumerGroup: {}",
+          correlationId,
+          consumerGroup);
+      metricsService.recordFilterConcurrentDuplicate();
+      return true;
     }
+  }
+
+  @Override
+  @Transactional(propagation = Propagation.REQUIRES_NEW)
+  public void markProcessed(final String correlationId, final String consumerGroup) {
+    if (correlationId == null || correlationId.isEmpty()) {
+      log.warn("Attempted to mark null or empty correlationId " + "as processed");
+      return;
+    }
+
+    if (consumerGroup == null || consumerGroup.isEmpty()) {
+      log.warn("Attempted to mark with null or empty consumerGroup");
+      return;
+    }
+
+    try {
+      ProcessedMessage message = new ProcessedMessage(correlationId, consumerGroup);
+      repository.save(message);
+      log.trace(
+          "Marked correlationId: {} as processed " + "in consumerGroup: {}",
+          correlationId,
+          consumerGroup);
+      metricsService.recordFilterMarkProcessed();
+    } catch (DataIntegrityViolationException e) {
+      log.debug(
+          "CorrelationId: {} already marked as processed " + "in consumerGroup: {}",
+          correlationId,
+          consumerGroup);
+    }
+  }
+
+  @Override
+  @Transactional(readOnly = true)
+  public boolean isProcessed(final String correlationId, final String consumerGroup) {
+    if (correlationId == null || correlationId.isEmpty()) {
+      return false;
+    }
+
+    if (consumerGroup == null || consumerGroup.isEmpty()) {
+      return false;
+    }
+
+    return repository.existsByCorrelationIdAndConsumerGroup(correlationId, consumerGroup);
+  }
+
+  @Override
+  @Transactional(propagation = Propagation.REQUIRES_NEW)
+  public void markUnprocessed(final String correlationId, final String consumerGroup) {
+    if (correlationId == null || correlationId.isEmpty()) {
+      log.warn("Attempted to mark null or empty correlationId " + "as unprocessed");
+      return;
+    }
+
+    if (consumerGroup == null || consumerGroup.isEmpty()) {
+      log.warn("Attempted to unmark with null or empty consumerGroup");
+      return;
+    }
+
+    repository.deleteByCorrelationIdAndConsumerGroup(correlationId, consumerGroup);
+    log.info(
+        "Marked correlationId: {} as unprocessed " + "in consumerGroup: {}",
+        correlationId,
+        consumerGroup);
+    metricsService.recordFilterMarkUnprocessed();
+  }
 }
