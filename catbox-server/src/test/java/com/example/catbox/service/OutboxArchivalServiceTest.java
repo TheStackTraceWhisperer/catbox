@@ -203,6 +203,9 @@ class OutboxArchivalServiceTest {
         assertThat(archived.getKafkaPartition()).isEqualTo(5);
         assertThat(archived.getKafkaOffset()).isEqualTo(123456L);
         assertThat(archived.getKafkaTimestamp()).isNotNull();
+    }
+
+    @Test
     void manualArchive_returnsZeroWhenNoEventsToArchive() {
         // Given - No old events
         OutboxEvent event = new OutboxEvent("Order", "A1", "OrderCreated", "{}");
