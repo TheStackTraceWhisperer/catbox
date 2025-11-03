@@ -97,7 +97,7 @@ For detailed architecture information, see [Architecture Documentation](docs/arc
 - **[Multi-Cluster Routing](docs/multi-cluster-routing.md)** - Advanced Kafka routing strategies
 - **[Virtual Threads](docs/virtual-threads.md)** - Java 21 virtual threads implementation
 - **[Testing Guide](docs/testing.md)** - Testing framework and coverage reports
-- **[Known Issues](KNOWN_ISSUES.md)** - Known issues and workarounds
+- **[Troubleshooting](docs/troubleshooting.md)** - Known issues and workarounds
 
 ## Building and Testing
 

@@ -366,7 +366,7 @@ Example GitHub Actions workflow snippet:
 - [Apache JMeter Documentation](https://jmeter.apache.org/usermanual/index.html)
 - [JMeter Best Practices](https://jmeter.apache.org/usermanual/best-practices.html)
 - [Catbox Application README](../README.md)
-- [Catbox Testing Guide](../TESTING.md)
+- [Catbox Testing Guide](../docs/testing.md)
 
 ## Support
 
