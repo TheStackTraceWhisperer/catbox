@@ -21,12 +21,13 @@ Microsoft SQL Server compatible database.
 - CPU: 2 cores (max), 0.5 cores (reserved)
 - Memory: 2GB (max), 512MB (reserved)
 
-### 2. Apache Kafka Cluster 1
+### 2. Apache Kafka Cluster 1 (cluster-a)
 
 Primary message broker using KRaft mode (no Zookeeper).
 
-- **Port 9092:** PLAINTEXT (for backward compatibility)
+- **Port 9092:** PLAINTEXT (for backward compatibility and testing)
 - **Port 9093:** SASL_SSL (secure with authentication and encryption)
+- **Cluster Name:** cluster-a (in application configuration)
 - **Features:**
   - SSL/TLS encryption enabled
   - SASL SCRAM-SHA-512 authentication configured
@@ -38,11 +39,19 @@ Primary message broker using KRaft mode (no Zookeeper).
 - CPU: 2 cores (max), 0.5 cores (reserved)
 - Memory: 2GB (max), 512MB (reserved)
 
-### 3. Apache Kafka Cluster 2
+**Production Recommendations:**
+- Increase memory to 4-8GB for optimal performance
+- Increase CPUs to 4+ cores for high-throughput scenarios
+- Use dedicated hosts or Kubernetes nodes
+- Set replication factor to 3 for high availability
+- Enable JMX monitoring for better observability
+
+### 3. Apache Kafka Cluster 2 (cluster-c)
 
 Secondary message broker for multi-cluster testing.
 
 - **Port 9095:** PLAINTEXT
+- **Cluster Name:** cluster-c (in application configuration)
 - **Purpose:** Independent broker for testing multi-cluster routing
 - **Features:** 3 partitions for outbox events
 
@@ -50,13 +59,19 @@ Secondary message broker for multi-cluster testing.
 - CPU: 2 cores (max), 0.5 cores (reserved)
 - Memory: 2GB (max), 512MB (reserved)
 
+**Production Note:** 
+For production multi-cluster deployments:
+- Deploy to separate physical infrastructure for true isolation
+- Use the same resource recommendations as the primary cluster
+- Consider geographic distribution for disaster recovery
+
 ### 4. Kafka UI
 
 Web interface for managing both Kafka clusters.
 
 - **Port:** 8090
 - **Features:**
-  - Pre-configured with both clusters
+  - Pre-configured with cluster-a (port 9092) and cluster-c (port 9095)
   - Browse topics, messages, and consumer groups
   - Monitor cluster health and metrics
 
@@ -128,12 +143,33 @@ Log shipper for Loki.
 
 ## Total Resource Requirements
 
-**Maximum:** 8.5 CPU cores / 7.25GB RAM  
-**Minimum Reserved:** 1.8 CPU cores / 1.81GB RAM
+**Development Environment (Current):**
+- Maximum: 11.5 CPU cores / 9.25GB RAM  
+- Minimum Reserved: 2.55 CPU cores / 2.37GB RAM
+
+**Production-Like Environment (Recommended):**
+For a production-like development setup with better Kafka performance:
+- Kafka Cluster 1: 4 CPUs / 4GB RAM
+- Kafka Cluster 2: 4 CPUs / 4GB RAM
+- Azure SQL Edge: 4 CPUs / 4GB RAM
+- Other services: As configured above
+- Total: ~15 CPUs / 15GB RAM
 
 These limits ensure stable operation and prevent any single service from consuming excessive resources. The configured limits are suitable for development and testing environments.
 
-**For production deployments**, consider increasing these limits based on your actual workload requirements, especially for Azure SQL Edge and Kafka which may need significantly more resources under heavy load. Adjust the limits in `compose.yaml` based on your system capacity and environment type.
+**For production deployments**, resource requirements will vary significantly based on:
+- Message throughput and size
+- Number of topics and partitions
+- Retention policies
+- Replication requirements
+- Number of concurrent connections
+
+Consider:
+- Running Kafka on dedicated infrastructure separate from application servers
+- Using Kubernetes for orchestration with proper resource quotas
+- Implementing horizontal pod autoscaling for application services
+- Monitoring resource utilization and adjusting limits accordingly
+- Using managed Kafka services (e.g., Confluent Cloud, AWS MSK) for simplified operations
 
 ## Using Docker Compose
 

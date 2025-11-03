@@ -103,6 +103,12 @@ services:
         reservations:
           cpus: '0.5'
           memory: 512M
+    # Production note: For production workloads, consider:
+    # - Increasing memory to 4-8GB for optimal performance
+    # - Increasing CPUs to 4+ cores for high-throughput scenarios
+    # - Using dedicated hosts or Kubernetes nodes
+    # - Setting replication factor to 3 for high availability
+    # - Enabling JMX monitoring for better observability
 
   # Kafka Cluster 2 with KRaft mode - Second cluster for multi-cluster testing
   # Configured with PLAINTEXT only for simplicity
@@ -136,8 +142,21 @@ services:
       timeout: 10s
       retries: 5
       start_period: 30s
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 2G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+    # Production note: This is a secondary cluster for multi-cluster testing.
+    # For production multi-cluster deployments:
+    # - Deploy to separate physical infrastructure for true isolation
+    # - Use the same resource recommendations as the primary cluster
+    # - Consider geographic distribution for disaster recovery
 
-  # Kafka UI - Web UI for Kafka Cluster 1
+  # Kafka UI - Web UI for both Kafka clusters
   kafka-ui:
     image: provectuslabs/kafka-ui:latest
     container_name: catbox-kafka-ui
@@ -145,10 +164,12 @@ services:
       - "8090:8080"
     environment:
       DYNAMIC_CONFIG_ENABLED: "true"
-      KAFKA_CLUSTERS_0_NAME: cluster-1-primary
+      # Cluster A - Primary cluster (PLAINTEXT for backward compatibility)
+      KAFKA_CLUSTERS_0_NAME: cluster-a
       KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:9092
       KAFKA_CLUSTERS_0_PROPERTIES_SECURITY_PROTOCOL: PLAINTEXT
-      KAFKA_CLUSTERS_1_NAME: cluster-2-secondary
+      # Cluster C - Secondary cluster for multi-cluster testing
+      KAFKA_CLUSTERS_1_NAME: cluster-c
       KAFKA_CLUSTERS_1_BOOTSTRAPSERVERS: kafka-2:9095
       KAFKA_CLUSTERS_1_PROPERTIES_SECURITY_PROTOCOL: PLAINTEXT
     depends_on:
