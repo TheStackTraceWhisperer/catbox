@@ -2438,3 +2438,57 @@ This report aggregates test durations across all modules in the build.
 
 ---
 
+## Module: order-processor
+
+### Summary Statistics
+
+- **Test Classes:** 3
+- **Test Methods:** 16
+- **Passed:** 16
+- **Failed:** 0
+- **Total Test Duration:** 7.98s
+- **Module Execution Time:** 25.03s
+- **Average Test Duration:** 498ms
+
+### Test Details
+
+### OrderEventListenerTest
+
+**Class Total Duration:** 2.51s
+
+| Test Method | Duration | Status |
+|-------------|----------|--------|
+| testHandleOrderCreated_DuplicateMessage_SkippedAndAcknowledged | 2.36s | ✅ |
+| testHandleOrderCreated_UnexpectedException_Acknowledged | 53ms | ✅ |
+| testHandleOrderCreated_NullCorrelationId_ProcessedAndAcknowledged | 39ms | ✅ |
+| testHandleOrderStatusChanged_DuplicateMessage_SkippedAndAcknowledged | 17ms | ✅ |
+| testHandleOrderCreated_ProcessingException_NotAcknowledged | 17ms | ✅ |
+| testHandleOrderCreated_NewMessage_ProcessedAndAcknowledged | 13ms | ✅ |
+| testHandleOrderStatusChanged_NewMessage_ProcessedAndAcknowledged | 11ms | ✅ |
+
+### OrderEventProcessingServiceTest
+
+**Class Total Duration:** 1.37s
+
+| Test Method | Duration | Status |
+|-------------|----------|--------|
+| testProcessOrderCreated_Success | 684ms | ✅ |
+| testProcessOrderStatusChanged_Success | 584ms | ✅ |
+| testCounters_TrackProcessedEvents | 72ms | ✅ |
+| testResetCounters | 30ms | ✅ |
+
+### OrderProcessorE2ETest
+
+**Class Total Duration:** 4.10s
+
+| Test Method | Duration | Status |
+|-------------|----------|--------|
+| testMixedScenario_UniqueAndDuplicateMessages | 1.90s | ✅ |
+| testDeduplication_DuplicateMessages_ProcessedOnlyOnce | 1.63s | ✅ |
+| testMultipleUniqueMessages_AllProcessed | 329ms | ✅ |
+| testHappyPath_SingleMessage_ProcessedSuccessfully | 121ms | ✅ |
+| testMessageWithoutCorrelationId_StillProcessed | 118ms | ✅ |
+
+
+---
+

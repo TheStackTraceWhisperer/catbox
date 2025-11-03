@@ -157,11 +157,15 @@ class OrderProcessorE2ETest {
             .as("Correlation ID should be marked as processed")
             .isTrue();
 
-        // Wait a bit more to ensure no additional processing happens
-        Thread.sleep(2000);
-        assertThat(processingService.getProcessedOrderCreatedCount())
-            .as("Count should still be 1 after waiting")
-            .isEqualTo(1);
+        // Verify no additional processing happens after waiting
+        await()
+            .atMost(2, TimeUnit.SECONDS)
+            .pollDelay(1500, TimeUnit.MILLISECONDS)
+            .untilAsserted(() -> {
+                assertThat(processingService.getProcessedOrderCreatedCount())
+                    .as("Count should still be 1 after waiting")
+                    .isEqualTo(1);
+            });
     }
 
     @Test

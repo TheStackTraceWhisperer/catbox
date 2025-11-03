@@ -30,13 +30,16 @@ public class OrderEventProcessingService {
     
     @Value("${order.processor.simulate-failures:true}")
     private boolean simulateFailures;
+    
+    @Value("${order.processor.failure-rate:0.1}")
+    private double failureRate;
 
     /**
      * Process an OrderCreated event.
      * 
      * <p>Simulates:
      * <ul>
-     *   <li>10% chance of intermittent failure (for retry testing) - if enabled</li>
+     *   <li>Configurable chance of intermittent failure (for retry testing) - if enabled</li>
      *   <li>Otherwise processes successfully with simulated business logic</li>
      * </ul>
      * 
@@ -48,7 +51,7 @@ public class OrderEventProcessingService {
         log.info("Processing OrderCreated event - correlationId: {}, orderId: {}, customer: {}", 
             correlationId, payload.orderId(), payload.customerName());
 
-        // Simulate intermittent failures (10% chance) if enabled
+        // Simulate intermittent failures if enabled
         if (simulateFailures && shouldSimulateFailure()) {
             failureCount.incrementAndGet();
             log.warn("Simulated intermittent failure for OrderCreated - correlationId: {}", correlationId);
@@ -68,7 +71,7 @@ public class OrderEventProcessingService {
      * 
      * <p>Simulates:
      * <ul>
-     *   <li>10% chance of intermittent failure (for retry testing) - if enabled</li>
+     *   <li>Configurable chance of intermittent failure (for retry testing) - if enabled</li>
      *   <li>Otherwise processes successfully with simulated business logic</li>
      * </ul>
      * 
@@ -80,7 +83,7 @@ public class OrderEventProcessingService {
         log.info("Processing OrderStatusChanged event - correlationId: {}, orderId: {}, {} -> {}", 
             correlationId, payload.orderId(), payload.oldStatus(), payload.newStatus());
 
-        // Simulate intermittent failures (10% chance) if enabled
+        // Simulate intermittent failures if enabled
         if (simulateFailures && shouldSimulateFailure()) {
             failureCount.incrementAndGet();
             log.warn("Simulated intermittent failure for OrderStatusChanged - correlationId: {}", correlationId);
@@ -109,10 +112,10 @@ public class OrderEventProcessingService {
     }
 
     /**
-     * Determine if we should simulate a failure (10% chance).
+     * Determine if we should simulate a failure based on configured failure rate.
      */
     private boolean shouldSimulateFailure() {
-        return random.nextInt(10) == 0;
+        return random.nextDouble() < failureRate;
     }
 
     /**
