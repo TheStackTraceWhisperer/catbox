@@ -8,16 +8,16 @@ import org.springframework.scheduling.concurrent.SimpleAsyncTaskScheduler;
 @Configuration
 public class TaskExecutorConfig {
 
-  /**
-   * Provides a task scheduler that creates a new virtual thread for every task. This will be used
-   * by the @Scheduled poller.
-   */
-  @Bean
-  public TaskScheduler taskScheduler() {
-    SimpleAsyncTaskScheduler scheduler = new SimpleAsyncTaskScheduler();
-    scheduler.setVirtualThreads(true);
-    // We can set a prefix for easier debugging
-    scheduler.setThreadNamePrefix("scheduler-vthread-");
-    return scheduler;
-  }
+    /**
+     * Provides a task scheduler that creates a new virtual thread
+     * for every task. This will be used by the @Scheduled poller.
+     */
+    @Bean
+    public TaskScheduler taskScheduler() {
+        SimpleAsyncTaskScheduler scheduler = new SimpleAsyncTaskScheduler();
+        scheduler.setVirtualThreads(true);
+        // We can set a prefix for easier debugging
+        scheduler.setThreadNamePrefix("scheduler-vthread-");
+        return scheduler;
+    }
 }

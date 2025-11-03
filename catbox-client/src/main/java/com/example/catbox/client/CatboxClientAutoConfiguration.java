@@ -5,4 +5,5 @@ import org.springframework.context.annotation.Configuration;
 
 @Configuration
 @ComponentScan
-public class CatboxClientAutoConfiguration {}
+public class CatboxClientAutoConfiguration {
+}
