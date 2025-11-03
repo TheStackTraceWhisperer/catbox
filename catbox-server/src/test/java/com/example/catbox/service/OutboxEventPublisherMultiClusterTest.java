@@ -4,6 +4,9 @@ import com.example.catbox.common.entity.OutboxEvent;
 import com.example.catbox.common.repository.OutboxEventRepository;
 import com.example.catbox.server.CatboxServerApplication;
 import com.example.catbox.server.config.DynamicKafkaTemplateFactory;
+import org.apache.kafka.clients.producer.ProducerRecord;
+import org.apache.kafka.clients.producer.RecordMetadata;
+import org.apache.kafka.common.TopicPartition;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -80,6 +83,23 @@ class OutboxEventPublisherMultiClusterTest {
         mockTemplate = Mockito.mock(KafkaTemplate.class);
     }
 
+    /**
+     * Helper method to create a mock SendResult with RecordMetadata
+     */
+    private SendResult<String, String> createMockSendResult(String topic, int partition, long offset) {
+        TopicPartition topicPartition = new TopicPartition(topic, partition);
+        RecordMetadata recordMetadata = new RecordMetadata(
+            topicPartition,
+            offset,
+            0, // batch index
+            System.currentTimeMillis(),
+            0, // serialized key size
+            0  // serialized value size
+        );
+        ProducerRecord<String, String> producerRecord = new ProducerRecord<>(topic, "key", "value");
+        return new SendResult<>(producerRecord, recordMetadata);
+    }
+
     @Test
     void allMustSucceed_successWhenAllClustersSucceed() throws Exception {
         // Given - Event configured with all-must-succeed strategy
@@ -87,7 +107,8 @@ class OutboxEventPublisherMultiClusterTest {
                 new OutboxEvent("Order", "A1", "OrderCreated", "{}")
         );
         
-        CompletableFuture<SendResult<String, String>> future = CompletableFuture.completedFuture(null);
+        SendResult<String, String> mockSendResult = createMockSendResult("OrderCreated", 0, 12345L);
+        CompletableFuture<SendResult<String, String>> future = CompletableFuture.completedFuture(mockSendResult);
         Mockito.when(kafkaTemplateFactory.getTemplate(eq("cluster-a"))).thenReturn(mockTemplate);
         Mockito.when(kafkaTemplateFactory.getTemplate(eq("cluster-b"))).thenReturn(mockTemplate);
         Mockito.when(mockTemplate.send(any(org.apache.kafka.clients.producer.ProducerRecord.class))).thenReturn(future);
@@ -112,7 +133,8 @@ class OutboxEventPublisherMultiClusterTest {
                 new OutboxEvent("Order", "A1", "OrderCreated", "{}")
         );
         
-        CompletableFuture<SendResult<String, String>> successFuture = CompletableFuture.completedFuture(null);
+        SendResult<String, String> mockSendResult = createMockSendResult("OrderCreated", 0, 12345L);
+        CompletableFuture<SendResult<String, String>> successFuture = CompletableFuture.completedFuture(mockSendResult);
         CompletableFuture<SendResult<String, String>> failureFuture = new CompletableFuture<>();
         failureFuture.completeExceptionally(new RuntimeException("Connection failed"));
         
@@ -140,7 +162,8 @@ class OutboxEventPublisherMultiClusterTest {
                 new OutboxEvent("Order", "A1", "OrderStatusChanged", "{}")
         );
         
-        CompletableFuture<SendResult<String, String>> successFuture = CompletableFuture.completedFuture(null);
+        SendResult<String, String> mockSendResult = createMockSendResult("OrderStatusChanged", 0, 12345L);
+        CompletableFuture<SendResult<String, String>> successFuture = CompletableFuture.completedFuture(mockSendResult);
         CompletableFuture<SendResult<String, String>> failureFuture = new CompletableFuture<>();
         failureFuture.completeExceptionally(new RuntimeException("Connection failed"));
         
@@ -191,7 +214,8 @@ class OutboxEventPublisherMultiClusterTest {
                 new OutboxEvent("Inventory", "I1", "InventoryAdjusted", "{}")
         );
         
-        CompletableFuture<SendResult<String, String>> successFuture = CompletableFuture.completedFuture(null);
+        SendResult<String, String> mockSendResult = createMockSendResult("InventoryAdjusted", 0, 12345L);
+        CompletableFuture<SendResult<String, String>> successFuture = CompletableFuture.completedFuture(mockSendResult);
         CompletableFuture<SendResult<String, String>> failureFuture = new CompletableFuture<>();
         failureFuture.completeExceptionally(new RuntimeException("Optional cluster failed"));
         
@@ -219,7 +243,8 @@ class OutboxEventPublisherMultiClusterTest {
                 new OutboxEvent("Inventory", "I1", "InventoryAdjusted", "{}")
         );
         
-        CompletableFuture<SendResult<String, String>> successFuture = CompletableFuture.completedFuture(null);
+        SendResult<String, String> mockSendResult = createMockSendResult("InventoryAdjusted", 0, 12345L);
+        CompletableFuture<SendResult<String, String>> successFuture = CompletableFuture.completedFuture(mockSendResult);
         CompletableFuture<SendResult<String, String>> failureFuture = new CompletableFuture<>();
         failureFuture.completeExceptionally(new RuntimeException("Required cluster failed"));
         

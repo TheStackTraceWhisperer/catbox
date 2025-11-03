@@ -11,6 +11,7 @@ import com.example.catbox.common.repository.OutboxEventRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.core.KafkaTemplate;
+import org.springframework.kafka.support.SendResult;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
@@ -124,11 +125,13 @@ public class OutboxEventPublisher {
         // Track successes and failures for required clusters only
         int requiredSuccessCount = 0;
         Map<String, Exception> requiredFailures = new HashMap<>();
+        Map<String, SendResult<String, String>> successfulResults = new HashMap<>();
 
         // 3. Publish to required clusters
         for (String clusterKey : requiredClusters) {
             try {
-                publishToCluster(clusterKey, topic, key, payload, event.getCorrelationId());
+                SendResult<String, String> result = publishToCluster(clusterKey, topic, key, payload, event.getCorrelationId());
+                successfulResults.put(clusterKey, result);
                 requiredSuccessCount++;
                 log.debug("Successfully published to required cluster: {}", clusterKey);
             } catch (Exception e) {
@@ -167,12 +170,27 @@ public class OutboxEventPublisher {
             Exception firstFailure = requiredFailures.values().iterator().next();
             throw new Exception(errorMsg, firstFailure);
         }
+
+        // 6. If successful, record the receipt from the *first* successful publish
+        if (isSuccess && !successfulResults.isEmpty()) {
+            SendResult<String, String> firstResult = successfulResults.values().iterator().next();
+            var recordMetadata = firstResult.getRecordMetadata();
+            
+            event.setKafkaPartition(recordMetadata.partition());
+            event.setKafkaOffset(recordMetadata.offset());
+            event.setKafkaTimestamp(
+                LocalDateTime.ofInstant(
+                    java.time.Instant.ofEpochMilli(recordMetadata.timestamp()),
+                    java.time.ZoneId.systemDefault()
+                )
+            );
+        }
     }
 
     /**
      * Publishes a message to a single cluster.
      */
-    private void publishToCluster(String clusterKey, String topic, String key, String payload, String correlationId) 
+    private SendResult<String, String> publishToCluster(String clusterKey, String topic, String key, String payload, String correlationId) 
             throws Exception {
         KafkaTemplate<String, String> template = kafkaTemplateFactory.getTemplate(clusterKey);
         
@@ -183,7 +201,7 @@ public class OutboxEventPublisher {
             if (correlationId != null) {
                 producerRecord.headers().add("correlationId", correlationId.getBytes(java.nio.charset.StandardCharsets.UTF_8));
             }
-            template.send(producerRecord).get(); // .get() will throw if the send fails
+            return template.send(producerRecord).get(); // .get() will throw if the send fails
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
             throw e;

@@ -8,6 +8,9 @@ import com.example.catbox.server.CatboxServerApplication;
 import com.example.catbox.server.config.DynamicKafkaTemplateFactory;
 import com.example.catbox.server.config.OutboxProcessingConfig;
 import com.example.catbox.server.config.OutboxRoutingConfig;
+import org.apache.kafka.clients.producer.ProducerRecord;
+import org.apache.kafka.clients.producer.RecordMetadata;
+import org.apache.kafka.common.TopicPartition;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -82,6 +85,23 @@ class OutboxEventPublisherTest {
         outboxEventRepository.deleteAll();
     }
 
+    /**
+     * Helper method to create a mock SendResult with RecordMetadata
+     */
+    private SendResult<String, String> createMockSendResult(String topic, int partition, long offset) {
+        TopicPartition topicPartition = new TopicPartition(topic, partition);
+        RecordMetadata recordMetadata = new RecordMetadata(
+            topicPartition,
+            offset,
+            0, // batch index
+            System.currentTimeMillis(),
+            0, // serialized key size
+            0  // serialized value size
+        );
+        ProducerRecord<String, String> producerRecord = new ProducerRecord<>(topic, "key", "value");
+        return new SendResult<>(producerRecord, recordMetadata);
+    }
+
     @Test
     void publishEvent_successfullySendsAndMarksSent() throws Exception {
         // Given
@@ -91,7 +111,8 @@ class OutboxEventPublisherTest {
         
         @SuppressWarnings("unchecked")
         KafkaTemplate<String, String> mockTemplate = Mockito.mock(KafkaTemplate.class);
-        CompletableFuture<SendResult<String, String>> future = CompletableFuture.completedFuture(null);
+        SendResult<String, String> mockSendResult = createMockSendResult("OrderCreated", 0, 12345L);
+        CompletableFuture<SendResult<String, String>> future = CompletableFuture.completedFuture(mockSendResult);
         
         Mockito.when(kafkaTemplateFactory.getTemplate(eq("cluster-a"))).thenReturn(mockTemplate);
         Mockito.when(mockTemplate.send(any(org.apache.kafka.clients.producer.ProducerRecord.class))).thenReturn(future);
@@ -188,7 +209,8 @@ class OutboxEventPublisherTest {
         
         @SuppressWarnings("unchecked")
         KafkaTemplate<String, String> mockTemplate = Mockito.mock(KafkaTemplate.class);
-        CompletableFuture<SendResult<String, String>> future = CompletableFuture.completedFuture(null);
+        SendResult<String, String> mockSendResult = createMockSendResult("OrderCreated", 0, 12345L);
+        CompletableFuture<SendResult<String, String>> future = CompletableFuture.completedFuture(mockSendResult);
         
         Mockito.when(kafkaTemplateFactory.getTemplate(eq("cluster-a"))).thenReturn(mockTemplate);
         Mockito.when(mockTemplate.send(any(org.apache.kafka.clients.producer.ProducerRecord.class))).thenReturn(future);

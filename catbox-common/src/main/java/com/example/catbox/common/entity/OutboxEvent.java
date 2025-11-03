@@ -47,6 +47,15 @@ public class OutboxEvent {
     @Column(columnDefinition = "TEXT")
     private String lastError;
 
+    @Column
+    private Integer kafkaPartition;
+
+    @Column
+    private Long kafkaOffset;
+
+    @Column
+    private LocalDateTime kafkaTimestamp;
+
     @PrePersist
     protected void onCreate() {
         createdAt = LocalDateTime.now();
