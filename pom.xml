@@ -31,6 +31,7 @@
         <module>catbox-test-listener</module>
         <module>catbox-server</module>
         <module>order-service</module>
+        <module>order-processor</module>
         <module>coverage-report</module>
         <module>catbox-archunit</module>
     </modules>

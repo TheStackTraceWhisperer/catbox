@@ -1554,3 +1554,369 @@ This report aggregates test durations across all modules in the build.
 
 ---
 
+## Module: order-processor
+
+### Summary Statistics
+
+- **Test Classes:** 2
+- **Test Methods:** 11
+- **Passed:** 11
+- **Failed:** 0
+- **Total Test Duration:** 4.00s
+- **Module Execution Time:** 4.60s
+- **Average Test Duration:** 363ms
+
+### Test Details
+
+### OrderEventListenerTest
+
+**Class Total Duration:** 2.56s
+
+| Test Method | Duration | Status |
+|-------------|----------|--------|
+| testHandleOrderCreated_DuplicateMessage_SkippedAndAcknowledged | 2.42s | ✅ |
+| testHandleOrderCreated_UnexpectedException_Acknowledged | 59ms | ✅ |
+| testHandleOrderCreated_NullCorrelationId_ProcessedAndAcknowledged | 33ms | ✅ |
+| testHandleOrderCreated_ProcessingException_NotAcknowledged | 16ms | ✅ |
+| testHandleOrderCreated_NewMessage_ProcessedAndAcknowledged | 11ms | ✅ |
+| testHandleOrderStatusChanged_NewMessage_ProcessedAndAcknowledged | 10ms | ✅ |
+| testHandleOrderStatusChanged_DuplicateMessage_SkippedAndAcknowledged | 10ms | ✅ |
+
+### OrderEventProcessingServiceTest
+
+**Class Total Duration:** 1.44s
+
+| Test Method | Duration | Status |
+|-------------|----------|--------|
+| testProcessOrderCreated_Success | 725ms | ✅ |
+| testProcessOrderStatusChanged_Success | 533ms | ✅ |
+| testCounters_TrackProcessedEvents | 133ms | ✅ |
+| testResetCounters | 45ms | ✅ |
+
+
+---
+
+## Module: order-processor
+
+### Summary Statistics
+
+- **Test Classes:** 3
+- **Test Methods:** 16
+- **Passed:** 11
+- **Failed:** 5
+- **Total Test Duration:** 3.51s
+- **Module Execution Time:** 44.77s
+- **Average Test Duration:** 219ms
+
+### Test Details
+
+### OrderEventListenerTest
+
+**Class Total Duration:** 2.26s
+
+| Test Method | Duration | Status |
+|-------------|----------|--------|
+| testHandleOrderCreated_DuplicateMessage_SkippedAndAcknowledged | 2.11s | ✅ |
+| testHandleOrderCreated_UnexpectedException_Acknowledged | 67ms | ✅ |
+| testHandleOrderCreated_NullCorrelationId_ProcessedAndAcknowledged | 38ms | ✅ |
+| testHandleOrderCreated_ProcessingException_NotAcknowledged | 17ms | ✅ |
+| testHandleOrderCreated_NewMessage_ProcessedAndAcknowledged | 13ms | ✅ |
+| testHandleOrderStatusChanged_DuplicateMessage_SkippedAndAcknowledged | 11ms | ✅ |
+| testHandleOrderStatusChanged_NewMessage_ProcessedAndAcknowledged | 9ms | ✅ |
+
+### OrderEventProcessingServiceTest
+
+**Class Total Duration:** 1.23s
+
+| Test Method | Duration | Status |
+|-------------|----------|--------|
+| testProcessOrderCreated_Success | 636ms | ✅ |
+| testProcessOrderStatusChanged_Success | 496ms | ✅ |
+| testCounters_TrackProcessedEvents | 79ms | ✅ |
+| testResetCounters | 16ms | ✅ |
+
+### OrderProcessorE2ETest
+
+**Class Total Duration:** 14ms
+
+| Test Method | Duration | Status |
+|-------------|----------|--------|
+| testMixedScenario_UniqueAndDuplicateMessages | 6ms | ❌ |
+| testHappyPath_SingleMessage_ProcessedSuccessfully | 3ms | ❌ |
+| testDeduplication_DuplicateMessages_ProcessedOnlyOnce | 2ms | ❌ |
+| testMultipleUniqueMessages_AllProcessed | 2ms | ❌ |
+| testMessageWithoutCorrelationId_StillProcessed | 1ms | ❌ |
+
+
+---
+
+## Module: order-processor
+
+### Summary Statistics
+
+- **Test Classes:** 3
+- **Test Methods:** 16
+- **Passed:** 11
+- **Failed:** 5
+- **Total Test Duration:** 3.81s
+- **Module Execution Time:** 18.64s
+- **Average Test Duration:** 238ms
+
+### Test Details
+
+### OrderEventListenerTest
+
+**Class Total Duration:** 2.41s
+
+| Test Method | Duration | Status |
+|-------------|----------|--------|
+| testHandleOrderCreated_DuplicateMessage_SkippedAndAcknowledged | 2.25s | ✅ |
+| testHandleOrderCreated_UnexpectedException_Acknowledged | 74ms | ✅ |
+| testHandleOrderCreated_NullCorrelationId_ProcessedAndAcknowledged | 35ms | ✅ |
+| testHandleOrderCreated_ProcessingException_NotAcknowledged | 16ms | ✅ |
+| testHandleOrderCreated_NewMessage_ProcessedAndAcknowledged | 12ms | ✅ |
+| testHandleOrderStatusChanged_NewMessage_ProcessedAndAcknowledged | 10ms | ✅ |
+| testHandleOrderStatusChanged_DuplicateMessage_SkippedAndAcknowledged | 8ms | ✅ |
+
+### OrderEventProcessingServiceTest
+
+**Class Total Duration:** 1.39s
+
+| Test Method | Duration | Status |
+|-------------|----------|--------|
+| testProcessOrderCreated_Success | 628ms | ✅ |
+| testProcessOrderStatusChanged_Success | 592ms | ✅ |
+| testCounters_TrackProcessedEvents | 132ms | ✅ |
+| testResetCounters | 39ms | ✅ |
+
+### OrderProcessorE2ETest
+
+**Class Total Duration:** 16ms
+
+| Test Method | Duration | Status |
+|-------------|----------|--------|
+| testMixedScenario_UniqueAndDuplicateMessages | 6ms | ❌ |
+| testMessageWithoutCorrelationId_StillProcessed | 3ms | ❌ |
+| testHappyPath_SingleMessage_ProcessedSuccessfully | 3ms | ❌ |
+| testDeduplication_DuplicateMessages_ProcessedOnlyOnce | 2ms | ❌ |
+| testMultipleUniqueMessages_AllProcessed | 2ms | ❌ |
+
+
+---
+
+## Module: order-processor
+
+### Summary Statistics
+
+- **Test Classes:** 3
+- **Test Methods:** 16
+- **Passed:** 11
+- **Failed:** 5
+- **Total Test Duration:** 3.95s
+- **Module Execution Time:** 18.41s
+- **Average Test Duration:** 246ms
+
+### Test Details
+
+### OrderEventListenerTest
+
+**Class Total Duration:** 2.58s
+
+| Test Method | Duration | Status |
+|-------------|----------|--------|
+| testHandleOrderCreated_DuplicateMessage_SkippedAndAcknowledged | 2.43s | ✅ |
+| testHandleOrderCreated_UnexpectedException_Acknowledged | 73ms | ✅ |
+| testHandleOrderCreated_NullCorrelationId_ProcessedAndAcknowledged | 32ms | ✅ |
+| testHandleOrderCreated_ProcessingException_NotAcknowledged | 15ms | ✅ |
+| testHandleOrderCreated_NewMessage_ProcessedAndAcknowledged | 12ms | ✅ |
+| testHandleOrderStatusChanged_NewMessage_ProcessedAndAcknowledged | 11ms | ✅ |
+| testHandleOrderStatusChanged_DuplicateMessage_SkippedAndAcknowledged | 8ms | ✅ |
+
+### OrderEventProcessingServiceTest
+
+**Class Total Duration:** 1.35s
+
+| Test Method | Duration | Status |
+|-------------|----------|--------|
+| testProcessOrderCreated_Success | 742ms | ✅ |
+| testProcessOrderStatusChanged_Success | 509ms | ✅ |
+| testCounters_TrackProcessedEvents | 66ms | ✅ |
+| testResetCounters | 32ms | ✅ |
+
+### OrderProcessorE2ETest
+
+**Class Total Duration:** 17ms
+
+| Test Method | Duration | Status |
+|-------------|----------|--------|
+| testMixedScenario_UniqueAndDuplicateMessages | 7ms | ❌ |
+| testMultipleUniqueMessages_AllProcessed | 3ms | ❌ |
+| testHappyPath_SingleMessage_ProcessedSuccessfully | 3ms | ❌ |
+| testDeduplication_DuplicateMessages_ProcessedOnlyOnce | 2ms | ❌ |
+| testMessageWithoutCorrelationId_StillProcessed | 2ms | ❌ |
+
+
+---
+
+## Module: order-processor
+
+### Summary Statistics
+
+- **Test Classes:** 3
+- **Test Methods:** 16
+- **Passed:** 11
+- **Failed:** 5
+- **Total Test Duration:** 3.89s
+- **Module Execution Time:** 20.03s
+- **Average Test Duration:** 242ms
+
+### Test Details
+
+### OrderEventListenerTest
+
+**Class Total Duration:** 2.46s
+
+| Test Method | Duration | Status |
+|-------------|----------|--------|
+| testHandleOrderCreated_DuplicateMessage_SkippedAndAcknowledged | 2.30s | ✅ |
+| testHandleOrderCreated_UnexpectedException_Acknowledged | 81ms | ✅ |
+| testHandleOrderCreated_NullCorrelationId_ProcessedAndAcknowledged | 34ms | ✅ |
+| testHandleOrderCreated_ProcessingException_NotAcknowledged | 16ms | ✅ |
+| testHandleOrderCreated_NewMessage_ProcessedAndAcknowledged | 11ms | ✅ |
+| testHandleOrderStatusChanged_NewMessage_ProcessedAndAcknowledged | 10ms | ✅ |
+| testHandleOrderStatusChanged_DuplicateMessage_SkippedAndAcknowledged | 8ms | ✅ |
+
+### OrderEventProcessingServiceTest
+
+**Class Total Duration:** 1.42s
+
+| Test Method | Duration | Status |
+|-------------|----------|--------|
+| testProcessOrderCreated_Success | 740ms | ✅ |
+| testProcessOrderStatusChanged_Success | 509ms | ✅ |
+| testCounters_TrackProcessedEvents | 150ms | ✅ |
+| testResetCounters | 18ms | ✅ |
+
+### OrderProcessorE2ETest
+
+**Class Total Duration:** 9ms
+
+| Test Method | Duration | Status |
+|-------------|----------|--------|
+| testMixedScenario_UniqueAndDuplicateMessages | 5ms | ❌ |
+| testDeduplication_DuplicateMessages_ProcessedOnlyOnce | 1ms | ❌ |
+| testMultipleUniqueMessages_AllProcessed | 1ms | ❌ |
+| testMessageWithoutCorrelationId_StillProcessed | 1ms | ❌ |
+| testHappyPath_SingleMessage_ProcessedSuccessfully | 1ms | ❌ |
+
+
+---
+
+## Module: order-processor
+
+### Summary Statistics
+
+- **Test Classes:** 3
+- **Test Methods:** 16
+- **Passed:** 11
+- **Failed:** 5
+- **Total Test Duration:** 3.79s
+- **Module Execution Time:** 19.87s
+- **Average Test Duration:** 236ms
+
+### Test Details
+
+### OrderEventListenerTest
+
+**Class Total Duration:** 2.47s
+
+| Test Method | Duration | Status |
+|-------------|----------|--------|
+| testHandleOrderCreated_DuplicateMessage_SkippedAndAcknowledged | 2.32s | ✅ |
+| testHandleOrderCreated_UnexpectedException_Acknowledged | 62ms | ✅ |
+| testHandleOrderCreated_NullCorrelationId_ProcessedAndAcknowledged | 36ms | ✅ |
+| testHandleOrderCreated_ProcessingException_NotAcknowledged | 19ms | ✅ |
+| testHandleOrderStatusChanged_NewMessage_ProcessedAndAcknowledged | 17ms | ✅ |
+| testHandleOrderCreated_NewMessage_ProcessedAndAcknowledged | 12ms | ✅ |
+| testHandleOrderStatusChanged_DuplicateMessage_SkippedAndAcknowledged | 11ms | ✅ |
+
+### OrderEventProcessingServiceTest
+
+**Class Total Duration:** 1.31s
+
+| Test Method | Duration | Status |
+|-------------|----------|--------|
+| testProcessOrderCreated_Success | 660ms | ✅ |
+| testProcessOrderStatusChanged_Success | 521ms | ✅ |
+| testCounters_TrackProcessedEvents | 97ms | ✅ |
+| testResetCounters | 30ms | ✅ |
+
+### OrderProcessorE2ETest
+
+**Class Total Duration:** 9ms
+
+| Test Method | Duration | Status |
+|-------------|----------|--------|
+| testMixedScenario_UniqueAndDuplicateMessages | 5ms | ❌ |
+| testDeduplication_DuplicateMessages_ProcessedOnlyOnce | 1ms | ❌ |
+| testMultipleUniqueMessages_AllProcessed | 1ms | ❌ |
+| testMessageWithoutCorrelationId_StillProcessed | 1ms | ❌ |
+| testHappyPath_SingleMessage_ProcessedSuccessfully | 1ms | ❌ |
+
+
+---
+
+## Module: order-processor
+
+### Summary Statistics
+
+- **Test Classes:** 3
+- **Test Methods:** 16
+- **Passed:** 16
+- **Failed:** 0
+- **Total Test Duration:** 7.95s
+- **Module Execution Time:** 24.83s
+- **Average Test Duration:** 496ms
+
+### Test Details
+
+### OrderEventListenerTest
+
+**Class Total Duration:** 2.19s
+
+| Test Method | Duration | Status |
+|-------------|----------|--------|
+| testHandleOrderCreated_DuplicateMessage_SkippedAndAcknowledged | 2.05s | ✅ |
+| testHandleOrderCreated_UnexpectedException_Acknowledged | 68ms | ✅ |
+| testHandleOrderCreated_NullCorrelationId_ProcessedAndAcknowledged | 35ms | ✅ |
+| testHandleOrderCreated_ProcessingException_NotAcknowledged | 15ms | ✅ |
+| testHandleOrderCreated_NewMessage_ProcessedAndAcknowledged | 13ms | ✅ |
+| testHandleOrderStatusChanged_NewMessage_ProcessedAndAcknowledged | 10ms | ✅ |
+| testHandleOrderStatusChanged_DuplicateMessage_SkippedAndAcknowledged | 8ms | ✅ |
+
+### OrderEventProcessingServiceTest
+
+**Class Total Duration:** 1.37s
+
+| Test Method | Duration | Status |
+|-------------|----------|--------|
+| testProcessOrderCreated_Success | 617ms | ✅ |
+| testProcessOrderStatusChanged_Success | 573ms | ✅ |
+| testCounters_TrackProcessedEvents | 133ms | ✅ |
+| testResetCounters | 48ms | ✅ |
+
+### OrderProcessorE2ETest
+
+**Class Total Duration:** 4.38s
+
+| Test Method | Duration | Status |
+|-------------|----------|--------|
+| testDeduplication_DuplicateMessages_ProcessedOnlyOnce | 2.12s | ✅ |
+| testMixedScenario_UniqueAndDuplicateMessages | 1.69s | ✅ |
+| testMultipleUniqueMessages_AllProcessed | 328ms | ✅ |
+| testHappyPath_SingleMessage_ProcessedSuccessfully | 124ms | ✅ |
+| testMessageWithoutCorrelationId_StillProcessed | 118ms | ✅ |
+
+
+---
+

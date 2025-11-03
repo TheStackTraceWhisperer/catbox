@@ -1,0 +1,16 @@
+spring:
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: false
+  
+  kafka:
+    consumer:
+      auto-offset-reset: earliest
+
+logging:
+  level:
+    com.example.orderprocessor: DEBUG
+    org.springframework.kafka: WARN
+    org.apache.kafka: WARN
+    org.hibernate.SQL: DEBUG
