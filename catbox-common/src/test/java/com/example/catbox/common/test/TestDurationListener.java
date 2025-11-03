@@ -104,7 +104,7 @@ public class TestDurationListener implements TestExecutionListener {
             
             // Write the report (append mode for multi-module builds)
             StandardOpenOption[] openOptions = isFirstWrite 
-                ? new StandardOpenOption[]{StandardOpenOption.CREATE, StandardOpenOption.WRITE}
+                ? new StandardOpenOption[]{StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING, StandardOpenOption.WRITE}
                 : new StandardOpenOption[]{StandardOpenOption.CREATE, StandardOpenOption.APPEND};
                 
             try (BufferedWriter writer = Files.newBufferedWriter(reportPath, openOptions)) {
@@ -153,11 +153,6 @@ public class TestDurationListener implements TestExecutionListener {
     }
     
     private String extractClassName(TestIdentifier testId) {
-        // Try to get parent class name
-        Optional<TestIdentifier> parent = testId.getParentId()
-                .flatMap(id -> Optional.ofNullable(testId.getSource().orElse(null)))
-                .map(source -> testId);
-        
         // Extract from unique ID which has format like:
         // [engine:junit-jupiter]/[class:com.example.TestClass]/[method:testMethod()]
         String uniqueId = testId.getUniqueId();
