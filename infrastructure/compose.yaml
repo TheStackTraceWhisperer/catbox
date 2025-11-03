@@ -80,7 +80,8 @@ services:
       KAFKA_ALLOW_EVERYONE_IF_NO_ACL_FOUND: "false"
       KAFKA_SUPER_USERS: User:admin
       
-      # Standard Kafka settings
+      # Standard Kafka settings (configured for single-broker development)
+      # Production note: Use replication factor of 3 and min.insync.replicas of 2
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
       KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
       KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
@@ -128,7 +129,8 @@ services:
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT
       KAFKA_CONTROLLER_QUORUM_VOTERS: 1@localhost:9096
 
-      # Standard Kafka settings
+      # Standard Kafka settings (configured for single-broker development)
+      # Production note: Use replication factor of 3 and min.insync.replicas of 2
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
       KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
       KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
