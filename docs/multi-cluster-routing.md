@@ -322,7 +322,7 @@ The project includes two Kafka clusters for testing:
 
 ```bash
 # Start both clusters
-cd infrastructure && docker compose up -d kafka kafka-cluster-2
+cd infrastructure && docker compose up -d kafka kafka-2
 
 # Test multi-cluster routing
 curl -X POST http://localhost:8080/api/orders \

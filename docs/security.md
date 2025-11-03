@@ -14,9 +14,15 @@ The project supports comprehensive Kafka security features including SSL/TLS enc
 
 ### Quick Start with Security
 
-The Kafka broker is configured with two listeners:
+The Kafka broker (cluster-a) is configured with two listeners:
 - **Port 9092** - PLAINTEXT (for backward compatibility and testing)
 - **Port 9093** - SASL_SSL (secure with authentication and encryption)
+
+**Note on cluster naming:** The application uses logical cluster names (cluster-a, cluster-b, cluster-c) 
+that map to physical Kafka brokers:
+- **cluster-a**: Primary Kafka broker (localhost:9092 PLAINTEXT, localhost:9093 SASL_SSL)
+- **cluster-b**: Same as cluster-a but configured to use the secure SASL_SSL listener on port 9093
+- **cluster-c**: Secondary Kafka broker for multi-cluster testing (localhost:9095 PLAINTEXT)
 
 #### 1. Generate SSL Certificates
 

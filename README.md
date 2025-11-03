@@ -52,6 +52,9 @@ See the [Quick Start Guide](docs/quick-start.md) for detailed setup instructions
    
    # Terminal 2 - Catbox Server (port 8081)
    mvn spring-boot:run -pl catbox-server -Dspring-boot.run.profiles=azuresql
+   
+   # Terminal 3 - Order Processor (port 8082)
+   mvn spring-boot:run -pl order-processor -Dspring-boot.run.profiles=azuresql
    ```
 
 5. Test the API:
@@ -78,10 +81,11 @@ The `sql-debug` profile enables:
 
 ## Architecture
 
-The system uses a decoupled, multi-module architecture with two Spring Boot applications:
+The system uses a decoupled, multi-module architecture with three Spring Boot applications:
 
 - **order-service (Port 8080)** - Business service that creates orders and writes outbox events in the same transaction
 - **catbox-server (Port 8081)** - Standalone processor that polls and publishes events to Kafka
+- **order-processor (Port 8082)** - Kafka consumer that processes order events with deduplication
 
 This separation allows independent scaling and keeps business logic lightweight.
 
@@ -94,6 +98,7 @@ For detailed architecture information, see [Architecture Documentation](docs/arc
 - **[API Reference](docs/api-reference.md)** - REST API endpoints and examples
 - **[Docker Setup](docs/docker-setup.md)** - Infrastructure services and Docker Compose
 - **[Security](docs/security.md)** - Kafka SSL/SASL and Keycloak OAuth2 configuration
+- **[Production Deployment](docs/production-deployment.md)** - Production best practices and recommendations
 - **[Monitoring](docs/monitoring.md)** - Metrics, dashboards, and observability
 - **[Distributed Tracing](docs/distributed-tracing.md)** - OpenTelemetry, Tempo, and end-to-end tracing
 - **[Multi-Cluster Routing](docs/multi-cluster-routing.md)** - Advanced Kafka routing strategies
@@ -141,6 +146,7 @@ catbox-parent
 ├── catbox-client        # Client library for creating events
 ├── catbox-server        # Standalone event processor (port 8081)
 ├── order-service        # Business service (port 8080)
+├── order-processor      # Order event consumer with deduplication (port 8082)
 ├── catbox-archunit      # Architecture testing with ArchUnit
 ├── coverage-report      # Aggregated test coverage reports
 ├── jmeter-tests         # JMeter load and stress test suites

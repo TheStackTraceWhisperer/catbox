@@ -1,0 +1,39 @@
+spring:
+  application:
+    name: order-processor
+
+  datasource:
+    url: jdbc:sqlserver://localhost:1433;databaseName=catbox;encrypt=true;trustServerCertificate=true
+    username: sa
+    password: ${DB_PASSWORD:YourStrong!Passw0rd}
+    driver-class-name: com.microsoft.sqlserver.jdbc.SQLServerDriver
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: false
+
+  kafka:
+    bootstrap-servers: localhost:9092
+    consumer:
+      group-id: order-processor
+      auto-offset-reset: earliest
+      enable-auto-commit: false
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+
+  threads:
+    virtual:
+      enabled: true
+
+server:
+  port: 8082
+
+logging:
+  level:
+    com.example.orderprocessor: INFO
+    org.springframework.kafka: INFO
+    org.apache.kafka: WARN
