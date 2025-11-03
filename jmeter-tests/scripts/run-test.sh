@@ -10,6 +10,7 @@ usage() {
     echo "Available tests:"
     echo "  order      - Order Service Load Test"
     echo "  outbox     - Outbox Service Load Test"
+    echo "  admin      - Admin UI Load Test"
     echo "  stress     - End-to-End Stress Test"
     echo ""
     echo "Options:"
@@ -81,6 +82,14 @@ case $TEST_NAME in
         TEST_FILE="testplans/OutboxService_LoadTest.jmx"
         RESULT_PREFIX="outbox_service"
         THREADS=${THREADS:-30}
+        RAMP_UP=${RAMP_UP:-20}
+        DURATION=${DURATION:-300}
+        PARAMS="-Jnum.threads=$THREADS -Jramp.up=$RAMP_UP -Jduration=$DURATION"
+        ;;
+    admin)
+        TEST_FILE="testplans/AdminUI_LoadTest.jmx"
+        RESULT_PREFIX="admin_ui"
+        THREADS=${THREADS:-20}
         RAMP_UP=${RAMP_UP:-20}
         DURATION=${DURATION:-300}
         PARAMS="-Jnum.threads=$THREADS -Jramp.up=$RAMP_UP -Jduration=$DURATION"

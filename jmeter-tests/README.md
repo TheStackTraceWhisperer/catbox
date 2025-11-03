@@ -9,10 +9,12 @@ jmeter-tests/
 ├── testplans/           # JMeter test plan files (.jmx)
 │   ├── OrderService_LoadTest.jmx
 │   ├── OutboxService_LoadTest.jmx
+│   ├── AdminUI_LoadTest.jmx
 │   └── EndToEnd_StressTest.jmx
 ├── testdata/            # Test data files
 │   └── orders.csv
 ├── scripts/             # Helper scripts
+│   ├── run-test.sh
 │   ├── run-all-tests.sh
 │   └── start-infrastructure.sh
 ├── results/             # Test results (generated)
@@ -65,6 +67,7 @@ Tests the Order Service API under various load conditions.
 **Thread Groups:**
 - **Order Creation**: Tests POST /api/orders endpoint
 - **Order Read Operations**: Tests GET /api/orders endpoint
+- **Get Order By ID**: Tests GET /api/orders/{id} endpoint
 - **Order Update Operations**: Tests PATCH /api/orders/{id}/status endpoint
 
 **Default Configuration:**
@@ -109,6 +112,7 @@ Tests the Outbox Service API and event retrieval performance.
 **Thread Groups:**
 - **Query Outbox Events**: Tests GET /api/outbox-events and /api/outbox-events/pending
 - **Search Outbox Events**: Tests paginated search with various parameters
+- **Mark Event Unsent**: Tests POST /api/outbox-events/{id}/mark-unsent endpoint
 
 **Default Configuration:**
 - Threads: 30 concurrent users
@@ -126,17 +130,52 @@ Tests the Outbox Service API and event retrieval performance.
 
 **Assertions:**
 - HTTP 200 for all GET requests
+- HTTP 204 or 404 for mark-unsent operations
 - Valid JSON array responses
 - Proper pagination structure
 
-### 3. End-to-End Stress Test (`EndToEnd_StressTest.jmx`)
+### 3. Admin UI Load Test (`AdminUI_LoadTest.jmx`)
+
+Tests the Admin Web UI under various load conditions.
+
+**Thread Groups:**
+- **Admin UI Page Views**: Tests GET /admin endpoint with various filters and pagination
+
+**Default Configuration:**
+- Threads: 20 concurrent users
+- Ramp-up: 20 seconds
+- Duration: 300 seconds (5 minutes)
+
+**Running the test:**
+```bash
+# Using the helper script (recommended)
+./scripts/run-test.sh admin
+
+# With custom parameters
+./scripts/run-test.sh admin -t 40 -r 30 -d 600
+```
+
+**Assertions:**
+- HTTP 200 for all requests
+- Valid HTML responses
+- Proper rendering of admin interface
+
+**What this test validates:**
+- Admin UI page load performance
+- Filter and pagination functionality
+- HTML rendering under load
+- Concurrent user access to web interface
+
+### 4. End-to-End Stress Test (`EndToEnd_StressTest.jmx`)
 
 Comprehensive stress test simulating high load on both services simultaneously.
 
 **Thread Groups:**
 - **High Volume Order Creation**: 100 threads creating orders continuously
 - **High Volume Order Updates**: 100 threads updating order statuses
+- **Get Order By ID - Stress**: 100 threads retrieving orders by ID
 - **Outbox Monitoring Load**: 50 threads querying pending events
+- **Admin UI Page Load - Stress**: 100 threads accessing the admin interface
 
 **Default Configuration:**
 - Threads: 100 concurrent users per service
@@ -214,7 +253,9 @@ open results/order_service_report_*/index.html
 1. **Throughput**: Requests per second
    - Order creation: Target > 50 req/sec
    - Order reads: Target > 100 req/sec
+   - Get order by ID: Target > 100 req/sec
    - Order updates: Target > 50 req/sec
+   - Admin UI page loads: Target > 30 req/sec
 
 2. **Response Times**:
    - 90th percentile < 500ms
@@ -237,9 +278,12 @@ open results/order_service_report_*/index.html
 |-----------|------------|-------------------|-----------------|
 | Create Order | 50-100 req/s | 50-100ms | 200ms |
 | Get Orders | 100-200 req/s | 20-50ms | 100ms |
+| Get Order By ID | 100-200 req/s | 20-50ms | 100ms |
 | Update Order Status | 50-100 req/s | 50-100ms | 200ms |
 | Get Pending Events | 50-100 req/s | 30-60ms | 150ms |
+| Mark Event Unsent | 40-80 req/s | 40-80ms | 180ms |
 | Search Events (paginated) | 40-80 req/s | 40-80ms | 180ms |
+| Admin UI Page Load | 30-60 req/s | 100-200ms | 400ms |
 
 ### Expected Performance (Docker Compose)
 
