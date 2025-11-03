@@ -28,6 +28,22 @@ Gauges provide real-time measurements of specific values.
 
 **Alert Threshold:** Consider alerting if this value exceeds 300 seconds (5 minutes)
 
+#### `outbox_events_archived_total`
+
+**Description:** Total number of events in the archive table
+
+**Use Case:** Monitor the size of the archive table to track historical event data
+
+**Alert Threshold:** Monitor growth rate; consider cleanup if archive grows too large
+
+#### `outbox_events_deadletter_total`
+
+**Description:** Total number of events in the dead letter queue
+
+**Use Case:** Monitor failed events that exceeded retry limits and require manual intervention
+
+**Alert Threshold:** Alert on any increase in dead letter events; investigate root causes
+
 ### Counters
 
 Counters track cumulative totals that only increase over time.
@@ -47,6 +63,22 @@ Counters track cumulative totals that only increase over time.
 **Use Case:** Monitor error rate and system health
 
 **Alert Threshold:** Alert on sustained increase in failure rate
+
+#### `outbox_events_archived_total`
+
+**Description:** Total number of events archived (moved from outbox to archive table)
+
+**Use Case:** Track archival activity and verify archival process is running correctly
+
+**Calculation:** Compare to pending events to understand event lifecycle
+
+#### `outbox_events_deadletter_total`
+
+**Description:** Total number of events moved to the dead letter queue
+
+**Use Case:** Track permanent failures that exceeded retry limits
+
+**Alert Threshold:** Alert on any increase; each dead letter event requires investigation
 
 ### Histograms
 
@@ -87,11 +119,23 @@ Example queries:
 # Current pending events
 outbox_events_pending
 
+# Current archived events
+outbox_events_archived_total
+
+# Current dead letter events
+outbox_events_deadletter_total
+
 # Event publishing rate (events per second)
 rate(outbox_events_published_success_total[1m])
 
 # Failure rate (failures per second)
 rate(outbox_events_published_failure_total[1m])
+
+# Archival rate (events per second)
+rate(outbox_events_archived_total[1m])
+
+# Dead letter rate (events per second)
+rate(outbox_events_deadletter_total[1m])
 
 # 95th percentile processing duration
 histogram_quantile(0.95, rate(outbox_events_processing_duration_seconds_bucket[5m]))
@@ -111,20 +155,33 @@ A pre-configured Grafana dashboard is available in `infrastructure/monitoring/gr
    - Age of oldest pending event in seconds
    - Alert threshold at 300 seconds (5 minutes)
 
-3. **Event Publishing Rate** (Time Series)
+3. **Archived Events** (Gauge)
+   - Total number of events in the archive table
+   - Monitor archive table growth
+
+4. **Dead Letter Events** (Gauge)
+   - Total number of events in the dead letter queue
+   - Alert on any non-zero value
+
+5. **Event Publishing Rate** (Time Series)
    - Success rate (green line)
    - Failure rate (red line)
    - Shows events/second over time
 
-4. **Event Processing Duration** (Time Series)
+6. **Event Processing Duration** (Time Series)
    - p50 (median) - blue line
    - p95 - yellow line
    - p99 - red line
    - Shows processing latency percentiles
 
-5. **Total Events Published** (Counter)
+7. **Total Events Published** (Counter)
    - Cumulative success count
    - Cumulative failure count
+
+8. **Archival and Dead Letter Activity** (Time Series)
+   - Archival rate (events/second)
+   - Dead letter rate (events/second)
+   - Track event lifecycle management
 
 ### Accessing Grafana
 
@@ -207,6 +264,24 @@ severity: warning
 description: 95th percentile processing time exceeds 10 seconds
 ```
 
+#### Dead Letter Queue Growth
+```yaml
+alert: DeadLetterQueueGrowth
+expr: increase(outbox_events_deadletter_total[5m]) > 0
+for: 1m
+severity: critical
+description: Events are being moved to the dead letter queue - requires immediate investigation
+```
+
+#### Archive Table Growth
+```yaml
+alert: ArchiveTableLargeSize
+expr: outbox_events_archived_total > 1000000
+for: 10m
+severity: warning
+description: Archive table has exceeded 1 million events - consider purging old data
+```
+
 ### Trends to Monitor
 
 **Publishing Throughput:**
@@ -228,6 +303,17 @@ description: 95th percentile processing time exceeds 10 seconds
 - Monitor rate of change in pending events
 - Positive slope indicates publishing can't keep up with creation
 - Negative slope indicates healthy processing
+
+**Archival Activity:**
+- Track archival rate over time
+- Verify archival process runs as scheduled
+- Monitor archive table size to plan retention policies
+
+**Dead Letter Queue:**
+- Monitor for any new entries
+- Each dead letter event represents a permanent failure
+- Investigate root causes and consider manual retry or compensation
+- Track patterns in dead letter events to identify systemic issues
 
 ## Health Checks
 
