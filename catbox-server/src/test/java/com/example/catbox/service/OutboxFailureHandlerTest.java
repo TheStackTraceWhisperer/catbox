@@ -182,4 +182,15 @@ class OutboxFailureHandlerTest {
         assertThat(updated2.getPermanentFailureCount()).isEqualTo(1);
         assertThat(updated2.getLastError()).isEqualTo("Error 2");
     }
+
+    @Test
+    void recordPermanentFailure_throwsExceptionWhenEventNotFound() {
+        // When & Then
+        try {
+            failureHandler.recordPermanentFailure(99999L, "Error");
+            org.junit.jupiter.api.Assertions.fail("Expected IllegalArgumentException to be thrown");
+        } catch (IllegalArgumentException e) {
+            assertThat(e.getMessage()).contains("Event not found");
+        }
+    }
 }

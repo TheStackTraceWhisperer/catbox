@@ -124,4 +124,33 @@ class OrderServiceTest {
         // Then
         assertThat(orders).hasSizeGreaterThanOrEqualTo(2);
     }
+
+    @Test
+    void testGetOrderById_Success() {
+        // Given
+        CreateOrderRequest request = new CreateOrderRequest("Charlie", "Mouse", new BigDecimal("19.99"));
+        Order createdOrder = orderService.createOrder(request);
+
+        // When
+        Order retrievedOrder = orderService.getOrderById(createdOrder.getId());
+
+        // Then
+        assertThat(retrievedOrder.getId()).isEqualTo(createdOrder.getId());
+        assertThat(retrievedOrder.getCustomerName()).isEqualTo("Charlie");
+        assertThat(retrievedOrder.getProductName()).isEqualTo("Mouse");
+    }
+
+    @Test
+    void testGetOrderById_ThrowsExceptionWhenNotFound() {
+        // Given
+        Long nonExistentId = 99999L;
+
+        // When & Then
+        try {
+            orderService.getOrderById(nonExistentId);
+            org.junit.jupiter.api.Assertions.fail("Expected OrderNotFoundException to be thrown");
+        } catch (com.example.order.exception.OrderNotFoundException e) {
+            assertThat(e.getMessage()).contains("Order not found: " + nonExistentId);
+        }
+    }
 }
