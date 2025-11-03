@@ -141,6 +141,8 @@ public class OutboxEventPublisher {
         }
 
         // 4. Publish to optional clusters (failures are ignored)
+        // Note: We don't capture SendResult for optional clusters as they don't affect
+        // success determination and metadata is captured from required clusters only
         for (String clusterKey : optionalClusters) {
             try {
                 publishToCluster(clusterKey, topic, key, payload, event.getCorrelationId());
