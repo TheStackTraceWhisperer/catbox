@@ -22,6 +22,8 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <testcontainers.version>1.19.8</testcontainers.version>
         <jacoco.version>0.8.12</jacoco.version>
+        <micrometer-tracing.version>1.4.3</micrometer-tracing.version>
+        <opentelemetry.version>1.44.1</opentelemetry.version>
     </properties>
 
     <!-- Define all modules -->
@@ -61,6 +63,15 @@
                 <groupId>com.microsoft.sqlserver</groupId>
                 <artifactId>mssql-jdbc</artifactId>
                 <version>12.6.1.jre11</version>
+            </dependency>
+
+            <!-- Tracing - OpenTelemetry BOM -->
+            <dependency>
+                <groupId>io.opentelemetry</groupId>
+                <artifactId>opentelemetry-bom</artifactId>
+                <version>${opentelemetry.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
             </dependency>
 
             <!-- Testcontainers -->

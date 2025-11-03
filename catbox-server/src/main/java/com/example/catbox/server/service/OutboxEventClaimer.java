@@ -3,6 +3,7 @@ package com.example.catbox.server.service;
 import com.example.catbox.server.config.OutboxProcessingConfig;
 import com.example.catbox.common.entity.OutboxEvent;
 import com.example.catbox.common.repository.OutboxEventRepository;
+import io.micrometer.observation.annotation.Observed;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
@@ -25,6 +26,7 @@ public class OutboxEventClaimer {
     /**
      * Claims events using SELECT TOP ... WITH (UPDLOCK, READPAST, ROWLOCK) in a new transaction.
      */
+    @Observed(name = "outbox.event.claim", contextualName = "claim-outbox-events")
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public List<OutboxEvent> claimEvents() {
         LocalDateTime now = LocalDateTime.now();

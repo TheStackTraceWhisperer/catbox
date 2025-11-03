@@ -145,6 +145,12 @@ management:
       enabled: true
     readinessState:
       enabled: true
+  tracing:
+    sampling:
+      probability: 0.1  # Sample 10% of traces to avoid performance impact
+  otlp:
+    tracing:
+      endpoint: http://localhost:4318/v1/traces
 
 logging:
   structured:
@@ -154,3 +160,5 @@ logging:
     com.example.catbox: INFO
     org.springframework.web: INFO
     org.hibernate.SQL: INFO
+  pattern:
+    level: '%5p [${spring.application.name:},%X{traceId:-},%X{spanId:-}]'
