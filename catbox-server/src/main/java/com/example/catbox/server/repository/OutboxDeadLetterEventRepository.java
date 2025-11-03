@@ -1,6 +1,6 @@
-package com.example.catbox.common.repository;
+package com.example.catbox.server.repository;
 
-import com.example.catbox.common.entity.OutboxDeadLetterEvent;
+import com.example.catbox.server.entity.OutboxDeadLetterEvent;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

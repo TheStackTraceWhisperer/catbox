@@ -1,8 +1,8 @@
 package com.example.catbox.server.service;
 
-import com.example.catbox.common.entity.OutboxDeadLetterEvent;
+import com.example.catbox.server.entity.OutboxDeadLetterEvent;
 import com.example.catbox.common.entity.OutboxEvent;
-import com.example.catbox.common.repository.OutboxDeadLetterEventRepository;
+import com.example.catbox.server.repository.OutboxDeadLetterEventRepository;
 import com.example.catbox.common.repository.OutboxEventRepository;
 import com.example.catbox.server.CatboxServerApplication;
 import com.example.catbox.server.config.OutboxProcessingConfig;
