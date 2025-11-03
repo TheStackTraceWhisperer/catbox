@@ -60,6 +60,21 @@ See the [Quick Start Guide](docs/quick-start.md) for detailed setup instructions
      -d '{"customerName": "Alice", "productName": "Widget", "amount": 99.99}'
    ```
 
+### SQL Debug Profile
+
+By default, Hibernate SQL logging is disabled for cleaner console output. To enable SQL logging for debugging:
+
+```bash
+# Run with SQL debug profile
+mvn spring-boot:run -pl order-service -Dspring-boot.run.profiles=azuresql,sql-debug
+mvn spring-boot:run -pl catbox-server -Dspring-boot.run.profiles=azuresql,sql-debug
+```
+
+The `sql-debug` profile enables:
+- SQL statement output (`show-sql: true`)
+- SQL formatting (`format_sql: true`)
+- SQL parameter binding (`org.hibernate.type.descriptor.sql.BasicBinder: TRACE`)
+
 ## Architecture
 
 The system uses a decoupled, multi-module architecture with two Spring Boot applications:

@@ -54,7 +54,7 @@ spring:
     properties:
       hibernate:
         dialect: org.hibernate.dialect.SQLServerDialect
-    show-sql: true
+    show-sql: false
 
   h2:
     console:
