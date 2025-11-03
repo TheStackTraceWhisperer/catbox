@@ -1,4 +1,4 @@
-package com.example.catbox.common.test;
+package com.example.catbox.test.listener;
 
 import org.junit.platform.engine.TestExecutionResult;
 import org.junit.platform.launcher.TestExecutionListener;

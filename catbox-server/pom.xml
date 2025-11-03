@@ -113,8 +113,7 @@
         </dependency>
         <dependency>
             <groupId>com.example</groupId>
-            <artifactId>catbox-common</artifactId>
-            <type>test-jar</type>
+            <artifactId>catbox-test-listener</artifactId>
             <scope>test</scope>
         </dependency>
     </dependencies>
