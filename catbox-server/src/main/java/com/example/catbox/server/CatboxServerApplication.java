@@ -10,8 +10,14 @@ import org.springframework.scheduling.annotation.SchedulingConfigurer;
 import org.springframework.scheduling.config.ScheduledTaskRegistrar;
 
 @SpringBootApplication(scanBasePackages = {"com.example.catbox.server"})
-@EnableJpaRepositories(basePackages = {"com.example.catbox.common.repository"})
-@EntityScan(basePackages = {"com.example.catbox.common.entity"})
+@EnableJpaRepositories(basePackages = {
+    "com.example.catbox.common.repository", // For OutboxEventRepository
+    "com.example.catbox.server.repository"  // For local repositories
+})
+@EntityScan(basePackages = {
+    "com.example.catbox.common.entity",     // For OutboxEvent
+    "com.example.catbox.server.entity"      // For local entities
+})
 @EnableScheduling
 public class CatboxServerApplication implements SchedulingConfigurer {
 

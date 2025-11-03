@@ -1,8 +1,8 @@
 package com.example.catbox.server.service;
 
-import com.example.catbox.common.entity.OutboxArchiveEvent;
+import com.example.catbox.server.entity.OutboxArchiveEvent;
 import com.example.catbox.common.entity.OutboxEvent;
-import com.example.catbox.common.repository.OutboxArchiveEventRepository;
+import com.example.catbox.server.repository.OutboxArchiveEventRepository;
 import com.example.catbox.common.repository.OutboxEventRepository;
 import com.example.catbox.server.config.OutboxProcessingConfig;
 import lombok.RequiredArgsConstructor;

@@ -1,5 +1,6 @@
-package com.example.catbox.common.entity;
+package com.example.catbox.server.entity;
 
+import com.example.catbox.common.entity.OutboxEvent;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
