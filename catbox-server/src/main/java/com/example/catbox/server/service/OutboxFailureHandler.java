@@ -12,76 +12,85 @@ import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 /**
- * Handles permanent and transient failures for outbox events.
- * Operates in REQUIRES_NEW transaction to ensure failure recording
- * happens independently of the publishing transaction.
+ * Handles permanent and transient failures for outbox events. Operates in REQUIRES_NEW transaction
+ * to ensure failure recording happens independently of the publishing transaction.
  */
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class OutboxFailureHandler {
 
-    private final OutboxEventRepository outboxEventRepository;
-    private final OutboxDeadLetterEventRepository deadLetterRepository;
-    private final OutboxProcessingConfig processingConfig;
+  private final OutboxEventRepository outboxEventRepository;
+  private final OutboxDeadLetterEventRepository deadLetterRepository;
+  private final OutboxProcessingConfig processingConfig;
 
-    /**
-     * Records a permanent failure for an event.
-     * If the event has exceeded max retries, moves it to the dead-letter queue.
-     * 
-     * @param eventId The ID of the event that failed
-     * @param errorMessage The error message from the failure
-     */
-    @Transactional(propagation = Propagation.REQUIRES_NEW)
-    public void recordPermanentFailure(Long eventId, String errorMessage) {
-        OutboxEvent event = outboxEventRepository.findById(eventId)
-                .orElseThrow(() -> new IllegalArgumentException("Event not found: " + eventId));
+  /**
+   * Records a permanent failure for an event. If the event has exceeded max retries, moves it to
+   * the dead-letter queue.
+   *
+   * @param eventId The ID of the event that failed
+   * @param errorMessage The error message from the failure
+   */
+  @Transactional(propagation = Propagation.REQUIRES_NEW)
+  public void recordPermanentFailure(Long eventId, String errorMessage) {
+    OutboxEvent event =
+        outboxEventRepository
+            .findById(eventId)
+            .orElseThrow(() -> new IllegalArgumentException("Event not found: " + eventId));
 
-        // Increment failure count
-        Integer currentCount = event.getPermanentFailureCount();
-        if (currentCount == null) {
-            currentCount = 0;
-        }
-        currentCount++;
-        event.setPermanentFailureCount(currentCount);
-        event.setLastError(errorMessage);
-
-        log.warn("Recording permanent failure #{} for event: {}. Error: {}", 
-                currentCount, eventId, errorMessage);
-
-        if (currentCount >= processingConfig.getMaxPermanentRetries()) {
-            // Move to dead-letter queue
-            log.error("Event {} exceeded max permanent retries ({}). Moving to dead-letter queue.", 
-                    eventId, processingConfig.getMaxPermanentRetries());
-            
-            OutboxDeadLetterEvent deadLetter = new OutboxDeadLetterEvent(event, errorMessage);
-            deadLetterRepository.save(deadLetter);
-            
-            // Delete from outbox
-            outboxEventRepository.delete(event);
-            
-            log.info("Event {} moved to dead-letter queue with ID: {}", eventId, deadLetter.getId());
-        } else {
-            // Save the updated failure count and clear the claim for retry
-            event.setInProgressUntil(null);
-            outboxEventRepository.save(event);
-            
-            log.info("Event {} will be retried. Failures: {}/{}", 
-                    eventId, currentCount, processingConfig.getMaxPermanentRetries());
-        }
+    // Increment failure count
+    Integer currentCount = event.getPermanentFailureCount();
+    if (currentCount == null) {
+      currentCount = 0;
     }
+    currentCount++;
+    event.setPermanentFailureCount(currentCount);
+    event.setLastError(errorMessage);
 
-    /**
-     * Resets the failure count for an event after successful publication.
-     * 
-     * @param event The event that was successfully published
-     */
-    @Transactional(propagation = Propagation.MANDATORY)
-    public void resetFailureCount(OutboxEvent event) {
-        if (event.getPermanentFailureCount() != null && event.getPermanentFailureCount() > 0) {
-            log.debug("Resetting failure count for event: {}", event.getId());
-            event.setPermanentFailureCount(0);
-            event.setLastError(null);
-        }
+    log.warn(
+        "Recording permanent failure #{} for event: {}. Error: {}",
+        currentCount,
+        eventId,
+        errorMessage);
+
+    if (currentCount >= processingConfig.getMaxPermanentRetries()) {
+      // Move to dead-letter queue
+      log.error(
+          "Event {} exceeded max permanent retries ({}). Moving to dead-letter queue.",
+          eventId,
+          processingConfig.getMaxPermanentRetries());
+
+      OutboxDeadLetterEvent deadLetter = new OutboxDeadLetterEvent(event, errorMessage);
+      deadLetterRepository.save(deadLetter);
+
+      // Delete from outbox
+      outboxEventRepository.delete(event);
+
+      log.info("Event {} moved to dead-letter queue with ID: {}", eventId, deadLetter.getId());
+    } else {
+      // Save the updated failure count and clear the claim for retry
+      event.setInProgressUntil(null);
+      outboxEventRepository.save(event);
+
+      log.info(
+          "Event {} will be retried. Failures: {}/{}",
+          eventId,
+          currentCount,
+          processingConfig.getMaxPermanentRetries());
     }
+  }
+
+  /**
+   * Resets the failure count for an event after successful publication.
+   *
+   * @param event The event that was successfully published
+   */
+  @Transactional(propagation = Propagation.MANDATORY)
+  public void resetFailureCount(OutboxEvent event) {
+    if (event.getPermanentFailureCount() != null && event.getPermanentFailureCount() > 0) {
+      log.debug("Resetting failure count for event: {}", event.getId());
+      event.setPermanentFailureCount(0);
+      event.setLastError(null);
+    }
+  }
 }

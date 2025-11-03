@@ -15,20 +15,20 @@ import org.springframework.scheduling.config.ScheduledTaskRegistrar;
 @EnableScheduling
 public class CatboxServerApplication implements SchedulingConfigurer {
 
-    private final TaskScheduler taskScheduler;
+  private final TaskScheduler taskScheduler;
 
-    // Inject the virtual thread scheduler bean
-    public CatboxServerApplication(TaskScheduler taskScheduler) {
-        this.taskScheduler = taskScheduler;
-    }
+  // Inject the virtual thread scheduler bean
+  public CatboxServerApplication(TaskScheduler taskScheduler) {
+    this.taskScheduler = taskScheduler;
+  }
 
-    public static void main(String[] args) {
-        SpringApplication.run(CatboxServerApplication.class, args);
-    }
-    
-    // This method tells @EnableScheduling to use our virtual thread scheduler
-    @Override
-    public void configureTasks(ScheduledTaskRegistrar taskRegistrar) {
-        taskRegistrar.setScheduler(taskScheduler);
-    }
+  public static void main(String[] args) {
+    SpringApplication.run(CatboxServerApplication.class, args);
+  }
+
+  // This method tells @EnableScheduling to use our virtual thread scheduler
+  @Override
+  public void configureTasks(ScheduledTaskRegistrar taskRegistrar) {
+    taskRegistrar.setScheduler(taskScheduler);
+  }
 }

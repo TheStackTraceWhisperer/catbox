@@ -8,14 +8,15 @@ import org.springframework.boot.autoconfigure.orm.jpa.HibernateJpaAutoConfigurat
 import org.springframework.context.annotation.ComponentScan;
 
 @SpringBootConfiguration
-@EnableAutoConfiguration(exclude = {
-        DataSourceAutoConfiguration.class,
-        HibernateJpaAutoConfiguration.class,
-        JpaRepositoriesAutoConfiguration.class
-})
-@ComponentScan(basePackages = {
-        // only bring in the config components we need for Kafka dynamic factory
-        "com.example.catbox.server.config"
-})
-public class TestKafkaOnlyApplication {
-}
+@EnableAutoConfiguration(
+    exclude = {
+      DataSourceAutoConfiguration.class,
+      HibernateJpaAutoConfiguration.class,
+      JpaRepositoriesAutoConfiguration.class
+    })
+@ComponentScan(
+    basePackages = {
+      // only bring in the config components we need for Kafka dynamic factory
+      "com.example.catbox.server.config"
+    })
+public class TestKafkaOnlyApplication {}
