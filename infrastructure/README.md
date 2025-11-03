@@ -50,6 +50,8 @@ docker compose down
 
 ### Observability
 - **Prometheus** - Metrics collection on port 9090
+- **Alertmanager** - Alert routing and notifications on port 9093
+- **Mailhog** - Email testing server on ports 1025 (SMTP) and 8025 (Web UI)
 - **Grafana** - Metrics visualization on port 3000
 - **Loki** - Log aggregation on port 3100
 - **Promtail** - Log shipping agent
@@ -107,11 +109,46 @@ This allows testing of the multi-cluster routing behavior in the outbox pattern.
 
 ### Monitoring Configuration
 
-The monitoring stack includes pre-configured dashboards and data sources:
+The monitoring stack includes pre-configured dashboards, data sources, and alerting:
 
 - **Prometheus**: Scrapes metrics from both order-service (port 8080) and catbox-server (port 8081)
+- **Alertmanager**: Routes alerts to Mailhog for testing the alerting pipeline
+- **Mailhog**: Captures alert emails for testing - Web UI at http://localhost:8025
 - **Grafana**: Includes a pre-configured dashboard at `monitoring/grafana/dashboards/catbox-dashboard.json`
 - **Loki**: Aggregates logs from all Docker containers via Promtail
+
+### Alerting Configuration
+
+The system includes a complete alerting pipeline for monitoring the outbox pattern:
+
+#### Alertmanager
+Alertmanager receives alerts from Prometheus and routes them based on severity:
+
+- **Access**: http://localhost:9093
+- **Configuration**: `monitoring/alertmanager/alertmanager.yml`
+- **Alert Rules**: `monitoring/alertmanager/alert-rules.yml`
+
+Alert rules include:
+- High outbox backlog (>100 pending events)
+- Stalled event processing (oldest event >5 minutes)
+- High failure rates
+- Dead letter queue growth
+- Application health checks
+- JVM memory and GC alerts
+
+#### Mailhog (Email Testing)
+Mailhog acts as a fake SMTP server to capture alert emails without sending real emails:
+
+- **Web UI**: http://localhost:8025
+- **SMTP Port**: 1025
+- **Features**: View all alert emails, test notification templates, inspect email content
+
+To test the alerting pipeline:
+1. Start all services: `docker compose up -d`
+2. Wait for services to be healthy
+3. Create a condition that triggers an alert (e.g., stop catbox-server to trigger `NoEventProcessing`)
+4. Check Prometheus alerts: http://localhost:9090/alerts
+5. View emails in Mailhog: http://localhost:8025
 
 ## Environment Variables
 
@@ -123,7 +160,7 @@ The following environment variables can be set before starting services:
 
 ### Services won't start
 1. Check Docker is running: `docker info`
-2. Check ports aren't already in use: `netstat -tuln | grep -E '1433|9092|9093|8080|9090|3000|3100'`
+2. Check ports aren't already in use: `netstat -tuln | grep -E '1433|9092|9093|8080|9090|3000|3100|8025'`
 3. Check Docker logs: `docker compose logs -f`
 
 ### Cannot connect to services
