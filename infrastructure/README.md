@@ -50,7 +50,7 @@ docker compose down
 
 ### Observability
 - **Prometheus** - Metrics collection on port 9090
-- **Alertmanager** - Alert routing and notifications on port 9093
+- **Alertmanager** - Alert routing and notifications on port 9094
 - **Mailhog** - Email testing server on ports 1025 (SMTP) and 8025 (Web UI)
 - **Grafana** - Metrics visualization on port 3000
 - **Loki** - Log aggregation on port 3100
@@ -129,7 +129,7 @@ The system includes a complete alerting pipeline for monitoring the outbox patte
 #### Alertmanager
 Alertmanager receives alerts from Prometheus and routes them based on severity:
 
-- **Access**: http://localhost:9093
+- **Access**: http://localhost:9094
 - **Configuration**: `monitoring/alertmanager/alertmanager.yml`
 - **Alert Rules**: `monitoring/alertmanager/alert-rules.yml`
 
