@@ -2492,3 +2492,94 @@ This report aggregates test durations across all modules in the build.
 
 ---
 
+## Module: routebox-archunit
+
+### Summary Statistics
+
+- **Test Classes:** 6
+- **Test Methods:** 32
+- **Passed:** 32
+- **Failed:** 0
+- **Total Test Duration:** 227ms
+- **Module Execution Time:** 4.46s
+- **Average Test Duration:** 7ms
+
+### Test Details
+
+### EntityRepositoryPatternTest
+
+**Class Total Duration:** 119ms
+
+| Test Method | Duration | Status |
+|-------------|----------|--------|
+| tableAnnotationShouldBeUsedForEntities | 81ms | ✅ |
+| entitiesShouldNotHavePublicFields | 24ms | ✅ |
+| repositoriesShouldBeInterfaces | 8ms | ✅ |
+| entitiesIdFieldsShouldBeAnnotatedWithId | 4ms | ✅ |
+| entitiesShouldResideInEntityPackage | 2ms | ✅ |
+
+### LayeringArchitectureTest
+
+**Class Total Duration:** 29ms
+
+| Test Method | Duration | Status |
+|-------------|----------|--------|
+| repositoriesShouldNotAccessServicesOrControllers | 23ms | ✅ |
+| servicesShouldNotAccessControllers | 4ms | ✅ |
+| controllersShouldNotAccessRepositoriesDirectly | 2ms | ✅ |
+
+### NamingConventionTest
+
+**Class Total Duration:** 14ms
+
+| Test Method | Duration | Status |
+|-------------|----------|--------|
+| servicesShouldBeSuffixed | 3ms | ✅ |
+| exceptionsShouldBeSuffixed | 2ms | ✅ |
+| configurationsShouldBeSuffixed | 2ms | ✅ |
+| repositoriesShouldBeSuffixed | 2ms | ✅ |
+| dtosShouldResideInDtoPackage | 2ms | ✅ |
+| entitiesShouldResideInEntityPackage | 2ms | ✅ |
+| controllersShouldBeSuffixed | 1ms | ✅ |
+
+### PackageDependencyTest
+
+**Class Total Duration:** 26ms
+
+| Test Method | Duration | Status |
+|-------------|----------|--------|
+| commonModuleShouldNotDependOnOtherModules | 9ms | ✅ |
+| clientModuleShouldNotDependOnServerOrOrderService | 7ms | ✅ |
+| serverModuleShouldNotDependOnOrderService | 3ms | ✅ |
+| entitiesShouldNotDependOnServicesOrControllers | 3ms | ✅ |
+| repositoriesShouldOnlyDependOnEntitiesAndSpringData | 2ms | ✅ |
+| orderServiceShouldNotDependOnRouteBoxServer | 1ms | ✅ |
+| controllersShouldNotDependOnOtherControllers | 1ms | ✅ |
+
+### SpringAnnotationTest
+
+**Class Total Duration:** 14ms
+
+| Test Method | Duration | Status |
+|-------------|----------|--------|
+| controllersShouldBeAnnotatedWithRestController | 5ms | ✅ |
+| repositoriesShouldExtendSpringDataRepository | 3ms | ✅ |
+| servicesShouldBeAnnotatedWithService | 2ms | ✅ |
+| configurationClassesShouldBeAnnotatedWithConfiguration | 2ms | ✅ |
+| serviceMethodsShouldNotBePublicUnlessNecessary | 1ms | ✅ |
+| entitiesShouldBeAnnotatedWithEntity | 1ms | ✅ |
+
+### TransactionBoundaryTest
+
+**Class Total Duration:** 25ms
+
+| Test Method | Duration | Status |
+|-------------|----------|--------|
+| repositoriesShouldNotDefineTransactions | 11ms | ✅ |
+| serviceClassesShouldBeAnnotatedWithTransactional | 9ms | ✅ |
+| serviceMethodsModifyingDataShouldBeTransactional | 3ms | ✅ |
+| controllersShouldNotBeTransactional | 2ms | ✅ |
+
+
+---
+
