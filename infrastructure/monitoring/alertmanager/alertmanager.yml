@@ -1,0 +1,84 @@
+global:
+  resolve_timeout: 5m
+  # Mailhog SMTP configuration for testing alerts
+  smtp_smarthost: 'mailhog:1025'
+  smtp_from: 'alertmanager@catbox.local'
+  smtp_require_tls: false
+
+# Route configuration - where alerts should go
+route:
+  # Default receiver for all alerts
+  receiver: 'email-notifications'
+  # Group alerts by alertname and severity to reduce notification spam
+  group_by: ['alertname', 'severity']
+  # Wait 30 seconds before sending a notification about a new group of alerts
+  group_wait: 30s
+  # Send notification about new alerts added to a group every 5 minutes
+  group_interval: 5m
+  # Resend notification if alert is still firing after 3 hours
+  repeat_interval: 3h
+
+  # Routes for different severity levels
+  routes:
+    # Critical alerts - send immediately with shorter repeat interval
+    - match:
+        severity: critical
+      receiver: 'email-notifications'
+      group_wait: 10s
+      repeat_interval: 30m
+    
+    # Warning alerts - use default settings
+    - match:
+        severity: warning
+      receiver: 'email-notifications'
+
+# Receivers configuration - how to send notifications
+receivers:
+  - name: 'email-notifications'
+    email_configs:
+      - to: 'catbox-alerts@example.com'
+        headers:
+          Subject: '[Catbox {{ .Status | toUpper }}] {{ .GroupLabels.alertname }}'
+        # HTML template for email body
+        html: |
+          <!DOCTYPE html>
+          <html>
+          <head>
+            <style>
+              body { font-family: Arial, sans-serif; }
+              .alert { margin: 10px 0; padding: 10px; border-left: 4px solid; }
+              .critical { border-color: #d32f2f; background-color: #ffebee; }
+              .warning { border-color: #f57c00; background-color: #fff3e0; }
+              .resolved { border-color: #388e3c; background-color: #e8f5e9; }
+              h2 { margin-top: 0; }
+              .details { margin: 10px 0; }
+              .label { font-weight: bold; }
+            </style>
+          </head>
+          <body>
+            <h1>Catbox Monitoring Alert</h1>
+            {{ range .Alerts }}
+            <div class="alert {{ .Labels.severity }}">
+              <h2>{{ .Labels.alertname }}</h2>
+              <div class="details">
+                <div><span class="label">Status:</span> {{ .Status | toUpper }}</div>
+                <div><span class="label">Severity:</span> {{ .Labels.severity }}</div>
+                <div><span class="label">Application:</span> {{ .Labels.application }}</div>
+                <div><span class="label">Description:</span> {{ .Annotations.description }}</div>
+                <div><span class="label">Summary:</span> {{ .Annotations.summary }}</div>
+                {{ if .StartsAt }}<div><span class="label">Started:</span> {{ .StartsAt }}</div>{{ end }}
+                {{ if .EndsAt }}<div><span class="label">Ended:</span> {{ .EndsAt }}</div>{{ end }}
+              </div>
+            </div>
+            {{ end }}
+          </body>
+          </html>
+
+# Inhibition rules - suppress certain alerts when others are firing
+inhibit_rules:
+  # If a critical alert is firing, don't send warning alerts for the same service
+  - source_match:
+      severity: 'critical'
+    target_match:
+      severity: 'warning'
+    equal: ['alertname', 'application']

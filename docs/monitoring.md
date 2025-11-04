@@ -222,11 +222,176 @@ curl -G -s "http://localhost:3100/loki/api/v1/query_range" \
   --data-urlencode "end=$(date +%s)000000000"
 ```
 
+## Alerting with Prometheus Alertmanager
+
+The project includes a complete alerting pipeline using Prometheus Alertmanager and Mailhog for testing.
+
+### Overview
+
+The alerting stack consists of:
+- **Prometheus** - Evaluates alert rules and sends alerts to Alertmanager
+- **Alertmanager** - Routes and manages alerts, handles grouping and deduplication
+- **Mailhog** - Email testing server to capture alert notifications
+
+### Accessing Alertmanager
+
+**Web UI:** http://localhost:9093
+
+The Alertmanager web interface shows:
+- Currently firing alerts
+- Silenced alerts
+- Alert grouping and routing status
+
+### Alert Rules
+
+All alert rules are defined in `infrastructure/monitoring/alertmanager/alert-rules.yml` and include:
+
+#### Outbox Pattern Alerts
+
+**HighOutboxBacklog** (Warning)
+- Triggers when pending events exceed 100 for 5 minutes
+- Indicates processing can't keep up with event creation
+
+**CriticalOutboxBacklog** (Critical)
+- Triggers when pending events exceed 1000 for 10 minutes
+- Requires immediate attention
+
+**StalledOutboxProcessing** (Critical)
+- Triggers when oldest event is more than 5 minutes old
+- May indicate catbox-server is down or stuck
+
+**NoEventProcessing** (Critical)
+- Triggers when there are pending events but no successful publishes for 10 minutes
+- Indicates complete processing failure
+
+**HighOutboxFailureRate** (Warning)
+- Triggers when failure rate exceeds 0.1 events/second
+- Check Kafka connectivity and broker health
+
+**SlowOutboxProcessing** (Warning)
+- Triggers when p95 processing time exceeds 10 seconds
+- May indicate performance degradation
+
+**DeadLetterQueueGrowth** (Critical)
+- Triggers when any events are moved to dead letter queue
+- Each event requires manual investigation
+
+**ArchiveTableLargeSize** (Warning)
+- Triggers when archive table exceeds 1 million events
+- Consider implementing data retention policies
+
+#### Application Health Alerts
+
+**CatboxServerDown** (Critical)
+- Triggers when catbox-server metrics are unavailable for 2 minutes
+- Application may be down or unreachable
+
+**OrderServiceDown** (Critical)
+- Triggers when order-service metrics are unavailable for 2 minutes
+- Application may be down or unreachable
+
+#### JVM Alerts
+
+**HighJVMMemoryUsage** (Warning)
+- Triggers when heap usage exceeds 90% for 5 minutes
+- Consider increasing heap size or investigating memory leaks
+
+**FrequentGarbageCollection** (Warning)
+- Triggers when GC runs more than 10 times per second
+- May indicate memory pressure
+
+### Viewing Alert Emails
+
+Mailhog captures all alert emails sent by Alertmanager:
+
+**Web UI:** http://localhost:8025
+
+Features:
+- View all received emails
+- Inspect HTML and text versions
+- Test email templates
+- Verify alert content and formatting
+
+### Testing the Alert Pipeline
+
+To verify the alerting system is working:
+
+1. **Start all services:**
+   ```bash
+   cd infrastructure && docker compose up -d
+   ```
+
+2. **Verify services are healthy:**
+   ```bash
+   docker compose ps
+   ```
+
+3. **Check Prometheus is evaluating rules:**
+   - Navigate to http://localhost:9090/alerts
+   - You should see all defined alert rules
+
+4. **Trigger a test alert** (stop catbox-server):
+   ```bash
+   # If running catbox-server locally, stop it
+   # Or trigger an alert by creating high backlog
+   ```
+
+5. **Monitor alert in Prometheus:**
+   - Refresh http://localhost:9090/alerts
+   - Alert should show as "Pending" then "Firing"
+
+6. **Check Alertmanager:**
+   - Navigate to http://localhost:9093
+   - Alert should appear in the Alertmanager UI
+
+7. **View email in Mailhog:**
+   - Open http://localhost:8025
+   - Alert email should appear within the group wait time (10s for critical, 30s for warnings)
+
+### Alertmanager Configuration
+
+The Alertmanager configuration (`infrastructure/monitoring/alertmanager/alertmanager.yml`) includes:
+
+**Email Configuration:**
+- SMTP server: mailhog:1025
+- From address: alertmanager@catbox.local
+- To address: catbox-alerts@example.com
+
+**Routing:**
+- Critical alerts: 10s group wait, 30m repeat interval
+- Warning alerts: 30s group wait, 3h repeat interval
+- Alerts grouped by alertname and severity
+
+**Inhibition Rules:**
+- Critical alerts suppress warnings for the same service
+
+### Customizing Alerts
+
+To modify alert rules:
+
+1. Edit `infrastructure/monitoring/alertmanager/alert-rules.yml`
+2. Reload Prometheus configuration:
+   ```bash
+   docker compose restart prometheus
+   # Or use hot reload:
+   curl -X POST http://localhost:9090/-/reload
+   ```
+
+To modify alerting behavior:
+
+1. Edit `infrastructure/monitoring/alertmanager/alertmanager.yml`
+2. Reload Alertmanager configuration:
+   ```bash
+   docker compose restart alertmanager
+   # Or use hot reload:
+   curl -X POST http://localhost:9093/-/reload
+   ```
+
 ## Monitoring Recommendations
 
 ### Alert Configurations
 
-Set up alerts for the following conditions:
+The following alert rules are pre-configured in `infrastructure/monitoring/alertmanager/alert-rules.yml`:
 
 #### High Backlog
 ```yaml
@@ -348,17 +513,21 @@ Use health endpoints for:
                                      │
 ┌─────────────────┐                  ▼
 │ order-service   │──── metrics ───►┌────────────┐
-└─────────────────┘                 │ Prometheus │
+└─────────────────┘                 │ Prometheus │◄──── alert rules
                                     └──────┬─────┘
 ┌─────────────────┐                        │
-│ Application     │──── logs ─────┐        │
+│ Application     │──── logs ─────┐        │ alerts
 │ Containers      │                │        │
-└─────────────────┘                ▼        │
-                              ┌──────┐      │
-                              │ Loki │      │
-                              └───┬──┘      │
-                                  │         │
-                                  └────┬────┘
+└─────────────────┘                ▼        ▼
+                              ┌──────┐  ┌──────────────┐
+                              │ Loki │  │ Alertmanager │
+                              └───┬──┘  └──────┬───────┘
+                                  │            │ email
+                                  │            ▼
+                                  │       ┌─────────┐
+                                  │       │ Mailhog │
+                                  │       └─────────┘
+                                  └────┬────────┘
                                        │
                                        ▼
                                   ┌─────────┐
@@ -371,6 +540,8 @@ Use health endpoints for:
 All monitoring configuration files are located in `infrastructure/monitoring/`:
 
 - **Prometheus:** `prometheus/prometheus.yml`
+- **Alert Rules:** `alertmanager/alert-rules.yml`
+- **Alertmanager:** `alertmanager/alertmanager.yml`
 - **Grafana Dashboards:** `grafana/dashboards/`
 - **Grafana Datasources:** `grafana/provisioning/datasources/`
 - **Loki:** `loki/loki-config.yml`

@@ -99,14 +99,41 @@ See [Security](security.md#keycloak) for more details.
 Metrics collection and storage.
 
 - **Port:** 9090
-- **Purpose:** Collects metrics from applications
+- **Purpose:** Collects metrics from applications and evaluates alert rules
 - **Configuration:** `infrastructure/monitoring/prometheus/prometheus.yml`
+- **Alert Rules:** `infrastructure/monitoring/alertmanager/alert-rules.yml`
 
 **Resource Limits:**
 - CPU: 1 core (max), 0.25 cores (reserved)
 - Memory: 1GB (max), 256MB (reserved)
 
-### 7. Grafana
+### 7. Alertmanager
+
+Alert routing and notifications.
+
+- **Port:** 9093
+- **Purpose:** Routes alerts to notification channels (Mailhog for testing)
+- **Configuration:** `infrastructure/monitoring/alertmanager/alertmanager.yml`
+- **Web UI:** http://localhost:9093
+
+**Resource Limits:**
+- CPU: 0.5 cores (max), 0.1 cores (reserved)
+- Memory: 256MB (max), 64MB (reserved)
+
+### 8. Mailhog
+
+Email testing server for alert notifications.
+
+- **SMTP Port:** 1025
+- **Web UI Port:** 8025
+- **Purpose:** Captures alert emails for testing without sending real emails
+- **Web UI:** http://localhost:8025
+
+**Resource Limits:**
+- CPU: 0.25 cores (max), 0.05 cores (reserved)
+- Memory: 128MB (max), 32MB (reserved)
+
+### 9. Grafana
 
 Dashboards and visualization.
 
@@ -118,7 +145,7 @@ Dashboards and visualization.
 - CPU: 0.5 cores (max), 0.1 cores (reserved)
 - Memory: 512MB (max), 128MB (reserved)
 
-### 8. Loki
+### 10. Loki
 
 Log aggregation.
 
@@ -130,7 +157,7 @@ Log aggregation.
 - CPU: 1 core (max), 0.1 cores (reserved)
 - Memory: 512MB (max), 128MB (reserved)
 
-### 9. Promtail
+### 11. Promtail
 
 Log shipper for Loki.
 
@@ -143,6 +170,8 @@ Log shipper for Loki.
 
 ## Total Resource Requirements
 
+**Maximum:** 9.25 CPU cores / 7.63GB RAM  
+**Minimum Reserved:** 2.0 CPU cores / 1.91GB RAM
 **Development Environment (Current):**
 - Maximum: 11.5 CPU cores / 9.25GB RAM  
 - Minimum Reserved: 2.55 CPU cores / 2.37GB RAM
