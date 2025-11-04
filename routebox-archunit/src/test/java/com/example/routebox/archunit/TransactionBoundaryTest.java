@@ -11,7 +11,7 @@ import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.classes;
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.methods;
 
 /**
- * Architectural tests for transaction boundaries in the catbox application.
+ * Architectural tests for transaction boundaries in the routebox application.
  * Tests verify that services properly handle transactional operations.
  */
 class TransactionBoundaryTest {

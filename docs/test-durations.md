@@ -20,7 +20,7 @@ This report aggregates test durations across all modules in the build.
 
 ### Test Details
 
-### CatboxApplicationTests
+### RouteBoxApplicationTests
 
 **Class Total Duration:** 31ms
 
@@ -337,7 +337,7 @@ This report aggregates test durations across all modules in the build.
 | repositoriesShouldOnlyDependOnEntitiesAndSpringData | 2ms | ✅ |
 | serverModuleShouldNotDependOnOrderService | 2ms | ✅ |
 | controllersShouldNotDependOnOtherControllers | 1ms | ✅ |
-| orderServiceShouldNotDependOnCatboxServer | 1ms | ✅ |
+| orderServiceShouldNotDependOnRouteBoxServer | 1ms | ✅ |
 
 ### SpringAnnotationTest
 
@@ -380,7 +380,7 @@ This report aggregates test durations across all modules in the build.
 
 ### Test Details
 
-### CatboxApplicationTests
+### RouteBoxApplicationTests
 
 **Class Total Duration:** 3ms
 
@@ -722,7 +722,7 @@ This report aggregates test durations across all modules in the build.
 | serverModuleShouldNotDependOnOrderService | 2ms | ✅ |
 | controllersShouldNotDependOnOtherControllers | 1ms | ✅ |
 | repositoriesShouldOnlyDependOnEntitiesAndSpringData | 1ms | ✅ |
-| orderServiceShouldNotDependOnCatboxServer | 1ms | ✅ |
+| orderServiceShouldNotDependOnRouteBoxServer | 1ms | ✅ |
 
 ### SpringAnnotationTest
 
@@ -778,7 +778,7 @@ This report aggregates test durations across all modules in the build.
 | adminPage_ShouldReturnAdminView | 22ms | ✅ |
 | adminPage_WithDefaultParameters_ShouldUseDefaults | 18ms | ✅ |
 
-### CatboxApplicationTests
+### RouteBoxApplicationTests
 
 **Class Total Duration:** 5ms
 
@@ -1169,7 +1169,7 @@ This report aggregates test durations across all modules in the build.
 | serverModuleShouldNotDependOnOrderService | 2ms | ✅ |
 | controllersShouldNotDependOnOtherControllers | 1ms | ✅ |
 | repositoriesShouldOnlyDependOnEntitiesAndSpringData | 1ms | ✅ |
-| orderServiceShouldNotDependOnCatboxServer | 1ms | ✅ |
+| orderServiceShouldNotDependOnRouteBoxServer | 1ms | ✅ |
 
 ### SpringAnnotationTest
 
@@ -1225,7 +1225,7 @@ This report aggregates test durations across all modules in the build.
 | adminPage_ShouldReturnAdminView | 33ms | ✅ |
 | adminPage_WithDefaultParameters_ShouldUseDefaults | 23ms | ✅ |
 
-### CatboxApplicationTests
+### RouteBoxApplicationTests
 
 **Class Total Duration:** 4ms
 
@@ -1947,7 +1947,7 @@ This report aggregates test durations across all modules in the build.
 | adminPage_ShouldReturnAdminView | 23ms | ✅ |
 | adminPage_WithDefaultParameters_ShouldUseDefaults | 18ms | ✅ |
 
-### CatboxApplicationTests
+### RouteBoxApplicationTests
 
 **Class Total Duration:** 5ms
 

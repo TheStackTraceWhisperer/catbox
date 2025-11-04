@@ -10,7 +10,7 @@ import org.junit.jupiter.api.Test;
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noClasses;
 
 /**
- * Architectural tests for package dependency rules in the catbox application.
+ * Architectural tests for package dependency rules in the routebox application.
  * Tests verify that packages follow proper dependency patterns.
  */
 class PackageDependencyTest {
@@ -65,7 +65,7 @@ class PackageDependencyTest {
         ArchRule rule = noClasses()
             .that().resideInAPackage("com.example.order..")
             .should().dependOnClassesThat().resideInAPackage("com.example.routebox.server..")
-            .because("The order-service should not depend on catbox-server module");
+            .because("The order-service should not depend on routebox-server module");
 
         rule.allowEmptyShould(true);
         rule.check(importedClasses);

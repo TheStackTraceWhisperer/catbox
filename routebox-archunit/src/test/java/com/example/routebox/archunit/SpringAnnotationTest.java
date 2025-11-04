@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.RestController;
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.classes;
 
 /**
- * Architectural tests for Spring annotations usage in the catbox application.
+ * Architectural tests for Spring annotations usage in the routebox application.
  * Tests verify that Spring components are properly annotated.
  */
 class SpringAnnotationTest {

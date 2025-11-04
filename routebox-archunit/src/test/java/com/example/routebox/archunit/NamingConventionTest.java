@@ -10,7 +10,7 @@ import org.junit.jupiter.api.Test;
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.classes;
 
 /**
- * Architectural tests for naming conventions in the catbox application.
+ * Architectural tests for naming conventions in the routebox application.
  * Tests verify that classes follow consistent naming patterns based on their roles.
  */
 class NamingConventionTest {

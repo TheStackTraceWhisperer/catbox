@@ -12,7 +12,7 @@ import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noClasses;
 import static com.tngtech.archunit.library.Architectures.layeredArchitecture;
 
 /**
- * Architectural tests for layering rules in the catbox application.
+ * Architectural tests for layering rules in the routebox application.
  * Tests verify that the application follows a clean layered architecture pattern.
  */
 class LayeringArchitectureTest {

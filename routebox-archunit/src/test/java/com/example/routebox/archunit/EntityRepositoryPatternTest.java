@@ -11,7 +11,7 @@ import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.classes;
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.fields;
 
 /**
- * Architectural tests for JPA entity and repository patterns in the catbox application.
+ * Architectural tests for JPA entity and repository patterns in the routebox application.
  * Tests verify that entities and repositories follow JPA best practices.
  */
 class EntityRepositoryPatternTest {

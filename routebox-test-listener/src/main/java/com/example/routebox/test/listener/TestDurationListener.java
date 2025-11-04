@@ -135,8 +135,8 @@ public class TestDurationListener implements TestExecutionListener {
             if (Files.exists(pomFile)) {
                 try {
                     String content = Files.readString(pomFile);
-                    // Check if this is the parent pom (catbox-parent)
-                    if (content.contains("<artifactId>catbox-parent</artifactId>") && 
+                    // Check if this is the parent pom (routebox-parent)
+                    if (content.contains("<artifactId>routebox-parent</artifactId>") && 
                         content.contains("<packaging>pom</packaging>")) {
                         foundParent = current;
                         // Don't break, keep searching upward in case there's a higher parent
