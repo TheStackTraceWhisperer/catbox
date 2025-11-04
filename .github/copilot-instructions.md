@@ -29,3 +29,12 @@
 - Maven 3.6+ is the build tool
 - The project uses Spring Boot 3.5.7
 - Run `mvn clean test` to verify changes
+
+## Documentation Guidelines
+- Documentation should describe the **current state** of the system only
+- Do NOT add progress tracking, change logs, or diff details to documentation
+- Do NOT create documents that track issues found and fixed
+- Do NOT add review documents, analysis documents, or historical tracking
+- Code changes and fixes should be described in commit messages and PR descriptions, not in documentation files
+- If you need to track progress or changes during development, use the PR description or commit messages
+- Documentation files should be reference material for users, not a log of development activities
