@@ -8,7 +8,7 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.web.SecurityFilterChain;
 
 /**
- * Security configuration for the Catbox server.
+ * Security configuration for the RouteBox server.
  * 
  * Security is disabled by default and can be enabled via the 'secure' profile.
  * When enabled, uses OAuth2/OIDC authentication with Keycloak.
