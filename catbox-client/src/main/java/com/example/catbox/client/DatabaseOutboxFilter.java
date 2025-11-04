@@ -3,10 +3,8 @@ package com.example.catbox.client;
 import com.example.catbox.client.metrics.CatboxClientMetricsService;
 import com.example.catbox.common.entity.ProcessedMessage;
 import com.example.catbox.common.repository.ProcessedMessageRepository;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataIntegrityViolationException;
-import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -26,12 +24,17 @@ import org.springframework.transaction.annotation.Transactional;
  * <p>Thread-safe and designed for concurrent use across multiple consumer instances.
  */
 @Slf4j
-@Component
-@RequiredArgsConstructor
 public class DatabaseOutboxFilter implements OutboxFilter {
 
   private final ProcessedMessageRepository repository;
   private final CatboxClientMetricsService metricsService;
+
+  public DatabaseOutboxFilter(
+      final ProcessedMessageRepository repository,
+      final CatboxClientMetricsService metricsService) {
+    this.repository = repository;
+    this.metricsService = metricsService;
+  }
 
   @Override
   @Transactional(propagation = Propagation.REQUIRES_NEW)
@@ -52,7 +55,7 @@ public class DatabaseOutboxFilter implements OutboxFilter {
           "Duplicate detected for correlationId: {} " + "in consumerGroup: {}",
           correlationId,
           consumerGroup);
-      metricsService.recordFilterDeduped();
+      recordFilterDeduped();
       return true;
     }
 
@@ -64,7 +67,7 @@ public class DatabaseOutboxFilter implements OutboxFilter {
           "First time processing correlationId: {} " + "in consumerGroup: {}",
           correlationId,
           consumerGroup);
-      metricsService.recordFilterUnique();
+      recordFilterUnique();
       return false;
     } catch (DataIntegrityViolationException e) {
       // Race condition: another instance processed it concurrently
@@ -72,7 +75,7 @@ public class DatabaseOutboxFilter implements OutboxFilter {
           "Concurrent duplicate detected for correlationId: {} " + "in consumerGroup: {}",
           correlationId,
           consumerGroup);
-      metricsService.recordFilterConcurrentDuplicate();
+      recordFilterConcurrentDuplicate();
       return true;
     }
   }
@@ -103,7 +106,7 @@ public class DatabaseOutboxFilter implements OutboxFilter {
           correlationId,
           consumerGroup);
     }
-    metricsService.recordFilterMarkProcessed();
+    recordFilterMarkProcessed();
   }
 
   @Override
@@ -138,6 +141,36 @@ public class DatabaseOutboxFilter implements OutboxFilter {
         "Marked correlationId: {} as unprocessed " + "in consumerGroup: {}",
         correlationId,
         consumerGroup);
-    metricsService.recordFilterMarkUnprocessed();
+    recordFilterMarkUnprocessed();
+  }
+
+  private void recordFilterDeduped() {
+    if (metricsService != null) {
+      metricsService.recordFilterDeduped();
+    }
+  }
+
+  private void recordFilterUnique() {
+    if (metricsService != null) {
+      metricsService.recordFilterUnique();
+    }
+  }
+
+  private void recordFilterConcurrentDuplicate() {
+    if (metricsService != null) {
+      metricsService.recordFilterConcurrentDuplicate();
+    }
+  }
+
+  private void recordFilterMarkProcessed() {
+    if (metricsService != null) {
+      metricsService.recordFilterMarkProcessed();
+    }
+  }
+
+  private void recordFilterMarkUnprocessed() {
+    if (metricsService != null) {
+      metricsService.recordFilterMarkUnprocessed();
+    }
   }
 }

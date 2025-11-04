@@ -5,19 +5,27 @@ import com.example.catbox.common.entity.OutboxEvent;
 import com.example.catbox.common.repository.OutboxEventRepository;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
-@RequiredArgsConstructor
 @Transactional(propagation = Propagation.MANDATORY)
 class DefaultOutboxClient implements OutboxClient {
 
   private final OutboxEventRepository outboxEventRepository;
   private final ObjectMapper objectMapper;
   private final CatboxClientMetricsService metricsService;
+
+  public DefaultOutboxClient(
+      final OutboxEventRepository outboxEventRepository,
+      final ObjectMapper objectMapper,
+      @Autowired(required = false) final CatboxClientMetricsService metricsService) {
+    this.outboxEventRepository = outboxEventRepository;
+    this.objectMapper = objectMapper;
+    this.metricsService = metricsService;
+  }
 
   @Override
   public void write(String aggregateType, String aggregateId, String eventType, Object payload) {
@@ -42,12 +50,24 @@ class DefaultOutboxClient implements OutboxClient {
       outboxEventRepository.save(event);
 
       // 3. Record successful write
-      metricsService.recordOutboxWriteSuccess();
+      recordOutboxWriteSuccess();
     } catch (JsonProcessingException e) {
       // Record failure
-      metricsService.recordOutboxWriteFailure();
+      recordOutboxWriteFailure();
       // Fatal serialization error - propagate as unchecked exception
       throw new RuntimeException("Failed to serialize outbox event payload for: " + eventType, e);
+    }
+  }
+
+  private void recordOutboxWriteSuccess() {
+    if (metricsService != null) {
+      metricsService.recordOutboxWriteSuccess();
+    }
+  }
+
+  private void recordOutboxWriteFailure() {
+    if (metricsService != null) {
+      metricsService.recordOutboxWriteFailure();
     }
   }
 }
