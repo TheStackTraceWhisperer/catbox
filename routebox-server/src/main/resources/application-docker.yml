@@ -1,6 +1,6 @@
 spring:
   application:
-    name: catbox
+    name: routebox-server
 
   # Docker Compose Profile
   docker:
@@ -43,7 +43,7 @@ spring:
       on-profile: azuresql
 
   datasource:
-    url: jdbc:sqlserver://localhost:1433;databaseName=catbox;encrypt=true;trustServerCertificate=true
+    url: jdbc:sqlserver://localhost:1433;databaseName=routebox;encrypt=true;trustServerCertificate=true
     driver-class-name: com.microsoft.sqlserver.jdbc.SQLServerDriver
     username: sa
     password: ${DB_PASSWORD}

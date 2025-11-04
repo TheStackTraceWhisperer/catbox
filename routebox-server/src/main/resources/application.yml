@@ -1,6 +1,6 @@
 spring:
   application:
-    name: catbox
+    name: routebox-server
 
   # Remove explicit default datasource to avoid H2 in default profile; let tests configure via Testcontainers
   datasource: { }
@@ -157,7 +157,7 @@ logging:
     format:
       console: ecs
   level:
-    com.example.catbox: INFO
+    com.example.routebox: INFO
     org.springframework.web: INFO
     org.hibernate.SQL: INFO
   pattern:

@@ -1,6 +1,6 @@
 # Quick Start Guide
 
-This guide will help you get Catbox up and running quickly.
+This guide will help you get RouteBox up and running quickly.
 
 ## Prerequisites
 
