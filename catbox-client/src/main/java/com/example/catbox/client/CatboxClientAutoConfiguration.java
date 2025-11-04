@@ -2,6 +2,7 @@ package com.example.catbox.client;
 
 import com.example.catbox.client.metrics.CatboxClientMetricsService;
 import com.example.catbox.common.repository.ProcessedMessageRepository;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
@@ -26,14 +27,14 @@ public class CatboxClientAutoConfiguration {
    * </ul>
    *
    * @param repository the processed message repository
-   * @param metricsService the client metrics service
+   * @param metricsService the client metrics service (optional)
    * @return the default OutboxFilter implementation
    */
   @Bean
   @ConditionalOnMissingBean
   public OutboxFilter outboxFilter(
       final ProcessedMessageRepository repository,
-      final CatboxClientMetricsService metricsService) {
+      @Autowired(required = false) final CatboxClientMetricsService metricsService) {
     return new DatabaseOutboxFilter(repository, metricsService);
   }
 }
