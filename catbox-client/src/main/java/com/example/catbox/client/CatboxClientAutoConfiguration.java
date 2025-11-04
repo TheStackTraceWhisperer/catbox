@@ -2,7 +2,6 @@ package com.example.catbox.client;
 
 import com.example.catbox.client.metrics.CatboxClientMetricsService;
 import com.example.catbox.common.repository.ProcessedMessageRepository;
-import io.micrometer.core.instrument.MeterRegistry;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.annotation.Bean;
