@@ -1,6 +1,62 @@
 # RouteBox UI Screenshots
 
-This folder contains screenshots of the RouteBox administrative web interface.
+This folder contains screenshots of the RouteBox administrative web interface and infrastructure services.
+
+## Infrastructure Services
+
+### Kafka UI Dashboard
+**File:** `kafka-ui-dashboard.png`
+
+The Kafka UI web interface showing both configured Kafka clusters:
+- **cluster-a** - Primary Kafka cluster (ports 9092 PLAINTEXT, 9093 SASL_SSL)
+- **cluster-c** - Secondary Kafka cluster for multi-cluster testing (port 9095)
+- **Dashboard view**: Shows cluster status, broker count, partitions, topics, and throughput metrics
+- **Access**: http://localhost:8090
+
+### Prometheus Dashboard
+**File:** `prometheus-dashboard.png`
+
+The Prometheus metrics collection and query interface:
+- **Query interface**: PromQL expression editor for querying metrics
+- **Visualization**: Table and graph views for metric data
+- **Access**: http://localhost:9090
+
+### Grafana Dashboard
+**File:** `grafana-dashboard.png`
+
+The Grafana visualization platform:
+- **Welcome page**: Getting started guide and tutorials
+- **Pre-configured**: Connected to Prometheus data source
+- **Dashboard management**: Create and manage visualization dashboards
+- **Default credentials**: admin/admin
+- **Access**: http://localhost:3000
+
+### Alertmanager Dashboard
+**File:** `alertmanager-dashboard.png`
+
+The Alertmanager alert routing and notification interface:
+- **Active alerts**: Shows firing alerts (CatboxServerDown, OrderServiceDown)
+- **Alert grouping**: Organized by receiver (email-notifications)
+- **Silence management**: Create and manage alert silences
+- **Access**: http://localhost:9094
+
+### Mailhog Email Interface
+**File:** `mailhog-dashboard.png`
+
+The Mailhog email testing interface:
+- **Captured emails**: Shows alert notification emails sent by Alertmanager
+- **Email preview**: View email content without sending to real addresses
+- **SMTP server**: Listening on port 1025
+- **Web UI Access**: http://localhost:8025
+
+### Keycloak Login
+**File:** `keycloak-login.png`
+
+The Keycloak identity and access management interface:
+- **Authentication**: OAuth2/OIDC provider for securing RouteBox services
+- **Admin console**: Manage realms, users, and clients
+- **Default credentials**: admin/admin
+- **Access**: http://localhost:8180
 
 ## Admin Pages
 
