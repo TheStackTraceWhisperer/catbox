@@ -41,14 +41,14 @@ This starts:
 
 ### Step 2: Create the Database
 
-The applications require a database named `catbox`. Create it manually:
+The applications require a database named `routebox`. Create it manually:
 
 ```bash
-# Create the catbox database
-docker exec catbox-azuresql /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P "${DB_PASSWORD}" -Q "CREATE DATABASE catbox" -C -No
+# Create the routebox database
+docker exec routebox-azuresql /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P "${DB_PASSWORD}" -Q "CREATE DATABASE routebox" -C -No
 ```
 
-Or if you prefer, connect using your favorite SQL client to `localhost:1433` with username `sa` and the password from your `.env` file, then run `CREATE DATABASE catbox`.
+Or if you prefer, connect using your favorite SQL client to `localhost:1433` with username `sa` and the password from your `.env` file, then run `CREATE DATABASE routebox`.
 
 ### Step 3: Run the order-service
 
@@ -58,15 +58,15 @@ In one terminal:
 mvn spring-boot:run -pl order-service -Dspring-boot.run.profiles=azuresql
 ```
 
-### Step 4: Run the catbox-server
+### Step 4: Run the routebox-server
 
 In a second terminal:
 ```bash
 # From the project root
-mvn spring-boot:run -pl catbox-server -Dspring-boot.run.profiles=azuresql
+mvn spring-boot:run -pl routebox-server -Dspring-boot.run.profiles=azuresql
 ```
 
-The `order-service` will be available at `http://localhost:8080` and the `catbox-server` will be available at `http://localhost:8081`.
+The `order-service` will be available at `http://localhost:8080` and the `routebox-server` will be available at `http://localhost:8081`.
 
 ## Building the Application
 
@@ -92,7 +92,7 @@ curl -X POST http://localhost:8080/api/orders \
 curl http://localhost:8080/api/orders
 ```
 
-3. View outbox events (catbox-server on port 8081):
+3. View outbox events (routebox-server on port 8081):
 ```bash
 curl http://localhost:8081/api/outbox-events
 ```

@@ -1,5 +1,5 @@
 #!/bin/bash
-# Helper script to run catbox-server with proper environment
+# Helper script to run routebox-server with proper environment
 
 cd "$(dirname "$0")"
 
@@ -14,8 +14,8 @@ else
     echo "Warning: .env file not found. Database password may not be set."
 fi
 
-echo "Starting catbox-server on port 8081 with azuresql profile..."
+echo "Starting routebox-server on port 8081 with azuresql profile..."
 echo "Java version: $(java -version 2>&1 | head -1)"
 echo ""
 
-mvn spring-boot:run -pl catbox-server -Dspring-boot.run.profiles=azuresql
+mvn spring-boot:run -pl routebox-server -Dspring-boot.run.profiles=azuresql

@@ -86,7 +86,7 @@ Identity provider for OAuth2/OIDC authentication.
 - **Port:** 8180 (changed from 8080 to avoid conflict with order-service)
 - **Admin Username:** `admin`
 - **Admin Password:** `admin`
-- **Realm:** `catbox`
+- **Realm:** `routebox`
 
 **Resource Limits:**
 - CPU: 1.5 cores (max), 0.25 cores (reserved)
@@ -139,7 +139,7 @@ Dashboards and visualization.
 
 - **Port:** 3000
 - **Default Login:** `admin` / `admin`
-- **Pre-configured Dashboard:** `infrastructure/monitoring/grafana/dashboards/catbox-dashboard.json`
+- **Pre-configured Dashboard:** `infrastructure/monitoring/grafana/dashboards/routebox-dashboard.json`
 
 **Resource Limits:**
 - CPU: 0.5 cores (max), 0.1 cores (reserved)
@@ -247,7 +247,7 @@ mvn spring-boot:run -pl order-service -Dspring-boot.run.profiles=azuresql
 
 **Catbox Server:**
 ```bash
-mvn spring-boot:run -pl catbox-server -Dspring-boot.run.profiles=azuresql
+mvn spring-boot:run -pl routebox-server -Dspring-boot.run.profiles=azuresql
 ```
 
 Or set in your IDE's run configuration:
@@ -257,18 +257,18 @@ Active profiles: azuresql
 
 Both applications will automatically use:
 - Database: Azure SQL Edge on port 1433
-- Kafka: localhost:9092 (catbox-server only)
+- Kafka: localhost:9092 (routebox-server only)
 
 ## Database Setup
 
-The applications use Azure SQL Edge when running with Docker Compose. The `catbox-server` also supports H2 in-memory database for development/testing without the `azuresql` profile.
+The applications use Azure SQL Edge when running with Docker Compose. The `routebox-server` also supports H2 in-memory database for development/testing without the `azuresql` profile.
 
 ### Creating the Database
 
 After starting the infrastructure, create the required database:
 
 ```bash
-docker exec catbox-azuresql /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P "${DB_PASSWORD}" -Q "CREATE DATABASE catbox" -C -No
+docker exec routebox-azuresql /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P "${DB_PASSWORD}" -Q "CREATE DATABASE routebox" -C -No
 ```
 
 ## Additional Configuration

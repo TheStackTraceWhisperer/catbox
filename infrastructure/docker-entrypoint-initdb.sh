@@ -28,9 +28,9 @@ fi
 # Create database if it doesn't exist
 echo "Creating database if not exists..."
 /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P "${MSSQL_SA_PASSWORD}" -d master -C -N -Q "
-IF NOT EXISTS (SELECT * FROM sys.databases WHERE name = 'catbox')
+IF NOT EXISTS (SELECT * FROM sys.databases WHERE name = 'routebox')
 BEGIN
-    CREATE DATABASE catbox;
+    CREATE DATABASE routebox;
 END
 "
 
@@ -41,7 +41,7 @@ fi
 
 # Run the schema initialization
 echo "Running schema initialization from init.sql..."
-/opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P "${MSSQL_SA_PASSWORD}" -d catbox -i /docker-entrypoint-initdb.d/init.sql -C -N
+/opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P "${MSSQL_SA_PASSWORD}" -d routebox -i /docker-entrypoint-initdb.d/init.sql -C -N
 
 if [ $? -ne 0 ]; then
     echo "ERROR: Failed to initialize database schema"

@@ -7,7 +7,7 @@
 
 ## Executive Summary
 
-This document provides an analysis of the Catbox project's CI/CD pipeline, build times, and test performance metrics. The analysis was conducted to identify opportunities for optimization and to establish baseline performance metrics for future improvements.
+This document provides an analysis of the RouteBox project's CI/CD pipeline, build times, and test performance metrics. The analysis was conducted to identify opportunities for optimization and to establish baseline performance metrics for future improvements.
 
 ---
 
@@ -16,23 +16,23 @@ This document provides an analysis of the Catbox project's CI/CD pipeline, build
 ### Overall Build Metrics
 - **Total Build Time (verify):** ~5 minutes 3 seconds
 - **Total Build Time (test only):** ~4 minutes 43 seconds
-- **Total Test Count:** 113 tests (77 in catbox-server, 4 in order-service, 32 in catbox-archunit)
+- **Total Test Count:** 113 tests (77 in routebox-server, 4 in order-service, 32 in routebox-archunit)
 - **Test Success Rate:** 100%
 
 ### Module-Level Build Times
 
 | Module | Build Time | Test Count | Avg Test Duration |
 |--------|------------|------------|-------------------|
-| catbox-parent | ~0.6s | 0 | N/A |
-| catbox-common | ~6.2s | 0 | N/A |
-| catbox-client | ~0.4s | 0 | N/A |
-| **catbox-server** | **~3m 27s** | 77 | 183ms |
+| routebox-parent | ~0.6s | 0 | N/A |
+| routebox-common | ~6.2s | 0 | N/A |
+| routebox-client | ~0.4s | 0 | N/A |
+| **routebox-server** | **~3m 27s** | 77 | 183ms |
 | **order-service** | **~1m 23s** | 4 | 202ms |
 | coverage-report | ~0.1s | 0 | N/A |
-| catbox-archunit | ~5.4s | 32 | 5ms |
+| routebox-archunit | ~5.4s | 32 | 5ms |
 
 **Key Observations:**
-- `catbox-server` accounts for ~67% of total build time
+- `routebox-server` accounts for ~67% of total build time
 - `order-service` accounts for ~27% of total build time
 - Combined, these two modules represent 94% of build time
 
@@ -44,16 +44,16 @@ This document provides an analysis of the Catbox project's CI/CD pipeline, build
 
 | Rank | Module | Test Class | Test Method | Duration | % of Total |
 |------|--------|------------|-------------|----------|------------|
-| 1 | catbox-server | E2EPollerMultiClusterTest | testPollerRoutesEventsToCorrectClusters | 6.64s | 46% |
-| 2 | catbox-server | E2EPollerTest | testPollerClaimsAndPublishesEvent | 2.90s | 20% |
-| 3 | catbox-server | DynamicKafkaTemplateFactoryEvictionTest | testConcurrentAccessDoesNotCauseExceptions | 1.03s | 7% |
-| 4 | catbox-server | OutboxEventClaimerConcurrencyTest | testConcurrentClaimersDoNotProcessSameEvents | 809ms | 6% |
+| 1 | routebox-server | E2EPollerMultiClusterTest | testPollerRoutesEventsToCorrectClusters | 6.64s | 46% |
+| 2 | routebox-server | E2EPollerTest | testPollerClaimsAndPublishesEvent | 2.90s | 20% |
+| 3 | routebox-server | DynamicKafkaTemplateFactoryEvictionTest | testConcurrentAccessDoesNotCauseExceptions | 1.03s | 7% |
+| 4 | routebox-server | OutboxEventClaimerConcurrencyTest | testConcurrentClaimersDoNotProcessSameEvents | 809ms | 6% |
 | 5 | order-service | OrderServiceTest | testGetAllOrders | 738ms | 5% |
-| 6 | catbox-server | OutboxEventPublisherTest | publishEvent_resetsFailureCountOnSuccess | 379ms | 3% |
+| 6 | routebox-server | OutboxEventPublisherTest | publishEvent_resetsFailureCountOnSuccess | 379ms | 3% |
 | 7 | order-service | OrderServiceFailureTest | testOrderCreationFailsWhenOutboxWriteFails | 223ms | 2% |
-| 8 | catbox-server | OutboxArchivalServiceTest | manualArchive_returnsZeroForInvalidRetention | 196ms | 1% |
-| 9 | catbox-server | OutboxArchivalServiceTest | archiveOldEvents_movesOldSentEventsToArchive | 162ms | 1% |
-| 10 | catbox-server | OutboxEventPublisherTest | publishEvent_movesToDeadLetterAfterMaxPermanentRetries | 149ms | 1% |
+| 8 | routebox-server | OutboxArchivalServiceTest | manualArchive_returnsZeroForInvalidRetention | 196ms | 1% |
+| 9 | routebox-server | OutboxArchivalServiceTest | archiveOldEvents_movesOldSentEventsToArchive | 162ms | 1% |
+| 10 | routebox-server | OutboxEventPublisherTest | publishEvent_movesToDeadLetterAfterMaxPermanentRetries | 149ms | 1% |
 
 **Key Observations:**
 - Top 2 E2E tests account for 66% of total test execution time
@@ -123,7 +123,7 @@ This document provides an analysis of the Catbox project's CI/CD pipeline, build
    - Consider enabling Surefire parallel execution for unit tests
    - Current: Sequential execution
    - Potential: `<parallel>methods</parallel>` or `<parallel>classes</parallel>`
-   - Impact: Could reduce catbox-server test time by 20-30%
+   - Impact: Could reduce routebox-server test time by 20-30%
 
 2. **Maven Parallel Builds** ⚠️ Use with caution
    - Current: Sequential module builds
@@ -166,7 +166,7 @@ This document provides an analysis of the Catbox project's CI/CD pipeline, build
 
 A JUnit 5 test listener has been implemented to automatically capture and report test durations:
 
-- **Location:** `catbox-common/src/test/java/.../TestDurationListener.java`
+- **Location:** `routebox-common/src/test/java/.../TestDurationListener.java`
 - **Configuration:** Auto-discovered via Java ServiceLoader
 - **Report Output:** `docs/test-durations.md`
 - **Updates:** Automatically generated on every test run
@@ -189,7 +189,7 @@ This allows tracking test performance over time and identifying regressions.
 3. Set up alerts for build time regressions (>10% increase)
 
 ### Priority 2: Quick Wins (Low Risk)
-1. Enable parallel unit test execution in catbox-server
+1. Enable parallel unit test execution in routebox-server
 2. Review and optimize database initialization in tests
 3. Consider splitting large test classes
 
@@ -213,7 +213,7 @@ The current CI/CD pipeline is well-configured with several optimizations already
 - Proper test separation
 - Modern Java 21 features
 
-The build time of ~5 minutes is reasonable for a multi-module project with integration tests. The main opportunity for improvement lies in parallelizing test execution, particularly within the catbox-server module which contains the majority of tests.
+The build time of ~5 minutes is reasonable for a multi-module project with integration tests. The main opportunity for improvement lies in parallelizing test execution, particularly within the routebox-server module which contains the majority of tests.
 
 The new test duration monitoring system provides visibility into test performance and will help identify regressions and optimization opportunities over time.
 
@@ -225,9 +225,9 @@ The new test duration monitoring system provides visibility into test performanc
 Total Build Time: 5m 3s (303 seconds)
 
 Module Distribution:
-- catbox-server: 207s (68.3%)
+- routebox-server: 207s (68.3%)
 - order-service:  83s (27.4%)
-- catbox-archunit: 5s (1.7%)
+- routebox-archunit: 5s (1.7%)
 - Other modules:   8s (2.6%)
 
 Test Type Distribution:

@@ -1,6 +1,6 @@
 # Virtual Threads
 
-This document describes the Java 21 virtual threads implementation in the Catbox project.
+This document describes the Java 21 virtual threads implementation in the RouteBox project.
 
 ## Overview
 
@@ -31,13 +31,13 @@ The outbox pattern is ideal for virtual threads because:
 3. **Variable Load:** Event volume fluctuates; need elastic concurrency
 4. **Simple Code:** Write synchronous code that performs asynchronously
 
-## Virtual Threads in Catbox
+## Virtual Threads in RouteBox
 
 ### 1. Web Request Handling
 
 Tomcat's protocol handler uses virtual threads for processing HTTP requests.
 
-**Configuration:** `catbox-server/src/main/java/com/catbox/config/WebConfig.java`
+**Configuration:** `routebox-server/src/main/java/com/routebox/config/WebConfig.java`
 
 ```java
 @Bean
@@ -58,7 +58,7 @@ public TomcatProtocolHandlerCustomizer<?> protocolHandlerVirtualThreadExecutorCu
 
 Spring's async task executor uses virtual threads for `@Async` methods.
 
-**Configuration:** `catbox-server/src/main/java/com/catbox/config/AsyncConfig.java`
+**Configuration:** `routebox-server/src/main/java/com/routebox/config/AsyncConfig.java`
 
 ```java
 @Bean
@@ -81,7 +81,7 @@ public AsyncTaskExecutor applicationTaskExecutor() {
 
 Each outbox event is processed in its own virtual thread.
 
-**Implementation:** `catbox-server/src/main/java/com/catbox/service/OutboxEventPoller.java`
+**Implementation:** `routebox-server/src/main/java/com/routebox/service/OutboxEventPoller.java`
 
 ```java
 claimedEvents.forEach(event -> {
@@ -230,7 +230,7 @@ Monitor virtual thread usage via JMX:
 java -Dcom.sun.management.jmxremote \
      -Dcom.sun.management.jmxremote.port=9999 \
      -Dcom.sun.management.jmxremote.authenticate=false \
-     -jar catbox-server.jar
+     -jar routebox-server.jar
 ```
 
 ### Thread Dumps

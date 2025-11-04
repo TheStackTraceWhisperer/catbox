@@ -25,9 +25,9 @@ scrape_configs:
         labels:
           application: 'order-service'
 
-  - job_name: 'catbox-server'
+  - job_name: 'routebox-server'
     metrics_path: '/actuator/prometheus'
     static_configs:
       - targets: ['host.docker.internal:8081']
         labels:
-          application: 'catbox-server'
+          application: 'routebox-server'

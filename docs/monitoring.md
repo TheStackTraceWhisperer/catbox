@@ -1,6 +1,6 @@
 # Monitoring and Observability
 
-This document describes the monitoring and observability features in the Catbox project.
+This document describes the monitoring and observability features in the RouteBox project.
 
 ## Overview
 
@@ -99,7 +99,7 @@ Histograms track the distribution of values over time.
 
 ### Via HTTP Endpoint
 
-View metrics directly from the catbox-server:
+View metrics directly from the routebox-server:
 
 ```bash
 curl http://localhost:8081/actuator/prometheus | grep outbox_events
@@ -143,7 +143,7 @@ histogram_quantile(0.95, rate(outbox_events_processing_duration_seconds_bucket[5
 
 ## Grafana Dashboard
 
-A pre-configured Grafana dashboard is available in `infrastructure/monitoring/grafana/dashboards/catbox-dashboard.json`.
+A pre-configured Grafana dashboard is available in `infrastructure/monitoring/grafana/dashboards/routebox-dashboard.json`.
 
 ### Dashboard Panels
 
@@ -189,7 +189,7 @@ A pre-configured Grafana dashboard is available in `infrastructure/monitoring/gr
 2. Login with default credentials:
    - Username: `admin`
    - Password: `admin`
-3. Navigate to Dashboards → Catbox Outbox Dashboard
+3. Navigate to Dashboards → RouteBox Outbox Dashboard
 
 ## Log Aggregation with Loki
 
@@ -203,21 +203,21 @@ Loki provides centralized log storage and querying capabilities.
 3. Use LogQL queries to search logs:
 
 ```logql
-# All logs from catbox-server
-{container_name="catbox-server"}
+# All logs from routebox-server
+{container_name="routebox-server"}
 
 # Error logs only
-{container_name="catbox-server"} |= "ERROR"
+{container_name="routebox-server"} |= "ERROR"
 
 # Logs containing "OutboxEvent"
-{container_name="catbox-server"} |= "OutboxEvent"
+{container_name="routebox-server"} |= "OutboxEvent"
 ```
 
 **Via Loki API:**
 ```bash
 # Query last 1 hour of logs
 curl -G -s "http://localhost:3100/loki/api/v1/query_range" \
-  --data-urlencode 'query={container_name="catbox-server"}' \
+  --data-urlencode 'query={container_name="routebox-server"}' \
   --data-urlencode "start=$(date -d '1 hour ago' +%s)000000000" \
   --data-urlencode "end=$(date +%s)000000000"
 ```
@@ -258,7 +258,7 @@ All alert rules are defined in `infrastructure/monitoring/alertmanager/alert-rul
 
 **StalledOutboxProcessing** (Critical)
 - Triggers when oldest event is more than 5 minutes old
-- May indicate catbox-server is down or stuck
+- May indicate routebox-server is down or stuck
 
 **NoEventProcessing** (Critical)
 - Triggers when there are pending events but no successful publishes for 10 minutes
@@ -282,8 +282,8 @@ All alert rules are defined in `infrastructure/monitoring/alertmanager/alert-rul
 
 #### Application Health Alerts
 
-**CatboxServerDown** (Critical)
-- Triggers when catbox-server metrics are unavailable for 2 minutes
+**RouteBoxServerDown** (Critical)
+- Triggers when routebox-server metrics are unavailable for 2 minutes
 - Application may be down or unreachable
 
 **OrderServiceDown** (Critical)
@@ -330,9 +330,9 @@ To verify the alerting system is working:
    - Navigate to http://localhost:9090/alerts
    - You should see all defined alert rules
 
-4. **Trigger a test alert** (stop catbox-server):
+4. **Trigger a test alert** (stop routebox-server):
    ```bash
-   # If running catbox-server locally, stop it
+   # If running routebox-server locally, stop it
    # Or trigger an alert by creating high backlog
    ```
 
@@ -354,8 +354,8 @@ The Alertmanager configuration (`infrastructure/monitoring/alertmanager/alertman
 
 **Email Configuration:**
 - SMTP server: mailhog:1025
-- From address: alertmanager@catbox.local
-- To address: catbox-alerts@example.com
+- From address: alertmanager@routebox.local
+- To address: routebox-alerts@example.com
 
 **Routing:**
 - Critical alerts: 10s group wait, 30m repeat interval
@@ -488,7 +488,7 @@ Both applications expose health check endpoints:
 # Order Service health
 curl http://localhost:8080/actuator/health
 
-# Catbox Server health
+# RouteBox Server health
 curl http://localhost:8081/actuator/health
 ```
 
@@ -508,7 +508,7 @@ Use health endpoints for:
 
 ```
 ┌─────────────────┐
-│ catbox-server   │──── metrics ────┐
+│ routebox-server   │──── metrics ────┐
 └─────────────────┘                  │
                                      │
 ┌─────────────────┐                  ▼

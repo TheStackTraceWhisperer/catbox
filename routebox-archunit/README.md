@@ -1,10 +1,10 @@
-# Catbox ArchUnit Module
+# RouteBox ArchUnit Module
 
-This module contains architectural tests for the catbox project using [ArchUnit](https://www.archunit.org/). These tests verify that the codebase follows established architectural principles and coding standards.
+This module contains architectural tests for the routebox project using [ArchUnit](https://www.archunit.org/). These tests verify that the codebase follows established architectural principles and coding standards.
 
 ## Purpose
 
-The catbox-archunit module enforces architectural rules across the entire catbox project, ensuring:
+The routebox-archunit module enforces architectural rules across the entire routebox project, ensuring:
 - Consistent layering and separation of concerns
 - Proper naming conventions
 - Correct usage of Spring annotations
@@ -40,10 +40,10 @@ Ensures proper usage of Spring annotations:
 
 ### 4. PackageDependencyTest
 Enforces clean package dependencies between modules:
-- catbox-common should not depend on other modules (it's the foundation)
-- catbox-client should not depend on catbox-server or order-service
-- catbox-server should not depend on order-service
-- order-service should not depend on catbox-server
+- routebox-common should not depend on other modules (it's the foundation)
+- routebox-client should not depend on routebox-server or order-service
+- routebox-server should not depend on order-service
+- order-service should not depend on routebox-server
 - Controllers should not depend on other controllers
 - Entities should not depend on services or controllers
 - Repositories should only depend on entities and Spring Data
@@ -67,7 +67,7 @@ Ensures proper transaction management:
 
 ```bash
 # Run only ArchUnit tests
-mvn test -pl catbox-archunit
+mvn test -pl routebox-archunit
 
 # Run all tests including ArchUnit
 mvn test
@@ -86,14 +86,14 @@ The module uses an `archunit.properties` file to configure test behavior:
 
 ## Architectural Principles Enforced
 
-Based on analysis of the catbox codebase, these tests enforce:
+Based on analysis of the routebox codebase, these tests enforce:
 
 1. **Layered Architecture**: Clear separation between controller → service → repository → entity layers
 2. **Package Organization**: Separate packages for config, controller, service, repository, entity, dto, exception, metrics
 3. **Spring Best Practices**: Proper use of Spring annotations and patterns
 4. **Transaction Management**: Transactions at the service layer, not in controllers or repositories
 5. **JPA Best Practices**: Proper entity design and repository interfaces
-6. **Module Independence**: catbox-common is independent; client, server, and order-service are decoupled
+6. **Module Independence**: routebox-common is independent; client, server, and order-service are decoupled
 7. **Outbox Pattern**: Client layer can access repositories for the transactional outbox pattern
 
 ## Benefits
@@ -108,7 +108,7 @@ Based on analysis of the catbox codebase, these tests enforce:
 
 To add new architectural rules:
 
-1. Create a new test class in `src/test/java/com/example/catbox/archunit/`
+1. Create a new test class in `src/test/java/com/example/routebox/archunit/`
 2. Use ArchUnit's fluent API to define rules
 3. Follow the pattern of existing tests for consistency
 4. Consider using `allowEmptyShould(true)` for rules that may not apply to all modules
@@ -128,6 +128,6 @@ void customRule() {
 
 ## Notes
 
-- The module only includes catbox-common and catbox-client as dependencies for testing
+- The module only includes routebox-common and routebox-client as dependencies for testing
 - Tests are designed to be flexible for a multi-module architecture where not all modules have all layer types
-- The archunit.properties configuration allows tests to pass even when some patterns don't match (e.g., no controller classes in catbox-common)
+- The archunit.properties configuration allows tests to pass even when some patterns don't match (e.g., no controller classes in routebox-common)

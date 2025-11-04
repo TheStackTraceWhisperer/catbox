@@ -18,7 +18,7 @@ cd jmeter-tests
 mvn spring-boot:run -pl order-service -Dspring-boot.run.profiles=azuresql
 
 # Terminal 2 - Catbox Server  
-mvn spring-boot:run -pl catbox-server -Dspring-boot.run.profiles=azuresql
+mvn spring-boot:run -pl routebox-server -Dspring-boot.run.profiles=azuresql
 ```
 
 ### 3. Run Tests

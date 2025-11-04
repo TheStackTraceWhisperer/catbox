@@ -5,8 +5,8 @@ spring:
       client:
         registration:
           keycloak:
-            client-id: catbox-server
-            client-secret: catbox-server-secret
+            client-id: routebox-server
+            client-secret: routebox-server-secret
             scope:
               - openid
               - profile

@@ -8,7 +8,7 @@ groups:
         for: 5m
         labels:
           severity: warning
-          application: catbox-server
+          application: routebox-server
         annotations:
           summary: "High number of pending outbox events"
           description: "There are {{ $value }} pending events in the outbox for more than 5 minutes. Normal operation should keep this below 100."
@@ -19,10 +19,10 @@ groups:
         for: 2m
         labels:
           severity: critical
-          application: catbox-server
+          application: routebox-server
         annotations:
           summary: "Outbox event processing appears to be stalled"
-          description: "The oldest unsent event is {{ $value }} seconds old (>5 minutes). Events should be processed within seconds. Check if catbox-server is running and healthy."
+          description: "The oldest unsent event is {{ $value }} seconds old (>5 minutes). Events should be processed within seconds. Check if routebox-server is running and healthy."
 
       # Alert on high failure rate
       - alert: HighOutboxFailureRate
@@ -30,7 +30,7 @@ groups:
         for: 2m
         labels:
           severity: warning
-          application: catbox-server
+          application: routebox-server
         annotations:
           summary: "High rate of event publishing failures"
           description: "Event publishing is failing at {{ $value }} events/second. Check Kafka connectivity and broker health."
@@ -41,7 +41,7 @@ groups:
         for: 5m
         labels:
           severity: warning
-          application: catbox-server
+          application: routebox-server
         annotations:
           summary: "Outbox event processing is slow"
           description: "95th percentile processing time is {{ $value }} seconds (>10s). This may indicate performance issues or high load."
@@ -52,7 +52,7 @@ groups:
         for: 1m
         labels:
           severity: critical
-          application: catbox-server
+          application: routebox-server
         annotations:
           summary: "Events being moved to dead letter queue"
           description: "{{ $value }} events have been moved to the dead letter queue in the last 5 minutes. These events have exceeded retry limits and require manual investigation."
@@ -63,7 +63,7 @@ groups:
         for: 10m
         labels:
           severity: warning
-          application: catbox-server
+          application: routebox-server
         annotations:
           summary: "Outbox archive table is very large"
           description: "Archive table contains {{ $value }} events (>1 million). Consider implementing data retention policies to purge old archived events."
@@ -74,7 +74,7 @@ groups:
         for: 10m
         labels:
           severity: critical
-          application: catbox-server
+          application: routebox-server
         annotations:
           summary: "Critical backlog of pending outbox events"
           description: "There are {{ $value }} pending events in the outbox (>1000). This indicates a serious performance or connectivity issue. Immediate attention required."
@@ -85,24 +85,24 @@ groups:
         for: 5m
         labels:
           severity: critical
-          application: catbox-server
+          application: routebox-server
         annotations:
           summary: "No events being processed despite pending events"
-          description: "There are {{ $value }} pending events but no successful publishes in the last 10 minutes. The catbox-server may be down or unable to connect to Kafka."
+          description: "There are {{ $value }} pending events but no successful publishes in the last 10 minutes. The routebox-server may be down or unable to connect to Kafka."
 
   - name: application_health
     interval: 30s
     rules:
       # Alert when application is down (no metrics being scraped)
       - alert: CatboxServerDown
-        expr: up{job="catbox-server"} == 0
+        expr: up{job="routebox-server"} == 0
         for: 2m
         labels:
           severity: critical
-          application: catbox-server
+          application: routebox-server
         annotations:
           summary: "Catbox Server is down"
-          description: "The catbox-server application is not responding to Prometheus scrapes. Check if the application is running and healthy."
+          description: "The routebox-server application is not responding to Prometheus scrapes. Check if the application is running and healthy."
 
       - alert: OrderServiceDown
         expr: up{job="order-service"} == 0

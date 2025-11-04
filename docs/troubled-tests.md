@@ -1,11 +1,11 @@
 # Troubled Tests - Components Difficult to Test
 
-This document outlines components in the Catbox project that are difficult to test cleanly and explains the challenges.
+This document outlines components in the RouteBox project that are difficult to test cleanly and explains the challenges.
 
 ## Application Main Methods
 
-### CatboxServerApplication.main()
-**Location:** `catbox-server/src/main/java/com/example/catbox/server/CatboxServerApplication.java`
+### RouteBoxServerApplication.main()
+**Location:** `routebox-server/src/main/java/com/example/routebox/server/RouteBoxServerApplication.java`
 
 **Challenge:** The `main()` method bootstraps the Spring application. Testing it would require:
 - Starting a full Spring Boot application context
@@ -24,7 +24,7 @@ This document outlines components in the Catbox project that are difficult to te
 ### OrderServiceApplication.main()
 **Location:** `order-service/src/main/java/com/example/order/OrderServiceApplication.java`
 
-**Challenge:** Same as CatboxServerApplication - it's a Spring Boot bootstrap method.
+**Challenge:** Same as RouteBoxServerApplication - it's a Spring Boot bootstrap method.
 
 **Reason for Limited Coverage:** 
 - No business logic in the method
@@ -38,7 +38,7 @@ This document outlines components in the Catbox project that are difficult to te
 ## SecurityConfig Bean Configuration Methods
 
 ### SecurityConfig
-**Location:** `catbox-server/src/main/java/com/example/catbox/server/config/SecurityConfig.java`
+**Location:** `routebox-server/src/main/java/com/example/routebox/server/config/SecurityConfig.java`
 
 **Challenge:** This configuration class uses Spring profiles to conditionally create security beans:
 - Different beans are created based on active profiles
@@ -57,7 +57,7 @@ This document outlines components in the Catbox project that are difficult to te
 ## DynamicKafkaTemplateFactory Advanced Branches
 
 ### DynamicKafkaTemplateFactory
-**Location:** `catbox-server/src/main/java/com/example/catbox/server/config/DynamicKafkaTemplateFactory.java`
+**Location:** `routebox-server/src/main/java/com/example/routebox/server/config/DynamicKafkaTemplateFactory.java`
 
 **Challenge:** This class performs complex runtime bean registration and lifecycle management:
 - Creates KafkaTemplate beans dynamically at runtime
@@ -84,7 +84,7 @@ This document outlines components in the Catbox project that are difficult to te
 ## OutboxService Specification Branches
 
 ### OutboxService.findPaged()
-**Location:** `catbox-server/src/main/java/com/example/catbox/server/service/OutboxService.java`
+**Location:** `routebox-server/src/main/java/com/example/routebox/server/service/OutboxService.java`
 
 **Challenge:** The `findPaged()` method uses JPA Specifications with multiple conditional predicates:
 - Combinations of null/non-null parameters create many branch paths

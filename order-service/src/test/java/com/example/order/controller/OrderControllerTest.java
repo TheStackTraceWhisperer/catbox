@@ -1,6 +1,6 @@
 package com.example.order.controller;
 
-import com.example.catbox.client.CatboxClientAutoConfiguration;
+import com.example.catbox.client.RouteBoxClientAutoConfiguration;
 import com.example.order.OrderServiceApplication;
 import com.example.order.dto.CreateOrderRequest;
 import com.example.order.dto.UpdateStatusRequest;
@@ -30,7 +30,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 /**
  * Integration tests for OrderController to verify REST API endpoints.
  */
-@SpringBootTest(classes = {OrderServiceApplication.class, CatboxClientAutoConfiguration.class})
+@SpringBootTest(classes = {OrderServiceApplication.class, RouteBoxClientAutoConfiguration.class})
 @AutoConfigureMockMvc
 @Transactional
 @Testcontainers

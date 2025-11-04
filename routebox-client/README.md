@@ -1,6 +1,6 @@
-# Catbox Client
+# RouteBox Client
 
-The Catbox Client library provides utilities for working with the transactional outbox pattern.
+The RouteBox Client library provides utilities for working with the transactional outbox pattern.
 
 ## Features
 
@@ -99,7 +99,7 @@ CREATE TABLE processed_messages (
 
 #### Admin UI Management
 
-The Catbox admin UI (available at `/admin/processed-messages`) provides:
+The RouteBox admin UI (available at `/admin/processed-messages`) provides:
 - **View processed messages**: Browse all processed messages with filtering by consumer group and correlation ID
 - **Mark as unprocessed**: Manually remove processed message records to allow reprocessing
 - **Statistics**: View counts and trends
@@ -218,7 +218,7 @@ Add the dependency to your `pom.xml`:
 ```xml
 <dependency>
     <groupId>com.example</groupId>
-    <artifactId>catbox-client</artifactId>
+    <artifactId>routebox-client</artifactId>
     <version>1.0.0-SNAPSHOT</version>
 </dependency>
 ```

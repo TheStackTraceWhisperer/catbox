@@ -1,6 +1,6 @@
 # Production Deployment Guide
 
-This guide provides recommendations and best practices for deploying Catbox in production environments.
+This guide provides recommendations and best practices for deploying RouteBox in production environments.
 
 ## Overview
 
@@ -214,7 +214,7 @@ For multi-cluster deployments (geographic distribution, disaster recovery):
 **Never hardcode secrets.** Use environment variables or secret management:
 
 ```yaml
-# catbox-server production configuration
+# routebox-server production configuration
 spring:
   datasource:
     url: ${DATABASE_URL}
@@ -243,7 +243,7 @@ JAVA_OPTS="-Xms2g -Xmx2g \
   -XX:MaxGCPauseMillis=200 \
   -XX:+ExitOnOutOfMemoryError \
   -XX:+HeapDumpOnOutOfMemoryError \
-  -XX:HeapDumpPath=/var/log/catbox/heap_dump.hprof"
+  -XX:HeapDumpPath=/var/log/routebox/heap_dump.hprof"
 
 # JMX settings for production monitoring (with authentication and SSL)
 # IMPORTANT: For production, enable JMX authentication and SSL
@@ -260,13 +260,13 @@ JAVA_OPTS="$JAVA_OPTS \
   -Dcom.sun.management.jmxremote.port=9010 \
   -Dcom.sun.management.jmxremote.rmi.port=9010 \
   -Dcom.sun.management.jmxremote.authenticate=true \
-  -Dcom.sun.management.jmxremote.password.file=/etc/catbox/jmxremote.password \
-  -Dcom.sun.management.jmxremote.access.file=/etc/catbox/jmxremote.access \
+  -Dcom.sun.management.jmxremote.password.file=/etc/routebox/jmxremote.password \
+  -Dcom.sun.management.jmxremote.access.file=/etc/routebox/jmxremote.access \
   -Dcom.sun.management.jmxremote.ssl=true \
   -Dcom.sun.management.jmxremote.registry.ssl=true \
-  -Djavax.net.ssl.keyStore=/etc/catbox/keystore.jks \
+  -Djavax.net.ssl.keyStore=/etc/routebox/keystore.jks \
   -Djavax.net.ssl.keyStorePassword=\${JMX_KEYSTORE_PASSWORD} \
-  -Djavax.net.ssl.trustStore=/etc/catbox/truststore.jks \
+  -Djavax.net.ssl.trustStore=/etc/routebox/truststore.jks \
   -Djavax.net.ssl.trustStorePassword=\${JMX_TRUSTSTORE_PASSWORD}"
 ```
 
@@ -280,11 +280,11 @@ logging:
     format:
       console: ecs  # Use ECS format for centralized logging
   level:
-    com.example.catbox: INFO
+    com.example.routebox: INFO
     org.springframework: WARN
     org.hibernate: WARN
   file:
-    name: /var/log/catbox/application.log
+    name: /var/log/routebox/application.log
     max-size: 100MB
     max-history: 30
 ```
@@ -324,12 +324,12 @@ spring:
    apiVersion: autoscaling/v2
    kind: HorizontalPodAutoscaler
    metadata:
-     name: catbox-server
+     name: routebox-server
    spec:
      scaleTargetRef:
        apiVersion: apps/v1
        kind: Deployment
-       name: catbox-server
+       name: routebox-server
      minReplicas: 3
      maxReplicas: 10
      metrics:

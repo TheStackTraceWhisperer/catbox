@@ -2,7 +2,7 @@ services:
   # Azure SQL Edge - Compatible with Azure SQL Database
   azuresql:
     image: mcr.microsoft.com/azure-sql-edge:latest
-    container_name: catbox-azuresql
+    container_name: routebox-azuresql
     ports:
       - "1433:1433"
     environment:
@@ -43,7 +43,7 @@ services:
   # Now configured with SSL/TLS, SASL authentication, and ACLs using Confluent Platform
   kafka:
     image: confluentinc/cp-kafka:7.6.0
-    container_name: catbox-kafka
+    container_name: routebox-kafka
     ports:
       - "9092:9092"  # PLAINTEXT listener (for backward compatibility)
       - "9093:9093"  # SASL_SSL listener (secure)
@@ -121,7 +121,7 @@ services:
   # Configured with PLAINTEXT only for simplicity
   kafka-2:
     image: confluentinc/cp-kafka:7.6.0
-    container_name: catbox-kafka-2
+    container_name: routebox-kafka-2
     ports:
       - "9095:9095"  # PLAINTEXT listener
     environment:
@@ -172,7 +172,7 @@ services:
   # Kafka UI - Web UI for both Kafka clusters
   kafka-ui:
     image: provectuslabs/kafka-ui:latest
-    container_name: catbox-kafka-ui
+    container_name: routebox-kafka-ui
     ports:
       - "8090:8080"
     environment:
@@ -200,7 +200,7 @@ services:
   # Keycloak - Identity and Access Management
   keycloak:
     image: quay.io/keycloak/keycloak:latest
-    container_name: catbox-keycloak
+    container_name: routebox-keycloak
     ports:
       - "8180:8080"  # Changed from 8080:8080 to avoid conflict with order-service
     environment:
@@ -231,7 +231,7 @@ services:
   # Prometheus - Metrics collection
   prometheus:
     image: prom/prometheus:latest
-    container_name: catbox-prometheus
+    container_name: routebox-prometheus
     ports:
       - "9090:9090"
     volumes:
@@ -264,7 +264,7 @@ services:
   # Alertmanager - Alert routing and notifications
   alertmanager:
     image: prom/alertmanager:latest
-    container_name: catbox-alertmanager
+    container_name: routebox-alertmanager
     ports:
       - "9093:9093"
     volumes:
@@ -293,7 +293,7 @@ services:
   # Mailhog - Email testing server
   mailhog:
     image: mailhog/mailhog:latest
-    container_name: catbox-mailhog
+    container_name: routebox-mailhog
     ports:
       - "1025:1025"  # SMTP server
       - "8025:8025"  # Web UI
@@ -316,7 +316,7 @@ services:
   # Grafana - Metrics visualization
   grafana:
     image: grafana/grafana:latest
-    container_name: catbox-grafana
+    container_name: routebox-grafana
     ports:
       - "3000:3000"
     environment:
@@ -348,7 +348,7 @@ services:
   # Loki - Log aggregation
   loki:
     image: grafana/loki:latest
-    container_name: catbox-loki
+    container_name: routebox-loki
     ports:
       - "3100:3100"
     volumes:
@@ -373,7 +373,7 @@ services:
   # Promtail - ship Docker logs to Loki, parse ECS JSON
   promtail:
     image: grafana/promtail:latest
-    container_name: catbox-promtail
+    container_name: routebox-promtail
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
       - /var/lib/docker/containers:/var/lib/docker/containers:ro
@@ -400,7 +400,7 @@ services:
   # Tempo - Distributed tracing backend
   tempo:
     image: grafana/tempo:latest
-    container_name: catbox-tempo
+    container_name: routebox-tempo
     ports:
       - "3200:3200"   # Tempo HTTP
       - "4317:4317"   # OTLP gRPC
