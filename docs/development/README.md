@@ -6,7 +6,7 @@ This directory contains development-related documentation including code reviews
 
 ### Code Reviews
 
-- **[code-review.md](code-review.md)** - Comprehensive code review of the entire Catbox project
+- **[code-review.md](code-review.md)** - Comprehensive code review of the entire RouteBox project
   - Architecture assessment
   - Code quality analysis
   - Security review

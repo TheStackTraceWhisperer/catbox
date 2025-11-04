@@ -2,7 +2,7 @@
 
 ## Overview
 
-This document provides a comprehensive summary of the JMeter test suite implementation for the Catbox application. The test suite uses Docker containers to run JMeter tests, eliminating the need for local JMeter installation and ensuring consistent test execution across platforms.
+This document provides a comprehensive summary of the JMeter test suite implementation for the RouteBox application. The test suite uses Docker containers to run JMeter tests, eliminating the need for local JMeter installation and ensuring consistent test execution across platforms.
 
 ## What Was Implemented
 
@@ -185,7 +185,7 @@ cd jmeter-tests
 
 # 2. Start services (in separate terminals)
 mvn spring-boot:run -pl order-service -Dspring-boot.run.profiles=azuresql
-mvn spring-boot:run -pl catbox-server -Dspring-boot.run.profiles=azuresql
+mvn spring-boot:run -pl routebox-server -Dspring-boot.run.profiles=azuresql
 
 # 3. Run a single test
 ./scripts/run-test.sh order
@@ -258,7 +258,7 @@ The test suite is designed to validate Java 21 virtual threads:
 
 Tests verify the transactional outbox pattern:
 - Every order creation generates an outbox event
-- Events are processed concurrently by catbox-server
+- Events are processed concurrently by routebox-server
 - No event loss under high load
 - At-least-once delivery guarantees
 
@@ -316,4 +316,4 @@ To use the test suite:
 
 ## Conclusion
 
-The JMeter test suite provides a comprehensive, production-ready framework for stress testing the Catbox application. It validates the performance of the transactional outbox pattern, tests the effectiveness of Java 21 virtual threads, and provides valuable insights into system behavior under load.
+The JMeter test suite provides a comprehensive, production-ready framework for stress testing the RouteBox application. It validates the performance of the transactional outbox pattern, tests the effectiveness of Java 21 virtual threads, and provides valuable insights into system behavior under load.

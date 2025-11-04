@@ -2,7 +2,7 @@
 
 ## Prerequisites
 - Docker
-- Both Order Service and Catbox Server running
+- Both Order Service and RouteBox Server running
 
 ## Quick Start (3 Steps)
 
@@ -17,8 +17,8 @@ cd jmeter-tests
 # Terminal 1 - Order Service
 mvn spring-boot:run -pl order-service -Dspring-boot.run.profiles=azuresql
 
-# Terminal 2 - Catbox Server  
-mvn spring-boot:run -pl catbox-server -Dspring-boot.run.profiles=azuresql
+# Terminal 2 - RouteBox Server  
+mvn spring-boot:run -pl routebox-server -Dspring-boot.run.profiles=azuresql
 ```
 
 ### 3. Run Tests

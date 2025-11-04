@@ -1,10 +1,10 @@
 # Keycloak Configuration
 
-This directory contains the Keycloak realm configuration for the Catbox application.
+This directory contains the Keycloak realm configuration for the RouteBox application.
 
 ## Configuration Files
 
-- `catbox-realm.json`: Realm import file with pre-configured catbox realm, user, and client
+- `routebox-realm.json`: Realm import file with pre-configured routebox realm, user, and client
 
 ## Development vs. Production
 
@@ -19,12 +19,12 @@ Before deploying to production, you **MUST** update the following:
    - Production: Change to `"all"` or `"external"` to enforce HTTPS
 
 2. **User Password**:
-   - Current: `catbox` user has password `catbox`
+   - Current: `routebox` user has password `routebox`
    - Production: Use strong passwords or set `"temporary": true` to force password change on first login
    - Better: Remove embedded users and create them through Keycloak admin console
 
 3. **Client Secret**:
-   - Current: `catbox-server-secret` (predictable and in source control)
+   - Current: `routebox-server-secret` (predictable and in source control)
    - Production: Use environment variables or secure secret management (e.g., Vault, AWS Secrets Manager)
    - Generate a cryptographically strong secret
 
@@ -34,7 +34,7 @@ Before deploying to production, you **MUST** update the following:
 
 ## Modifying the Configuration
 
-1. Edit `catbox-realm.json` as needed
+1. Edit `routebox-realm.json` as needed
 2. Restart Keycloak to import changes:
    ```bash
    cd .. && docker compose restart keycloak
@@ -42,7 +42,7 @@ Before deploying to production, you **MUST** update the following:
 
 ## Access
 
-- **Application**: http://localhost:8180/realms/catbox
+- **Application**: http://localhost:8180/realms/routebox
 - **Admin Console**: http://localhost:8180/admin
   - Username: `admin`
   - Password: `admin`

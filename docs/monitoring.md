@@ -1,6 +1,6 @@
 # Monitoring and Observability
 
-This document describes the monitoring and observability features in the Catbox project.
+This document describes the monitoring and observability features in the RouteBox project.
 
 ## Overview
 
@@ -99,7 +99,7 @@ Histograms track the distribution of values over time.
 
 ### Via HTTP Endpoint
 
-View metrics directly from the catbox-server:
+View metrics directly from the routebox-server:
 
 ```bash
 curl http://localhost:8081/actuator/prometheus | grep outbox_events
@@ -143,7 +143,7 @@ histogram_quantile(0.95, rate(outbox_events_processing_duration_seconds_bucket[5
 
 ## Grafana Dashboard
 
-A pre-configured Grafana dashboard is available in `infrastructure/monitoring/grafana/dashboards/catbox-dashboard.json`.
+A pre-configured Grafana dashboard is available in `infrastructure/monitoring/grafana/dashboards/routebox-dashboard.json`.
 
 ### Dashboard Panels
 
@@ -189,7 +189,7 @@ A pre-configured Grafana dashboard is available in `infrastructure/monitoring/gr
 2. Login with default credentials:
    - Username: `admin`
    - Password: `admin`
-3. Navigate to Dashboards → Catbox Outbox Dashboard
+3. Navigate to Dashboards → RouteBox Outbox Dashboard
 
 ## Log Aggregation with Loki
 
@@ -203,21 +203,21 @@ Loki provides centralized log storage and querying capabilities.
 3. Use LogQL queries to search logs:
 
 ```logql
-# All logs from catbox-server
-{container_name="catbox-server"}
+# All logs from routebox-server
+{container_name="routebox-server"}
 
 # Error logs only
-{container_name="catbox-server"} |= "ERROR"
+{container_name="routebox-server"} |= "ERROR"
 
 # Logs containing "OutboxEvent"
-{container_name="catbox-server"} |= "OutboxEvent"
+{container_name="routebox-server"} |= "OutboxEvent"
 ```
 
 **Via Loki API:**
 ```bash
 # Query last 1 hour of logs
 curl -G -s "http://localhost:3100/loki/api/v1/query_range" \
-  --data-urlencode 'query={container_name="catbox-server"}' \
+  --data-urlencode 'query={container_name="routebox-server"}' \
   --data-urlencode "start=$(date -d '1 hour ago' +%s)000000000" \
   --data-urlencode "end=$(date +%s)000000000"
 ```
@@ -323,7 +323,7 @@ Both applications expose health check endpoints:
 # Order Service health
 curl http://localhost:8080/actuator/health
 
-# Catbox Server health
+# RouteBox Server health
 curl http://localhost:8081/actuator/health
 ```
 
@@ -343,7 +343,7 @@ Use health endpoints for:
 
 ```
 ┌─────────────────┐
-│ catbox-server   │──── metrics ────┐
+│ routebox-server   │──── metrics ────┐
 └─────────────────┘                  │
                                      │
 ┌─────────────────┐                  ▼

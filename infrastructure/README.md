@@ -1,6 +1,6 @@
 # Infrastructure
 
-This directory contains all Docker infrastructure files and configurations for the Catbox project.
+This directory contains all Docker infrastructure files and configurations for the RouteBox project.
 
 ## Contents
 
@@ -79,9 +79,9 @@ To enable Kafka security:
 For information on configuring Keycloak, see [keycloak/README.md](keycloak/README.md).
 
 The default realm includes:
-- Realm: `catbox`
-- User: `catbox` / `catbox`
-- Client ID: `catbox-server`
+- Realm: `routebox`
+- User: `routebox` / `routebox`
+- Client ID: `routebox-server`
 
 ### Kafka UI Configuration
 
@@ -114,8 +114,8 @@ For multi-cluster routing examples, see the [Multi-Cluster Routing documentation
 
 The monitoring stack includes pre-configured dashboards and data sources:
 
-- **Prometheus**: Scrapes metrics from both order-service (port 8080) and catbox-server (port 8081)
-- **Grafana**: Includes a pre-configured dashboard at `monitoring/grafana/dashboards/catbox-dashboard.json`
+- **Prometheus**: Scrapes metrics from both order-service (port 8080) and routebox-server (port 8081)
+- **Grafana**: Includes a pre-configured dashboard at `monitoring/grafana/dashboards/routebox-dashboard.json`
 - **Loki**: Aggregates logs from all Docker containers via Promtail
 
 ## Environment Variables

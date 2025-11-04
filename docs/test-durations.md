@@ -6,7 +6,7 @@ This report aggregates test durations across all modules in the build.
 
 ---
 
-## Module: catbox-server
+## Module: routebox-server
 
 ### Summary Statistics
 
@@ -275,7 +275,7 @@ This report aggregates test durations across all modules in the build.
 
 ---
 
-## Module: catbox-archunit
+## Module: routebox-archunit
 
 ### Summary Statistics
 
@@ -366,7 +366,7 @@ This report aggregates test durations across all modules in the build.
 
 ---
 
-## Module: catbox-server
+## Module: routebox-server
 
 ### Summary Statistics
 
@@ -600,7 +600,7 @@ This report aggregates test durations across all modules in the build.
 
 ---
 
-## Module: catbox-server
+## Module: routebox-server
 
 ### Summary Statistics
 
@@ -660,7 +660,7 @@ This report aggregates test durations across all modules in the build.
 
 ---
 
-## Module: catbox-archunit
+## Module: routebox-archunit
 
 ### Summary Statistics
 
@@ -751,7 +751,7 @@ This report aggregates test durations across all modules in the build.
 
 ---
 
-## Module: catbox-server
+## Module: routebox-server
 
 ### Summary Statistics
 
@@ -1107,7 +1107,7 @@ This report aggregates test durations across all modules in the build.
 
 ---
 
-## Module: catbox-archunit
+## Module: routebox-archunit
 
 ### Summary Statistics
 
@@ -1198,7 +1198,7 @@ This report aggregates test durations across all modules in the build.
 
 ---
 
-## Module: catbox-server
+## Module: routebox-server
 
 ### Summary Statistics
 
@@ -1920,7 +1920,7 @@ This report aggregates test durations across all modules in the build.
 
 ---
 
-## Module: catbox-server
+## Module: routebox-server
 
 ### Summary Statistics
 

@@ -1,6 +1,6 @@
 # API Reference
 
-This document describes the RESTful API endpoints available in the Catbox system.
+This document describes the RESTful API endpoints available in the RouteBox system.
 
 ## Order Service API
 
@@ -111,9 +111,9 @@ Update an order's status.
 }
 ```
 
-## Catbox Server API
+## RouteBox Server API
 
-The Catbox Server runs on port 8081 and provides endpoints for monitoring outbox events.
+The RouteBox Server runs on port 8081 and provides endpoints for monitoring outbox events.
 
 **Base URL:** `http://localhost:8081`
 
@@ -212,7 +212,7 @@ Manually mark a sent event for reprocessing.
 
 ## Admin Web UI
 
-The `catbox-server` also hosts a simple Thymeleaf-based web interface for monitoring and administrative tasks.
+The `routebox-server` also hosts a simple Thymeleaf-based web interface for monitoring and administrative tasks.
 
 **URL:** `http://localhost:8081/admin`
 
@@ -229,7 +229,7 @@ The `catbox-server` also hosts a simple Thymeleaf-based web interface for monito
 
 ### Accessing the Admin UI
 
-1. Ensure the catbox-server is running on port 8081
+1. Ensure the routebox-server is running on port 8081
 2. Navigate to `http://localhost:8081/admin` in your web browser
 3. Use the filter and sort controls to find specific events
 4. Click on an event to see details or mark it for reprocessing

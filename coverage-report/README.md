@@ -1,13 +1,13 @@
 # Coverage Report Module
 
-This module aggregates test coverage reports from all Catbox modules.
+This module aggregates test coverage reports from all RouteBox modules.
 
 ## Purpose
 
-This POM-only module exists solely to generate an aggregated JaCoCo coverage report across all modules in the Catbox project:
-- catbox-common
-- catbox-client
-- catbox-server
+This POM-only module exists solely to generate an aggregated JaCoCo coverage report across all modules in the RouteBox project:
+- routebox-common
+- routebox-client
+- routebox-server
 - order-service
 
 ## Generating Coverage Reports
@@ -31,7 +31,7 @@ Each module also generates its own coverage report:
 ```bash
 # View individual module reports
 open order-service/target/jacoco-ut/index.html
-open catbox-server/target/jacoco-ut/index.html
+open routebox-server/target/jacoco-ut/index.html
 ```
 
 ## Report Locations

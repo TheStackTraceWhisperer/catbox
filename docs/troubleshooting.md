@@ -1,6 +1,6 @@
 # Known Issues
 
-This document tracks known issues with the Catbox project and their workarounds.
+This document tracks known issues with the RouteBox project and their workarounds.
 
 ## Kafka Docker Image SSL/SASL Configuration Issue
 
@@ -100,7 +100,7 @@ The application configuration uses `hibernate.ddl-auto: update` which should cre
 ### Resolution
 
 - Added database creation step to README.md Quick Start section
-- Documents the `CREATE DATABASE catbox` command
+- Documents the `CREATE DATABASE routebox` command
 - Users must create the database before starting the applications
 
 ### Alternative Approaches

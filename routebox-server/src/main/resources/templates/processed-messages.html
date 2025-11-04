@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RouteBox - Processed Messages Admin</title>
+    <link rel="stylesheet" th:href="@{/webjars/bootstrap/5.3.3/css/bootstrap.min.css}"/>
+    <script th:src="@{/webjars/htmx.org/2.0.4/dist/htmx.min.js}"></script>
+    <style>
+        .table-container {
+            overflow-x: auto;
+        }
+        .filter-section {
+            background-color: #f8f9fa;
+            padding: 1.5rem;
+            border-radius: 0.5rem;
+            margin-bottom: 1.5rem;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-dark bg-dark">
+        <div class="container-fluid">
+            <span class="navbar-brand mb-0 h1">RouteBox - Processed Messages</span>
+            <a href="/admin" class="btn btn-outline-light btn-sm">Back to Outbox Events</a>
+        </div>
+    </nav>
+
+    <div class="container-fluid mt-4">
+        <div class="row">
+            <div class="col-12">
+                <h2>Processed Messages</h2>
+
+                <!-- Filter Section -->
+                <div class="filter-section">
+                    <form method="get" action="/admin/processed-messages">
+                        <div class="row g-3">
+                            <div class="col-md-4">
+                                <label for="consumerGroup" class="form-label">Consumer Group</label>
+                                <input type="text" class="form-control" id="consumerGroup" name="consumerGroup" th:value="${consumerGroup}">
+                            </div>
+                            <div class="col-md-4">
+                                <label for="correlationId" class="form-label">Correlation ID</label>
+                                <input type="text" class="form-control" id="correlationId" name="correlationId" th:value="${correlationId}">
+                            </div>
+                            <div class="col-md-2">
+                                <label for="sortBy" class="form-label">Sort By</label>
+                                <select class="form-select" id="sortBy" name="sortBy">
+                                    <option value="processedAt" th:selected="${sortBy == 'processedAt'}">Processed At</option>
+                                    <option value="correlationId" th:selected="${sortBy == 'correlationId'}">Correlation ID</option>
+                                    <option value="consumerGroup" th:selected="${sortBy == 'consumerGroup'}">Consumer Group</option>
+                                </select>
+                            </div>
+                            <div class="col-md-2">
+                                <label for="direction" class="form-label">Direction</label>
+                                <select class="form-select" id="direction" name="direction">
+                                    <option value="DESC" th:selected="${direction == 'DESC'}">Descending</option>
+                                    <option value="ASC" th:selected="${direction == 'ASC'}">Ascending</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="row mt-3">
+                            <div class="col-12">
+                                <button type="submit" class="btn btn-primary">Apply Filters</button>
+                                <a href="/admin/processed-messages" class="btn btn-secondary">Clear Filters</a>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Statistics -->
+                <div class="alert alert-info">
+                    <strong>Total Messages:</strong> <span th:text="${totalElements}">0</span>
+                </div>
+
+                <!-- Table -->
+                <div class="table-container">
+                    <table class="table table-striped table-hover">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Correlation ID</th>
+                                <th>Consumer Group</th>
+                                <th>Event Type</th>
+                                <th>Aggregate Type</th>
+                                <th>Aggregate ID</th>
+                                <th>Processed At</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="message : ${messages}">
+                                <td th:text="${message.id}"></td>
+                                <td th:text="${message.correlationId}"></td>
+                                <td th:text="${message.consumerGroup}"></td>
+                                <td th:text="${message.eventType}"></td>
+                                <td th:text="${message.aggregateType}"></td>
+                                <td th:text="${message.aggregateId}"></td>
+                                <td th:text="${#temporals.format(message.processedAt, 'yyyy-MM-dd HH:mm:ss')}"></td>
+                                <td>
+                                    <button class="btn btn-sm btn-warning"
+                                            hx-post="/admin/processed-messages/mark-unprocessed"
+                                            th:hx-vals="${'{\"correlationId\":\"' + message.correlationId + '\",\"consumerGroup\":\"' + message.consumerGroup + '\"}'}"
+                                            hx-confirm="Are you sure you want to mark this message as unprocessed? It will allow reprocessing."
+                                            hx-swap="none"
+                                            onclick="setTimeout(() => window.location.reload(), 500)">
+                                        Mark Unprocessed
+                                    </button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Pagination -->
+                <nav aria-label="Page navigation" th:if="${totalPages > 1}">
+                    <ul class="pagination justify-content-center">
+                        <li class="page-item" th:classappend="${currentPage == 0} ? 'disabled'">
+                            <a class="page-link" th:href="@{/admin/processed-messages(page=${currentPage - 1}, size=20, consumerGroup=${consumerGroup}, correlationId=${correlationId}, sortBy=${sortBy}, direction=${direction})}">Previous</a>
+                        </li>
+                        <li class="page-item" th:each="i : ${#numbers.sequence(0, totalPages - 1)}"
+                            th:classappend="${i == currentPage} ? 'active'">
+                            <a class="page-link" th:href="@{/admin/processed-messages(page=${i}, size=20, consumerGroup=${consumerGroup}, correlationId=${correlationId}, sortBy=${sortBy}, direction=${direction})}" th:text="${i + 1}">1</a>
+                        </li>
+                        <li class="page-item" th:classappend="${currentPage >= totalPages - 1} ? 'disabled'">
+                            <a class="page-link" th:href="@{/admin/processed-messages(page=${currentPage + 1}, size=20, consumerGroup=${consumerGroup}, correlationId=${correlationId}, sortBy=${sortBy}, direction=${direction})}">Next</a>
+                        </li>
+                    </ul>
+                </nav>
+            </div>
+        </div>
+    </div>
+
+    <script th:src="@{/webjars/bootstrap/5.3.3/js/bootstrap.bundle.min.js}"></script>
+</body>
+</html>

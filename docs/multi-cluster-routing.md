@@ -1,6 +1,6 @@
 # Multi-Cluster Kafka Routing
 
-This document describes the advanced multi-cluster routing capabilities in the Catbox outbox pattern implementation.
+This document describes the advanced multi-cluster routing capabilities in the RouteBox outbox pattern implementation.
 
 ## Overview
 

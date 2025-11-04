@@ -3,7 +3,7 @@ spring:
     name: order-processor
 
   datasource:
-    url: jdbc:sqlserver://localhost:1433;databaseName=catbox;encrypt=true;trustServerCertificate=true
+    url: jdbc:sqlserver://localhost:1433;databaseName=routebox;encrypt=true;trustServerCertificate=true
     username: sa
     password: ${DB_PASSWORD:YourStrong!Passw0rd}
     driver-class-name: com.microsoft.sqlserver.jdbc.SQLServerDriver

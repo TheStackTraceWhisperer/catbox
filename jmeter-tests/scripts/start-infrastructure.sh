@@ -4,7 +4,7 @@
 set -e
 
 echo "=================================="
-echo "Starting Catbox Infrastructure"
+echo "Starting RouteBox Infrastructure"
 echo "=================================="
 
 # Check if docker compose is available
@@ -44,8 +44,8 @@ echo "Next steps:"
 echo "1. Start Order Service:"
 echo "   mvn spring-boot:run -pl order-service -Dspring-boot.run.profiles=azuresql"
 echo ""
-echo "2. Start Catbox Server:"
-echo "   mvn spring-boot:run -pl catbox-server -Dspring-boot.run.profiles=azuresql"
+echo "2. Start RouteBox Server:"
+echo "   mvn spring-boot:run -pl routebox-server -Dspring-boot.run.profiles=azuresql"
 echo ""
 echo "3. Wait 15 seconds for services to start"
 echo ""

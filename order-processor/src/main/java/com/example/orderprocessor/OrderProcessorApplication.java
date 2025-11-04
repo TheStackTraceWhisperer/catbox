@@ -13,10 +13,10 @@ import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 @SpringBootApplication
 @ComponentScan(basePackages = {
     "com.example.orderprocessor",
-    "com.example.catbox.client"
+    "com.example.routebox.client"
 })
-@EnableJpaRepositories(basePackages = "com.example.catbox.common.repository")
-@EntityScan(basePackages = "com.example.catbox.common.entity")
+@EnableJpaRepositories(basePackages = "com.example.routebox.common.repository")
+@EntityScan(basePackages = "com.example.routebox.common.entity")
 public class OrderProcessorApplication {
 
     public static void main(String[] args) {

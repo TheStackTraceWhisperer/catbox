@@ -32,7 +32,7 @@ TRUSTSTORE_PASSWORD="changeit"
 KEY_PASSWORD="changeit"
 COUNTRY="US"
 STATE="CA"
-ORG="Catbox"
+ORG="RouteBox"
 OU="Engineering"
 
 # Step 1: Generate CA (Certificate Authority)
@@ -43,7 +43,7 @@ keytool -genkeypair -v \
   -keyalg RSA \
   -keysize 2048 \
   -validity ${VALIDITY_DAYS} \
-  -dname "CN=Catbox-CA, OU=${OU}, O=${ORG}, L=San Francisco, ST=${STATE}, C=${COUNTRY}" \
+  -dname "CN=RouteBox-CA, OU=${OU}, O=${ORG}, L=San Francisco, ST=${STATE}, C=${COUNTRY}" \
   -storepass ${KEYSTORE_PASSWORD} \
   -keypass ${KEY_PASSWORD} \
   -storetype JKS

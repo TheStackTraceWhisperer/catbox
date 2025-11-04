@@ -1,8 +1,8 @@
 package com.example.order.service;
 
-import com.example.catbox.client.CatboxClientAutoConfiguration;
-import com.example.catbox.common.entity.OutboxEvent;
-import com.example.catbox.common.repository.OutboxEventRepository;
+import com.example.routebox.client.RouteBoxClientAutoConfiguration;
+import com.example.routebox.common.entity.OutboxEvent;
+import com.example.routebox.common.repository.OutboxEventRepository;
 import com.example.order.OrderServiceApplication;
 import com.example.order.dto.CreateOrderRequest;
 import com.example.order.entity.Order;
@@ -23,7 +23,7 @@ import java.util.List;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-@SpringBootTest(classes = {OrderServiceApplication.class, CatboxClientAutoConfiguration.class})
+@SpringBootTest(classes = {OrderServiceApplication.class, RouteBoxClientAutoConfiguration.class})
 @Transactional
 @Testcontainers
 class OrderServiceTest {

@@ -16,7 +16,7 @@ scrape_configs:
     relabel_configs:
       # Drop promtail's own logs to prevent loops
       - source_labels: ['__meta_docker_container_name']
-        regex: '/catbox-promtail'
+        regex: '/routebox-promtail'
         action: drop
       - source_labels: ['__meta_docker_container_name']
         regex: '/(.*)'

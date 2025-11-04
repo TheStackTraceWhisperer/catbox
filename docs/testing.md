@@ -1,10 +1,10 @@
 # Testing Guide
 
-Comprehensive testing documentation for the Catbox transactional outbox pattern implementation.
+Comprehensive testing documentation for the RouteBox transactional outbox pattern implementation.
 
 ## Overview
 
-The Catbox project includes a mature, multi-layered testing strategy:
+The RouteBox project includes a mature, multi-layered testing strategy:
 
 1. **Unit Tests** - Fast, isolated component tests
 2. **Integration Tests** - Tests with real dependencies (database, Kafka)
@@ -30,7 +30,7 @@ mvn clean test
 mvn clean verify
 
 # Run tests for a specific module
-mvn test -pl catbox-server
+mvn test -pl routebox-server
 mvn test -pl order-service
 ```
 
@@ -57,8 +57,8 @@ mvn clean verify
 open coverage-report/target/site/jacoco-aggregate/index.html
 
 # View module-specific coverage
-open catbox-server/target/jacoco-ut/index.html
-open catbox-server/target/jacoco-it/index.html
+open routebox-server/target/jacoco-ut/index.html
+open routebox-server/target/jacoco-it/index.html
 ```
 
 ## Test Categories
@@ -132,7 +132,7 @@ class KafkaIntegrationTest {
 **Example**: `E2EPollerTest`, `E2EPollerMultiClusterTest`
 
 ```java
-@SpringBootTest(classes = CatboxServerApplication.class)
+@SpringBootTest(classes = RouteBoxServerApplication.class)
 @Testcontainers
 class E2EPollerTest {
     @Container
@@ -162,7 +162,7 @@ class E2EPollerTest {
 
 **Purpose**: Enforce architectural rules and design patterns automatically.
 
-**Location**: `catbox-archunit` module
+**Location**: `routebox-archunit` module
 
 **Test Classes**:
 - `LayeringArchitectureTest` - Enforces layered architecture (controller → service → repository)
@@ -192,7 +192,7 @@ void servicesShouldNotDependOnControllers() {
 
 **Running**:
 ```bash
-mvn test -pl catbox-archunit
+mvn test -pl routebox-archunit
 ```
 
 ### 5. Performance and Load Tests
@@ -257,8 +257,8 @@ mvn clean verify
 open coverage-report/target/site/jacoco-aggregate/index.html
 
 # Open module-specific reports
-open catbox-server/target/jacoco-ut/index.html       # Unit test coverage
-open catbox-server/target/jacoco-it/index.html       # Integration test coverage
+open routebox-server/target/jacoco-ut/index.html       # Unit test coverage
+open routebox-server/target/jacoco-it/index.html       # Integration test coverage
 open order-service/target/jacoco-ut/index.html
 ```
 
@@ -368,8 +368,8 @@ docker compose ps
 # Terminal 1 - Order Service
 mvn spring-boot:run -pl order-service -Dspring-boot.run.profiles=azuresql
 
-# Terminal 2 - Catbox Server
-mvn spring-boot:run -pl catbox-server -Dspring-boot.run.profiles=azuresql
+# Terminal 2 - RouteBox Server
+mvn spring-boot:run -pl routebox-server -Dspring-boot.run.profiles=azuresql
 
 # 4. Test manually
 curl -X POST http://localhost:8080/api/orders \
@@ -377,7 +377,7 @@ curl -X POST http://localhost:8080/api/orders \
   -d '{"customerName": "Alice", "productName": "Widget", "amount": 99.99}'
 
 # 5. Verify in Kafka
-docker exec catbox-kafka kafka-console-consumer.sh \
+docker exec routebox-kafka kafka-console-consumer.sh \
   --bootstrap-server localhost:9092 \
   --topic outbox-events \
   --from-beginning
@@ -580,7 +580,7 @@ This section summarizes CI build performance optimizations made to reduce build 
   - Saves approximately 1-2 minutes per build
 
 #### 2. Testcontainers Reuse Configuration
-- **Added `testcontainers.properties`** in both `catbox-server` and `order-service` test resources
+- **Added `testcontainers.properties`** in both `routebox-server` and `order-service` test resources
   - Enables container reuse: `testcontainers.reuse.enable=true`
   
 - **Updated all Testcontainer instances** to enable reuse with `.withReuse(true)`:
@@ -664,7 +664,7 @@ These tests are integration tests by nature but follow the current naming conven
 
 ## Summary
 
-The Catbox project has comprehensive test coverage across multiple levels:
+The RouteBox project has comprehensive test coverage across multiple levels:
 
 - ✅ **29 test classes** covering unit, integration, and E2E scenarios
 - ✅ **Testcontainers** for realistic database and Kafka testing  

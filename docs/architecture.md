@@ -1,15 +1,15 @@
 # Architecture
 
-This document describes the architecture and design of the Catbox transactional outbox pattern implementation.
+This document describes the architecture and design of the RouteBox transactional outbox pattern implementation.
 
 ## Overview
 
 This project demonstrates a transactional outbox pattern using a decoupled, multi-module architecture. The system is composed of two primary Spring Boot applications:
 
 * **`order-service` (Port 8080):** A business-facing service responsible for creating and updating orders. When it writes to its `orders` table, it also writes an `OutboxEvent` to a shared table in the *same transaction*, ensuring data consistency.
-* **`catbox-server` (Port 8081):** A standalone processor that polls the `outbox_events` table. It uses a `SELECT FOR UPDATE SKIP LOCKED` query (via `OutboxEventClaimer`) to safely claim events and publish them to Kafka using a dynamic, multi-cluster routing factory.
+* **`routebox-server` (Port 8081):** A standalone processor that polls the `outbox_events` table. It uses a `SELECT FOR UPDATE SKIP LOCKED` query (via `OutboxEventClaimer`) to safely claim events and publish them to Kafka using a dynamic, multi-cluster routing factory.
 
-This separation ensures that the business service (`order-service`) is lightweight and not burdened with event publishing logic, while the `catbox-server` can be scaled independently to handle event throughput.
+This separation ensures that the business service (`order-service`) is lightweight and not burdened with event publishing logic, while the `routebox-server` can be scaled independently to handle event throughput.
 
 ## Phase 1: Order Submission (Atomic Transaction)
 
@@ -97,10 +97,10 @@ Use idempotent producer settings and consumer deduplication to handle at-least-o
 ## Project Structure
 
 ```
-catbox-parent
-├── catbox-common     # Shared code: OutboxEvent entity and repository
-├── catbox-client     # Simple client for creating events (used by order-service)
-├── catbox-server     # Standalone poller/publisher application (runs on 8081)
+routebox-parent
+├── routebox-common     # Shared code: OutboxEvent entity and repository
+├── routebox-client     # Simple client for creating events (used by order-service)
+├── routebox-server     # Standalone poller/publisher application (runs on 8081)
 ├── order-service     # Business service application (runs on 8080)
 ├── coverage-report   # Aggregated test coverage reports
 ├── jmeter-tests      # JMeter load and stress test suites
