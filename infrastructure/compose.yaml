@@ -60,12 +60,13 @@ services:
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT,SASL_SSL:SASL_SSL
       KAFKA_CONTROLLER_QUORUM_VOTERS: 1@localhost:9094
       
-      # SSL Configuration
-      KAFKA_SSL_KEYSTORE_LOCATION: /etc/kafka/secrets/kafka-broker-keystore.jks
-      KAFKA_SSL_KEYSTORE_PASSWORD: changeit
-      KAFKA_SSL_KEY_PASSWORD: changeit
-      KAFKA_SSL_TRUSTSTORE_LOCATION: /etc/kafka/secrets/kafka-truststore.jks
-      KAFKA_SSL_TRUSTSTORE_PASSWORD: changeit
+      # SSL Configuration - Confluent expects filenames, not full paths
+      # The /etc/kafka/secrets directory is the default location
+      KAFKA_SSL_KEYSTORE_FILENAME: kafka-broker-keystore.jks
+      KAFKA_SSL_KEYSTORE_CREDENTIALS: credentials
+      KAFKA_SSL_KEY_CREDENTIALS: credentials
+      KAFKA_SSL_TRUSTSTORE_FILENAME: kafka-truststore.jks
+      KAFKA_SSL_TRUSTSTORE_CREDENTIALS: credentials
       # Use 'requested' for development (allows fallback), 'required' for production (enforces mTLS)
       KAFKA_SSL_CLIENT_AUTH: requested
       
@@ -77,9 +78,9 @@ services:
       # JAAS Configuration for SASL
       KAFKA_OPTS: -Djava.security.auth.login.config=/etc/kafka/secrets/kafka_server_jaas.conf
       
-      # ACL Configuration
+      # ACL Configuration - Allow everyone for development (set to "false" in production)
       KAFKA_AUTHORIZER_CLASS_NAME: org.apache.kafka.metadata.authorizer.StandardAuthorizer
-      KAFKA_ALLOW_EVERYONE_IF_NO_ACL_FOUND: "false"
+      KAFKA_ALLOW_EVERYONE_IF_NO_ACL_FOUND: "true"
       KAFKA_SUPER_USERS: User:admin
       
       # Standard Kafka settings (configured for single-broker development)

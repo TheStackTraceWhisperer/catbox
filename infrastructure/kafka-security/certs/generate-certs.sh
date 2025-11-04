@@ -44,6 +44,8 @@ keytool -genkeypair -v \
   -keysize 2048 \
   -validity ${VALIDITY_DAYS} \
   -dname "CN=Catbox-CA, OU=${OU}, O=${ORG}, L=San Francisco, ST=${STATE}, C=${COUNTRY}" \
+  -ext BC=ca:true \
+  -ext KU=keyCertSign,cRLSign \
   -storepass ${KEYSTORE_PASSWORD} \
   -keypass ${KEY_PASSWORD} \
   -storetype JKS
