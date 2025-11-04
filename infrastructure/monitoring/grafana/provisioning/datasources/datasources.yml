@@ -10,6 +10,9 @@ datasources:
     jsonData:
       httpMethod: POST
       prometheusType: Prometheus
+      exemplarTraceIdDestinations:
+        - name: trace_id
+          datasourceUid: tempo
 
   - name: Loki
     type: loki
@@ -20,7 +23,41 @@ datasources:
       maxLines: 1000
       derivedFields:
         - name: traceID
-          matcherRegex: '"trace.id":"([a-f0-9\-]+)"'
-          # Example: point to Tempo if added later; keep disabled unless Tempo is present
-          url: ''
-          urlDisplayLabel: 'Trace'
+          matcherRegex: '"trace.id":"([a-f0-9]+)"'
+          datasourceUid: tempo
+          url: '$${__value.raw}'
+          urlDisplayLabel: 'View Trace'
+
+  - name: Tempo
+    type: tempo
+    uid: tempo
+    access: proxy
+    url: http://tempo:3200
+    editable: true
+    jsonData:
+      httpMethod: GET
+      tracesToLogs:
+        datasourceUid: loki
+        tags: ['correlation_id', 'trace_id']
+        mappedTags:
+          - key: correlation_id
+            value: correlation_id
+        spanStartTimeShift: '-1h'
+        spanEndTimeShift: '1h'
+        filterByTraceID: true
+        filterBySpanID: false
+      tracesToMetrics:
+        datasourceUid: prometheus
+        tags: [{ key: 'service.name', value: 'service' }]
+        queries:
+          - name: 'Sample query'
+            query: 'sum(rate(http_server_requests_seconds_count{$$__tags}[5m]))'
+      serviceMap:
+        datasourceUid: prometheus
+      nodeGraph:
+        enabled: true
+      search:
+        hide: false
+      lokiSearch:
+        datasourceUid: loki
+

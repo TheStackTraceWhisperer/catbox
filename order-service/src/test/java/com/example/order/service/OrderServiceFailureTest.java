@@ -62,12 +62,21 @@ class OrderServiceFailureTest {
      */
     @Test
     void testOrderCreationFailsWhenOutboxWriteFails() {
-        // Arrange: Configure mock to throw on the new 'write' method
+        // Arrange: Configure mock to throw on both 'write' method signatures
         doThrow(new RuntimeException("Simulated serialization failure"))
                 .when(outboxClient).write(
                     anyString(), 
                     anyString(), 
                     anyString(), 
+                    any(Object.class)
+                );
+        
+        doThrow(new RuntimeException("Simulated serialization failure"))
+                .when(outboxClient).write(
+                    anyString(), 
+                    anyString(), 
+                    anyString(),
+                    anyString(),
                     any(Object.class)
                 );
 

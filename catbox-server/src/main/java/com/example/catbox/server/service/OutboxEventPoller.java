@@ -2,6 +2,8 @@ package com.example.catbox.server.service;
 
 import com.example.catbox.common.entity.OutboxEvent;
 import com.example.catbox.server.config.OutboxProcessingConfig;
+import io.micrometer.observation.Observation;
+import io.micrometer.observation.ObservationRegistry;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -20,6 +22,7 @@ public class OutboxEventPoller {
     private final OutboxEventClaimer claimer;
     private final OutboxEventPublisher publisher;
     private final OutboxProcessingConfig processingConfig;
+    private final ObservationRegistry observationRegistry;
 
     /**
      * Polls for pending events.
@@ -34,6 +37,7 @@ public class OutboxEventPoller {
             log.info("Claimed {} events for publishing", claimedEvents.size());
 
             // Publish each event in a virtual thread
+            // Note: Each publishEvent call creates its own observation/span
             for (OutboxEvent event : claimedEvents) {
                 Thread.ofVirtual().start(() -> {
                     try {
