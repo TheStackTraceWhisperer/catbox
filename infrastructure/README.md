@@ -91,8 +91,13 @@ Kafka UI provides a web interface for managing and monitoring both Kafka cluster
 
 - **Access**: http://localhost:8090
 - **Clusters**:
-  - `cluster-1-primary` - Connected to kafka:9092 (main cluster with PLAINTEXT and SASL_SSL)
-  - `cluster-2-secondary` - Connected to kafka-2:9095 (secondary cluster for multi-cluster testing)
+  - `cluster-a` - Connected to kafka:9092 (main cluster with PLAINTEXT and SASL_SSL)
+  - `cluster-c` - Connected to kafka-2:9095 (secondary cluster for multi-cluster testing)
+
+**Note on cluster naming:** The application configuration uses logical cluster names that map to physical Kafka brokers:
+- **cluster-a**: Primary Kafka broker (kafka:9092 PLAINTEXT, kafka:9093 SASL_SSL)
+- **cluster-b**: Same physical broker as cluster-a, but configured to use the secure SASL_SSL listener on port 9093
+- **cluster-c**: Secondary Kafka broker (kafka-2:9095 PLAINTEXT)
 
 Features:
 - Browse topics, messages, and consumer groups
@@ -103,9 +108,9 @@ Features:
 
 The application is configured to route different event types to different clusters:
 - `OrderCreated` events → cluster-a (kafka:9092)
-- `OrderStatusChanged` events → cluster-c (kafka-2:9095)
+- `OrderStatusChanged` events → cluster-a (kafka:9092)
 
-This allows testing of the multi-cluster routing behavior in the outbox pattern.
+For multi-cluster routing examples, see the [Multi-Cluster Routing documentation](../docs/multi-cluster-routing.md).
 
 ### Monitoring Configuration
 
@@ -175,8 +180,9 @@ See [kafka-security/README.md](kafka-security/README.md) for detailed troublesho
 
 ⚠️ **IMPORTANT**: This configuration is designed for **DEVELOPMENT ONLY**.
 
-Before deploying to production:
+For production deployments, see the comprehensive [Production Deployment Guide](../docs/production-deployment.md).
 
+Key production considerations:
 1. **Use CA-signed certificates** instead of self-signed
 2. **Use strong passwords** (not defaults like "changeit" or "admin")
 3. **Store credentials securely** using environment variables or secret management tools
@@ -184,6 +190,9 @@ Before deploying to production:
 5. **Configure proper network segmentation**
 6. **Set up backup and disaster recovery**
 7. **Review and harden security settings** in all configuration files
+8. **Scale Kafka resources** (4-8 GB RAM, 4+ CPUs per broker)
+9. **Use managed services** where appropriate (e.g., Azure SQL Database, Confluent Cloud)
+10. **Implement monitoring and alerting**
 
 ## Additional Resources
 

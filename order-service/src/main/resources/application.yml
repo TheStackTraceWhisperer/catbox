@@ -25,9 +25,33 @@ spring:
 server:
   port: 8080
 
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,prometheus,info,metrics
+  endpoint:
+    health:
+      probes:
+        enabled: true
+      show-details: always
+  health:
+    livenessState:
+      enabled: true
+    readinessState:
+      enabled: true
+  tracing:
+    sampling:
+      probability: 0.1  # Sample 10% of traces to avoid performance impact
+  otlp:
+    tracing:
+      endpoint: http://localhost:4318/v1/traces
+
 logging:
   structured:
     format:
       console: ecs
   level:
     com.example: INFO
+  pattern:
+    level: '%5p [${spring.application.name:},%X{traceId:-},%X{spanId:-}]'

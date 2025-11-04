@@ -10,8 +10,9 @@ A Spring Boot 3.5.7 application demonstrating the transactional outbox pattern w
 - **Admin Web UI** - Professional dashboard for monitoring and managing outbox events
 - **Event Lifecycle Management** - Automatic archival and dead letter queue for failed events
 - **Spring Boot 3.5.7** - Modern Spring ecosystem with WebMVC, Data JPA, and Kafka
-- **Comprehensive Observability** - Custom Prometheus metrics, Grafana dashboards, Loki log aggregation, and alerting with Alertmanager
 - **Production-Ready Alerting** - 12 pre-configured alerts for outbox health, application status, and JVM metrics with email notifications
+- **Comprehensive Observability** - Custom Prometheus metrics, Grafana dashboards, Loki log aggregation, and distributed tracing with OpenTelemetry/Tempo
+- **Distributed Tracing** - End-to-end request tracing with correlation IDs across services and Kafka
 - **Security** - OAuth2/OIDC with Keycloak, Kafka SSL/SASL authentication
 - **Docker Compose** - Full infrastructure stack with Azure SQL Edge, Kafka, and monitoring
 - **Load Testing** - JMeter test suites for performance validation
@@ -98,7 +99,9 @@ For detailed architecture information, see [Architecture Documentation](docs/arc
 - **[API Reference](docs/api-reference.md)** - REST API endpoints and examples
 - **[Docker Setup](docs/docker-setup.md)** - Infrastructure services and Docker Compose
 - **[Security](docs/security.md)** - Kafka SSL/SASL and Keycloak OAuth2 configuration
+- **[Production Deployment](docs/production-deployment.md)** - Production best practices and recommendations
 - **[Monitoring](docs/monitoring.md)** - Metrics, dashboards, and observability
+- **[Distributed Tracing](docs/distributed-tracing.md)** - OpenTelemetry, Tempo, and end-to-end tracing
 - **[Multi-Cluster Routing](docs/multi-cluster-routing.md)** - Advanced Kafka routing strategies
 - **[Virtual Threads](docs/virtual-threads.md)** - Java 21 virtual threads implementation
 - **[Testing Guide](docs/testing.md)** - Testing framework and coverage reports

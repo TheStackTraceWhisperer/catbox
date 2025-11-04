@@ -80,7 +80,8 @@ services:
       KAFKA_ALLOW_EVERYONE_IF_NO_ACL_FOUND: "false"
       KAFKA_SUPER_USERS: User:admin
       
-      # Standard Kafka settings
+      # Standard Kafka settings (configured for single-broker development)
+      # Production note: Use replication factor of 3 and min.insync.replicas of 2
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
       KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
       KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
@@ -103,6 +104,12 @@ services:
         reservations:
           cpus: '0.5'
           memory: 512M
+    # Production note: For production workloads, consider:
+    # - Increasing memory to 4-8GB for optimal performance
+    # - Increasing CPUs to 4+ cores for high-throughput scenarios
+    # - Using dedicated hosts or Kubernetes nodes
+    # - Setting replication factor to 3 for high availability
+    # - Enabling JMX monitoring for better observability
 
   # Kafka Cluster 2 with KRaft mode - Second cluster for multi-cluster testing
   # Configured with PLAINTEXT only for simplicity
@@ -122,7 +129,8 @@ services:
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT
       KAFKA_CONTROLLER_QUORUM_VOTERS: 1@localhost:9096
 
-      # Standard Kafka settings
+      # Standard Kafka settings (configured for single-broker development)
+      # Production note: Use replication factor of 3 and min.insync.replicas of 2
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
       KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
       KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
@@ -136,8 +144,21 @@ services:
       timeout: 10s
       retries: 5
       start_period: 30s
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 2G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+    # Production note: This is a secondary cluster for multi-cluster testing.
+    # For production multi-cluster deployments:
+    # - Deploy to separate physical infrastructure for true isolation
+    # - Use the same resource recommendations as the primary cluster
+    # - Consider geographic distribution for disaster recovery
 
-  # Kafka UI - Web UI for Kafka Cluster 1
+  # Kafka UI - Web UI for both Kafka clusters
   kafka-ui:
     image: provectuslabs/kafka-ui:latest
     container_name: catbox-kafka-ui
@@ -145,10 +166,12 @@ services:
       - "8090:8080"
     environment:
       DYNAMIC_CONFIG_ENABLED: "true"
-      KAFKA_CLUSTERS_0_NAME: cluster-1-primary
+      # Cluster A - Primary cluster (PLAINTEXT for backward compatibility)
+      KAFKA_CLUSTERS_0_NAME: cluster-a
       KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:9092
       KAFKA_CLUSTERS_0_PROPERTIES_SECURITY_PROTOCOL: PLAINTEXT
-      KAFKA_CLUSTERS_1_NAME: cluster-2-secondary
+      # Cluster C - Secondary cluster for multi-cluster testing
+      KAFKA_CLUSTERS_1_NAME: cluster-c
       KAFKA_CLUSTERS_1_BOOTSTRAPSERVERS: kafka-2:9095
       KAFKA_CLUSTERS_1_PROPERTIES_SECURITY_PROTOCOL: PLAINTEXT
     depends_on:
@@ -357,6 +380,33 @@ services:
           cpus: '0.1'
           memory: 64M
 
+  # Tempo - Distributed tracing backend
+  tempo:
+    image: grafana/tempo:latest
+    container_name: catbox-tempo
+    ports:
+      - "3200:3200"   # Tempo HTTP
+      - "4317:4317"   # OTLP gRPC
+      - "4318:4318"   # OTLP HTTP
+    volumes:
+      - ./monitoring/tempo:/etc/tempo
+      - tempo-data:/tmp/tempo
+    command: -config.file=/etc/tempo/tempo-config.yml
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3200/ready"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 512M
+        reservations:
+          cpus: '0.1'
+          memory: 128M
+
 volumes:
   azuresql-data:
     driver: local
@@ -373,4 +423,6 @@ volumes:
   grafana-data:
     driver: local
   loki-data:
+    driver: local
+  tempo-data:
     driver: local

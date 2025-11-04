@@ -8,6 +8,8 @@ import com.example.catbox.server.config.RoutingRule;
 import com.example.catbox.server.metrics.OutboxMetricsService;
 import com.example.catbox.common.entity.OutboxEvent;
 import com.example.catbox.common.repository.OutboxEventRepository;
+import io.micrometer.observation.annotation.Observed;
+import io.micrometer.tracing.Tracer;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.core.KafkaTemplate;
@@ -39,13 +41,23 @@ public class OutboxEventPublisher {
     private final OutboxProcessingConfig processingConfig;
     private final OutboxFailureHandler failureHandler;
     private final OutboxMetricsService metricsService;
+    private final Tracer tracer;
 
     /**
      * Publish a single event in a new transaction.
      * This method is called from a virtual thread.
      */
+    @Observed(name = "outbox.event.publish", contextualName = "publish-outbox-event")
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void publishEvent(OutboxEvent event) {
+        // Add correlationId to span if present
+        if (event.getCorrelationId() != null && tracer.currentSpan() != null) {
+            tracer.currentSpan().tag("correlation.id", event.getCorrelationId());
+            tracer.currentSpan().tag("event.type", event.getEventType());
+            tracer.currentSpan().tag("aggregate.type", event.getAggregateType());
+            tracer.currentSpan().tag("aggregate.id", event.getAggregateId());
+        }
+        
         LocalDateTime claimTime = calculateEventClaimTime(event);
         
         try {
@@ -102,6 +114,7 @@ public class OutboxEventPublisher {
      * Publishes the event to the correct Kafka cluster(s) based on routing rules.
      * Supports multi-cluster publishing with different strategies.
      */
+    @Observed(name = "outbox.kafka.publish", contextualName = "publish-to-kafka")
     private void publishToKafka(OutboxEvent event) throws Exception {
         // 1. Find the routing rule for this event
         RoutingRule rule = routingConfig.getRoutingRule(event.getEventType());
