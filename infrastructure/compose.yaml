@@ -40,16 +40,18 @@ services:
           memory: 512M
 
   # Kafka Cluster 1 with KRaft mode (no Zookeeper required)
-  # Now configured with SSL/TLS, SASL authentication, and ACLs
+  # Now configured with SSL/TLS, SASL authentication, and ACLs using Confluent Platform
   kafka:
-    image: apache/kafka:latest
+    image: confluentinc/cp-kafka:7.6.0
     container_name: catbox-kafka
     ports:
       - "9092:9092"  # PLAINTEXT listener (for backward compatibility)
       - "9093:9093"  # SASL_SSL listener (secure)
     environment:
+      # KRaft mode configuration
       KAFKA_NODE_ID: 1
       KAFKA_PROCESS_ROLES: broker,controller
+      CLUSTER_ID: 'MkU3OEVBNTcwNTJENDM2Qk'
       
       # Listeners: PLAINTEXT (9092), SASL_SSL (9093), CONTROLLER (9094)
       KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092,SASL_SSL://0.0.0.0:9093,CONTROLLER://0.0.0.0:9094
@@ -58,12 +60,13 @@ services:
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT,SASL_SSL:SASL_SSL
       KAFKA_CONTROLLER_QUORUM_VOTERS: 1@localhost:9094
       
-      # SSL Configuration
-      KAFKA_SSL_KEYSTORE_LOCATION: /etc/kafka/secrets/kafka-broker-keystore.jks
-      KAFKA_SSL_KEYSTORE_PASSWORD: changeit
-      KAFKA_SSL_KEY_PASSWORD: changeit
-      KAFKA_SSL_TRUSTSTORE_LOCATION: /etc/kafka/secrets/kafka-truststore.jks
-      KAFKA_SSL_TRUSTSTORE_PASSWORD: changeit
+      # SSL Configuration - Confluent expects filenames, not full paths
+      # The /etc/kafka/secrets directory is the default location
+      KAFKA_SSL_KEYSTORE_FILENAME: kafka-broker-keystore.jks
+      KAFKA_SSL_KEYSTORE_CREDENTIALS: credentials
+      KAFKA_SSL_KEY_CREDENTIALS: credentials
+      KAFKA_SSL_TRUSTSTORE_FILENAME: kafka-truststore.jks
+      KAFKA_SSL_TRUSTSTORE_CREDENTIALS: credentials
       # Use 'requested' for development (allows fallback), 'required' for production (enforces mTLS)
       KAFKA_SSL_CLIENT_AUTH: requested
       
@@ -75,9 +78,9 @@ services:
       # JAAS Configuration for SASL
       KAFKA_OPTS: -Djava.security.auth.login.config=/etc/kafka/secrets/kafka_server_jaas.conf
       
-      # ACL Configuration
+      # ACL Configuration - Allow everyone for development (set to "false" in production)
       KAFKA_AUTHORIZER_CLASS_NAME: org.apache.kafka.metadata.authorizer.StandardAuthorizer
-      KAFKA_ALLOW_EVERYONE_IF_NO_ACL_FOUND: "false"
+      KAFKA_ALLOW_EVERYONE_IF_NO_ACL_FOUND: "true"
       KAFKA_SUPER_USERS: User:admin
       
       # Standard Kafka settings (configured for single-broker development)
@@ -87,11 +90,14 @@ services:
       KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
       KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
       KAFKA_NUM_PARTITIONS: 3
+      
+      # Confluent-specific settings
+      KAFKA_LOG_DIRS: /var/lib/kafka/data
     volumes:
       - kafka-data:/var/lib/kafka/data
       - ./kafka-security/certs:/etc/kafka/secrets:ro
     healthcheck:
-      test: kafka-broker-api-versions.sh --bootstrap-server localhost:9092
+      test: ["CMD", "kafka-broker-api-versions", "--bootstrap-server", "localhost:9092"]
       interval: 10s
       timeout: 10s
       retries: 5
@@ -111,16 +117,18 @@ services:
     # - Setting replication factor to 3 for high availability
     # - Enabling JMX monitoring for better observability
 
-  # Kafka Cluster 2 with KRaft mode - Second cluster for multi-cluster testing
+  # Kafka Cluster 2 with KRaft mode - Second cluster for multi-cluster testing using Confluent Platform
   # Configured with PLAINTEXT only for simplicity
   kafka-2:
-    image: apache/kafka:latest
+    image: confluentinc/cp-kafka:7.6.0
     container_name: catbox-kafka-2
     ports:
       - "9095:9095"  # PLAINTEXT listener
     environment:
+      # KRaft mode configuration
       KAFKA_NODE_ID: 1
       KAFKA_PROCESS_ROLES: broker,controller
+      CLUSTER_ID: 'NzE0RTlCRTcwNTJENDM2Qk'
 
       # Listeners: PLAINTEXT (9095), CONTROLLER (9096)
       KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9095,CONTROLLER://0.0.0.0:9096
@@ -136,10 +144,13 @@ services:
       KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
       KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
       KAFKA_NUM_PARTITIONS: 3
+      
+      # Confluent-specific settings
+      KAFKA_LOG_DIRS: /var/lib/kafka/data
     volumes:
       - kafka-2-data:/var/lib/kafka/data
     healthcheck:
-      test: kafka-broker-api-versions.sh --bootstrap-server localhost:9095
+      test: ["CMD", "kafka-broker-api-versions", "--bootstrap-server", "localhost:9095"]
       interval: 10s
       timeout: 10s
       retries: 5
@@ -371,6 +382,12 @@ services:
     depends_on:
       loki:
         condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:9080/ready"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
     deploy:
       resources:
         limits:

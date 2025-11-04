@@ -38,10 +38,10 @@ docker compose down
 - **Azure SQL Edge** - Microsoft SQL Server compatible database on port 1433
 
 ### Messaging
-- **Apache Kafka Cluster 1** - Primary message broker using KRaft mode
+- **Confluent Platform Kafka Cluster 1** - Primary message broker using KRaft mode (confluentinc/cp-kafka:7.6.0)
   - Port 9092 (PLAINTEXT - for backward compatibility)
   - Port 9093 (SASL_SSL - secure with authentication and encryption)
-- **Apache Kafka Cluster 2** - Secondary message broker for multi-cluster testing
+- **Confluent Platform Kafka Cluster 2** - Secondary message broker for multi-cluster testing (confluentinc/cp-kafka:7.6.0)
   - Port 9095 (PLAINTEXT)
 - **Kafka UI** - Web interface for managing and monitoring both Kafka clusters on port 8090
 
