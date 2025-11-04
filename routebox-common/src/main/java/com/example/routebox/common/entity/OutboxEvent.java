@@ -1,10 +1,10 @@
 package com.example.routebox.common.entity;
 
 import jakarta.persistence.*;
+import java.time.LocalDateTime;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "outbox_events")
@@ -13,77 +13,76 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 public class OutboxEvent {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+  @Id
+  @GeneratedValue(strategy = GenerationType.IDENTITY)
+  private Long id;
 
-    @Column(nullable = false)
-    private String aggregateType;
+  @Column(nullable = false)
+  private String aggregateType;
 
-    @Column(nullable = false)
-    private String aggregateId;
+  @Column(nullable = false)
+  private String aggregateId;
 
-    @Column(nullable = false)
-    private String eventType;
+  @Column(nullable = false)
+  private String eventType;
 
-    @Column(unique = true)
-    private String correlationId;
+  @Column(unique = true)
+  private String correlationId;
 
-    @Column(nullable = false, columnDefinition = "TEXT")
-    private String payload;
+  @Column(nullable = false, columnDefinition = "TEXT")
+  private String payload;
 
-    @Column(nullable = false)
-    private LocalDateTime createdAt;
+  @Column(nullable = false)
+  private LocalDateTime createdAt;
 
-    @Column
-    private LocalDateTime sentAt;
+  @Column private LocalDateTime sentAt;
 
-    @Column
-    private LocalDateTime inProgressUntil;
+  @Column private LocalDateTime inProgressUntil;
 
-    @Column
-    private Integer permanentFailureCount = 0;
+  @Column private Integer permanentFailureCount = 0;
 
-    @Column(columnDefinition = "TEXT")
-    private String lastError;
+  @Column(columnDefinition = "TEXT")
+  private String lastError;
 
-    @Column
-    private Integer kafkaPartition;
+  @Column private Integer kafkaPartition;
 
-    @Column
-    private Long kafkaOffset;
+  @Column private Long kafkaOffset;
 
-    @Column
-    private LocalDateTime kafkaTimestamp;
+  @Column private LocalDateTime kafkaTimestamp;
 
-    @PrePersist
-    protected void onCreate() {
-        createdAt = LocalDateTime.now();
-        permanentFailureCount = 0;
+  @PrePersist
+  protected void onCreate() {
+    createdAt = LocalDateTime.now();
+    permanentFailureCount = 0;
+  }
+
+  public OutboxEvent(String aggregateType, String aggregateId, String eventType, String payload) {
+    this.aggregateType = aggregateType;
+    this.aggregateId = aggregateId;
+    this.eventType = eventType;
+    this.payload = payload;
+    this.permanentFailureCount = 0;
+  }
+
+  public OutboxEvent(
+      String aggregateType,
+      String aggregateId,
+      String eventType,
+      String correlationId,
+      String payload) {
+    this.aggregateType = aggregateType;
+    this.aggregateId = aggregateId;
+    this.eventType = eventType;
+    this.correlationId = correlationId;
+    this.payload = payload;
+    this.permanentFailureCount = 0;
+  }
+
+  // Helper method to increment permanent failure count
+  public void incrementPermanentFailureCount() {
+    if (this.permanentFailureCount == null) {
+      this.permanentFailureCount = 0;
     }
-
-    public OutboxEvent(String aggregateType, String aggregateId, String eventType, String payload) {
-        this.aggregateType = aggregateType;
-        this.aggregateId = aggregateId;
-        this.eventType = eventType;
-        this.payload = payload;
-        this.permanentFailureCount = 0;
-    }
-
-    public OutboxEvent(String aggregateType, String aggregateId, String eventType, String correlationId, String payload) {
-        this.aggregateType = aggregateType;
-        this.aggregateId = aggregateId;
-        this.eventType = eventType;
-        this.correlationId = correlationId;
-        this.payload = payload;
-        this.permanentFailureCount = 0;
-    }
-
-    // Helper method to increment permanent failure count
-    public void incrementPermanentFailureCount() {
-        if (this.permanentFailureCount == null) {
-            this.permanentFailureCount = 0;
-        }
-        this.permanentFailureCount++;
-    }
+    this.permanentFailureCount++;
+  }
 }
