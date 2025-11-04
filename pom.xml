@@ -12,10 +12,10 @@
     </parent>
 
     <groupId>com.example</groupId>
-    <artifactId>catbox-parent</artifactId>
+    <artifactId>routebox-parent</artifactId>
     <version>1.0.0-SNAPSHOT</version>
     <packaging>pom</packaging>
-    <name>catbox-parent</name>
+    <name>routebox-parent</name>
 
     <properties>
         <java.version>21</java.version>
@@ -28,14 +28,14 @@
 
     <!-- Define all modules -->
     <modules>
-        <module>catbox-common</module>
-        <module>catbox-client</module>
-        <module>catbox-test-listener</module>
-        <module>catbox-server</module>
+        <module>routebox-common</module>
+        <module>routebox-client</module>
+        <module>routebox-test-listener</module>
+        <module>routebox-server</module>
         <module>order-service</module>
         <module>order-processor</module>
         <module>coverage-report</module>
-        <module>catbox-archunit</module>
+        <module>routebox-archunit</module>
     </modules>
 
     <!-- Dependency Management: All modules inherit these versions -->
@@ -44,17 +44,17 @@
             <!-- Our own modules -->
             <dependency>
                 <groupId>com.example</groupId>
-                <artifactId>catbox-common</artifactId>
+                <artifactId>routebox-common</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.example</groupId>
-                <artifactId>catbox-client</artifactId>
+                <artifactId>routebox-client</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.example</groupId>
-                <artifactId>catbox-test-listener</artifactId>
+                <artifactId>routebox-test-listener</artifactId>
                 <version>${project.version}</version>
                 <scope>test</scope>
             </dependency>
@@ -110,12 +110,12 @@
         <repository>
             <id>github</id>
             <name>GitHub Packages</name>
-            <url>https://maven.pkg.github.com/TheStackTraceWhisperer/catbox</url>
+            <url>https://maven.pkg.github.com/TheStackTraceWhisperer/routebox</url>
         </repository>
         <snapshotRepository>
             <id>github</id>
             <name>GitHub Packages</name>
-            <url>https://maven.pkg.github.com/TheStackTraceWhisperer/catbox</url>
+            <url>https://maven.pkg.github.com/TheStackTraceWhisperer/routebox</url>
         </snapshotRepository>
     </distributionManagement>
     

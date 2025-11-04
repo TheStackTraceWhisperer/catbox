@@ -6,13 +6,13 @@
 
     <parent>
         <groupId>com.example</groupId>
-        <artifactId>catbox-parent</artifactId>
+        <artifactId>routebox-parent</artifactId>
         <version>1.0.0-SNAPSHOT</version>
     </parent>
 
-    <artifactId>catbox-archunit</artifactId>
-    <name>catbox-archunit</name>
-    <description>Architectural tests for catbox project using ArchUnit</description>
+    <artifactId>routebox-archunit</artifactId>
+    <name>routebox-archunit</name>
+    <description>Architectural tests for routebox project using ArchUnit</description>
 
     <properties>
         <archunit.version>1.3.0</archunit.version>
@@ -30,12 +30,12 @@
         <!-- Include all other modules as test dependencies to verify their architecture -->
         <dependency>
             <groupId>com.example</groupId>
-            <artifactId>catbox-common</artifactId>
+            <artifactId>routebox-common</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>com.example</groupId>
-            <artifactId>catbox-client</artifactId>
+            <artifactId>routebox-client</artifactId>
             <scope>test</scope>
         </dependency>
 
@@ -62,7 +62,7 @@
         </dependency>
         <dependency>
             <groupId>com.example</groupId>
-            <artifactId>catbox-test-listener</artifactId>
+            <artifactId>routebox-test-listener</artifactId>
             <scope>test</scope>
         </dependency>
     </dependencies>

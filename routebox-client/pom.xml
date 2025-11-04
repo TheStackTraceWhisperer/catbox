@@ -5,18 +5,18 @@
     <modelVersion>4.0.0</modelVersion>
     <parent>
         <groupId>com.example</groupId>
-        <artifactId>catbox-parent</artifactId>
+        <artifactId>routebox-parent</artifactId>
         <version>1.0.0-SNAPSHOT</version>
     </parent>
 
-    <artifactId>catbox-client</artifactId>
-    <name>catbox-client</name>
-    <description>Client library for simple Catbox event creation.</description>
+    <artifactId>routebox-client</artifactId>
+    <name>routebox-client</name>
+    <description>Client library for simple RouteBox event creation.</description>
 
     <dependencies>
         <dependency>
             <groupId>com.example</groupId>
-            <artifactId>catbox-common</artifactId>
+            <artifactId>routebox-common</artifactId>
         </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>

@@ -5,12 +5,12 @@
     <modelVersion>4.0.0</modelVersion>
     <parent>
         <groupId>com.example</groupId>
-        <artifactId>catbox-parent</artifactId>
+        <artifactId>routebox-parent</artifactId>
         <version>1.0.0-SNAPSHOT</version>
     </parent>
 
-    <artifactId>catbox-test-listener</artifactId>
-    <name>catbox-test-listener</name>
+    <artifactId>routebox-test-listener</artifactId>
+    <name>routebox-test-listener</name>
     <description>JUnit 5 test execution listener for capturing test durations</description>
 
     <dependencies>
