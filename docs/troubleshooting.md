@@ -1,97 +1,75 @@
-# Known Issues
+# Troubleshooting Guide
 
-This document tracks known issues with the RouteBox project and their workarounds.
+Common issues and solutions for the RouteBox project.
 
-## Kafka Docker Image SSL/SASL Configuration Issue
+## Kafka Configuration
 
-**Status:** Resolved  
-**Fixed in:** Migration to Confluent Platform Kafka (confluentinc/cp-kafka:7.6.0)  
-**Severity:** Medium  
-**Affects:** Docker Compose setup with SSL/SASL enabled (Apache Kafka image only)
+The project uses Confluent Platform Kafka Docker image (`confluentinc/cp-kafka:7.6.0`) which provides:
 
-### Description
-
-The official Apache Kafka Docker image (`apache/kafka:latest`) had compatibility issues with certain environment variable configurations, specifically when using `KAFKA_OPTS` to set the JAAS configuration file path. The startup script failed with an "unbound variable" error.
-
-```
-/etc/kafka/docker/configure: line 18: !1: unbound variable
-```
-
-### Resolution
-
-The project has been migrated to use the Confluent Platform Kafka Docker image (`confluentinc/cp-kafka:7.6.0`), which provides:
-
-- Better SSL/SASL support and configuration
-- More reliable environment variable handling
+- Reliable SSL/SASL support and configuration
+- Better environment variable handling
 - Enterprise-grade features and stability
-- Full compatibility with the existing SSL/SASL security configuration
+- Full compatibility with SSL/SASL security configuration
 
-The migration includes:
-- Updated `compose.yaml` to use `confluentinc/cp-kafka:7.6.0` for both Kafka clusters
-- Confluent-specific environment variables (`KAFKA_SSL_KEYSTORE_FILENAME` instead of `KAFKA_SSL_KEYSTORE_LOCATION`)
-- Regenerated SSL certificates with proper CA extensions for Confluent compatibility
-- Added required `CLUSTER_ID` for KRaft mode
-- Added `credentials` file for Confluent SSL configuration
+Both PLAINTEXT (port 9092) and SASL_SSL (port 9093) listeners are fully functional.
 
-### Impact
-
-SSL/SASL security features now work out of the box with the updated Docker Compose configuration. Both PLAINTEXT (port 9092) and SASL_SSL (port 9093) listeners are fully functional.
-
-### References
-
-- Migration completed in this PR
-- Confluent Platform Kafka: https://hub.docker.com/r/confluentinc/cp-kafka
+**Reference:** [Confluent Platform Kafka](https://hub.docker.com/r/confluentinc/cp-kafka)
 
 ---
 
-## Port Conflict: Keycloak vs Order Service (RESOLVED)
+## Port Configuration
 
-**Status:** Resolved  
-**Fixed in:** This PR
+### Keycloak Port
 
-### Description
+Keycloak runs on port **8180** (not 8080) to avoid conflicts with order-service which uses the Spring Boot default port 8080.
 
-The original `compose.yaml` configured Keycloak to use port 8080, which conflicts with the order-service that also runs on port 8080 by default (Spring Boot default port).
-
-### Resolution
-
-- Changed Keycloak's external port mapping from `8080:8080` to `8180:8080` in `compose.yaml`
-- Updated all documentation to reference `http://localhost:8180` for Keycloak
-- order-service can now use port 8080 as documented
+- **Keycloak URL:** `http://localhost:8180`
+- **Order Service URL:** `http://localhost:8080`
 
 ---
 
-## Database Not Created Automatically (RESOLVED)
+## Database Setup
 
-**Status:** Resolved  
-**Fixed in:** This PR
+### Manual Database Creation Required
 
-### Description
+The application uses `hibernate.ddl-auto: update` which creates tables automatically, but the database itself must be created manually before starting the applications.
 
-The application configuration uses `hibernate.ddl-auto: update` which should create tables but not the database itself. Azure SQL Edge requires the database to exist before Hibernate can create tables.
+**Required Step:**
 
-### Resolution
+```bash
+docker exec routebox-azuresql /opt/mssql-tools18/bin/sqlcmd \
+  -S localhost -U sa -P "${DB_PASSWORD}" \
+  -Q "CREATE DATABASE routebox" -C -No
+```
 
-- Added database creation step to README.md Quick Start section
-- Documents the `CREATE DATABASE routebox` command
-- Users must create the database before starting the applications
+See the [Quick Start Guide](../README.md#quick-start) for complete setup instructions.
 
-### Alternative Approaches
+### Alternative Database Options
 
-For a fully automated setup, consider:
-1. Adding an init script to the Docker Compose configuration that creates the database
-2. Using Flyway or Liquibase for database migrations which can handle database creation
-3. Changing to H2 in-memory database for local development (already supported in non-azuresql profile)
+For different use cases, consider:
 
-**Status:** Resolved  
-**Fixed in:** This PR
+1. **Automated setup:** Add an init script to Docker Compose that creates the database
+2. **Schema migrations:** Use Flyway or Liquibase for full database lifecycle management
+3. **Local development:** Use H2 in-memory database (supported via default Spring profile)
 
-### Description
+---
 
-Docker Compose requires a `.env` file with `DB_PASSWORD` set, but this wasn't documented in the Quick Start guide.
+## Environment Configuration
 
-### Resolution
+### Required `.env` File
 
-- Added `.env` file setup instructions to README.md Quick Start section
-- Created `.env.example` template file
-- Documented Azure SQL password requirements (minimum 8 characters, complexity requirements)
+Docker Compose requires a `.env` file in the project root with database credentials.
+
+**Create from template:**
+
+```bash
+cp .env.example .env
+```
+
+**Required variables:**
+
+- `DB_PASSWORD` - Azure SQL password (minimum 8 characters, must include uppercase, lowercase, numbers, and symbols)
+- `KAFKA_USERNAME` - Kafka SASL username
+- `KAFKA_PASSWORD` - Kafka SASL password
+
+See `.env.example` for a complete template.
