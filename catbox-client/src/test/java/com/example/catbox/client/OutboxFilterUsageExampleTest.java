@@ -151,6 +151,7 @@ class OutboxFilterUsageExampleTest {
     // - Perform business logic
     // - Save to database
     // For this example, we just acknowledge the message was processed
+    System.out.println("Processing message: " + message);
   }
 
   /**
@@ -212,44 +213,6 @@ class OutboxFilterUsageExampleTest {
       if (processedIds != null) {
         processedIds.remove(correlationId);
       }
-    }
-  }
-
-  /**
-   * Example of a typical Kafka listener method signature. This is just for documentation purposes
-   * to show how OutboxFilter would be used in a real Kafka listener.
-   */
-  static class KafkaListenerExample {
-
-    private final OutboxFilter outboxFilter;
-
-    KafkaListenerExample(final OutboxFilter outboxFilter) {
-      this.outboxFilter = outboxFilter;
-    }
-
-    /**
-     * Typical Spring Kafka listener that uses OutboxFilter for deduplication.
-     *
-     * <p>In a real application, this method would be annotated with: @KafkaListener(topics =
-     * "order-events", groupId = "order-processor")
-     *
-     * @param message the Kafka message payload
-     * @param headers the Kafka message headers containing correlationId
-     */
-    public void handleOrderEvent(final String message, final Map<String, Object> headers) {
-      String correlationId = (String) headers.get("correlationId");
-
-      if (outboxFilter.deduped(correlationId, "order-processor")) {
-        // Already processed, skip
-        return;
-      }
-
-      // Process the message
-      processOrderEvent(message);
-    }
-
-    private void processOrderEvent(final String message) {
-      // Business logic here
     }
   }
 }

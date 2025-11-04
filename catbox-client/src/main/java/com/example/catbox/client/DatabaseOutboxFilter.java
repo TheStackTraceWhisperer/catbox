@@ -97,13 +97,13 @@ public class DatabaseOutboxFilter implements OutboxFilter {
           "Marked correlationId: {} as processed " + "in consumerGroup: {}",
           correlationId,
           consumerGroup);
-      metricsService.recordFilterMarkProcessed();
     } catch (DataIntegrityViolationException e) {
       log.debug(
           "CorrelationId: {} already marked as processed " + "in consumerGroup: {}",
           correlationId,
           consumerGroup);
     }
+    metricsService.recordFilterMarkProcessed();
   }
 
   @Override
