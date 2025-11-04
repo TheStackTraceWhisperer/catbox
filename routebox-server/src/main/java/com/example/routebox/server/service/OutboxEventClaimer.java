@@ -1,8 +1,8 @@
 package com.example.routebox.server.service;
 
-import com.example.catbox.server.config.OutboxProcessingConfig;
-import com.example.catbox.common.entity.OutboxEvent;
-import com.example.catbox.common.repository.OutboxEventRepository;
+import com.example.routebox.server.config.OutboxProcessingConfig;
+import com.example.routebox.common.entity.OutboxEvent;
+import com.example.routebox.common.repository.OutboxEventRepository;
 import io.micrometer.observation.annotation.Observed;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;

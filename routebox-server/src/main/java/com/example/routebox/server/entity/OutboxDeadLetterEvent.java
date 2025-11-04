@@ -1,6 +1,6 @@
 package com.example.routebox.server.entity;
 
-import com.example.catbox.common.entity.OutboxEvent;
+import com.example.routebox.common.entity.OutboxEvent;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;

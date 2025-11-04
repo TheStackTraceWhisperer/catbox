@@ -1,6 +1,6 @@
 package com.example.routebox.common.repository;
 
-import com.example.catbox.common.entity.ProcessedMessage;
+import com.example.routebox.common.entity.ProcessedMessage;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;

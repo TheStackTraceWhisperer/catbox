@@ -1,7 +1,7 @@
 package com.example.routebox.server.service;
 
-import com.example.catbox.common.entity.ProcessedMessage;
-import com.example.catbox.common.repository.ProcessedMessageRepository;
+import com.example.routebox.common.entity.ProcessedMessage;
+import com.example.routebox.common.repository.ProcessedMessageRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;

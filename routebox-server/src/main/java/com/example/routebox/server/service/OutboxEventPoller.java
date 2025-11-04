@@ -1,7 +1,7 @@
 package com.example.routebox.server.service;
 
-import com.example.catbox.common.entity.OutboxEvent;
-import com.example.catbox.server.config.OutboxProcessingConfig;
+import com.example.routebox.common.entity.OutboxEvent;
+import com.example.routebox.server.config.OutboxProcessingConfig;
 import io.micrometer.observation.Observation;
 import io.micrometer.observation.ObservationRegistry;
 import lombok.RequiredArgsConstructor;

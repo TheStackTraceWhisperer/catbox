@@ -1,6 +1,6 @@
 package com.example.orderprocessor;
 
-import com.example.catbox.client.OutboxFilter;
+import com.example.routebox.client.OutboxFilter;
 import com.example.orderprocessor.model.OrderCreatedPayload;
 import com.example.orderprocessor.service.OrderEventProcessingService;
 import com.fasterxml.jackson.databind.ObjectMapper;

@@ -1,7 +1,7 @@
 package com.example.routebox.client;
 
-import com.example.catbox.client.metrics.RouteBoxClientMetricsService;
-import com.example.catbox.common.repository.ProcessedMessageRepository;
+import com.example.routebox.client.metrics.RouteBoxClientMetricsService;
+import com.example.routebox.common.repository.ProcessedMessageRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.annotation.Bean;

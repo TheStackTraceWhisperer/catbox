@@ -1,6 +1,6 @@
 package com.example.routebox.server;
 
-import com.example.catbox.server.RouteBoxServerApplication;
+import com.example.routebox.server.RouteBoxServerApplication;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.DynamicPropertyRegistry;

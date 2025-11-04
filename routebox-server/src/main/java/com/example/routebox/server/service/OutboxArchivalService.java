@@ -1,11 +1,11 @@
 package com.example.routebox.server.service;
 
-import com.example.catbox.server.entity.OutboxArchiveEvent;
-import com.example.catbox.common.entity.OutboxEvent;
-import com.example.catbox.server.repository.OutboxArchiveEventRepository;
-import com.example.catbox.common.repository.OutboxEventRepository;
-import com.example.catbox.server.config.OutboxProcessingConfig;
-import com.example.catbox.server.metrics.OutboxMetricsService;
+import com.example.routebox.server.entity.OutboxArchiveEvent;
+import com.example.routebox.common.entity.OutboxEvent;
+import com.example.routebox.server.repository.OutboxArchiveEventRepository;
+import com.example.routebox.common.repository.OutboxEventRepository;
+import com.example.routebox.server.config.OutboxProcessingConfig;
+import com.example.routebox.server.metrics.OutboxMetricsService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;

@@ -1,6 +1,6 @@
 package com.example.routebox.server.repository;
 
-import com.example.catbox.server.entity.OutboxDeadLetterEvent;
+import com.example.routebox.server.entity.OutboxDeadLetterEvent;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

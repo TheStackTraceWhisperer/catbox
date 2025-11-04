@@ -27,9 +27,9 @@ class PackageDependencyTest {
     @Test
     void commonModuleShouldNotDependOnOtherModules() {
         ArchRule rule = noClasses()
-            .that().resideInAPackage("com.example.catbox.common..")
-            .should().dependOnClassesThat().resideInAPackage("com.example.catbox.client..")
-            .orShould().dependOnClassesThat().resideInAPackage("com.example.catbox.server..")
+            .that().resideInAPackage("com.example.routebox.common..")
+            .should().dependOnClassesThat().resideInAPackage("com.example.routebox.client..")
+            .orShould().dependOnClassesThat().resideInAPackage("com.example.routebox.server..")
             .orShould().dependOnClassesThat().resideInAPackage("com.example.order..")
             .because("The common module should be independent and not depend on other modules");
 
@@ -40,8 +40,8 @@ class PackageDependencyTest {
     @Test
     void clientModuleShouldNotDependOnServerOrOrderService() {
         ArchRule rule = noClasses()
-            .that().resideInAPackage("com.example.catbox.client..")
-            .should().dependOnClassesThat().resideInAPackage("com.example.catbox.server..")
+            .that().resideInAPackage("com.example.routebox.client..")
+            .should().dependOnClassesThat().resideInAPackage("com.example.routebox.server..")
             .orShould().dependOnClassesThat().resideInAPackage("com.example.order..")
             .because("The client module should not depend on server or order-service modules");
 
@@ -52,7 +52,7 @@ class PackageDependencyTest {
     @Test
     void serverModuleShouldNotDependOnOrderService() {
         ArchRule rule = noClasses()
-            .that().resideInAPackage("com.example.catbox.server..")
+            .that().resideInAPackage("com.example.routebox.server..")
             .should().dependOnClassesThat().resideInAPackage("com.example.order..")
             .because("The server module should not depend on the order-service module");
 
@@ -64,7 +64,7 @@ class PackageDependencyTest {
     void orderServiceShouldNotDependOnCatboxServer() {
         ArchRule rule = noClasses()
             .that().resideInAPackage("com.example.order..")
-            .should().dependOnClassesThat().resideInAPackage("com.example.catbox.server..")
+            .should().dependOnClassesThat().resideInAPackage("com.example.routebox.server..")
             .because("The order-service should not depend on catbox-server module");
 
         rule.allowEmptyShould(true);

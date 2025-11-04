@@ -1,8 +1,8 @@
 package com.example.routebox.server.metrics;
 
-import com.example.catbox.common.repository.OutboxEventRepository;
-import com.example.catbox.server.repository.OutboxArchiveEventRepository;
-import com.example.catbox.server.repository.OutboxDeadLetterEventRepository;
+import com.example.routebox.common.repository.OutboxEventRepository;
+import com.example.routebox.server.repository.OutboxArchiveEventRepository;
+import com.example.routebox.server.repository.OutboxDeadLetterEventRepository;
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.Gauge;
 import io.micrometer.core.instrument.MeterRegistry;

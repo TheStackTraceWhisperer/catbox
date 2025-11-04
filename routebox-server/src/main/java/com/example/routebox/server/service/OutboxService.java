@@ -1,7 +1,7 @@
 package com.example.routebox.server.service;
 
-import com.example.catbox.common.entity.OutboxEvent;
-import com.example.catbox.common.repository.OutboxEventRepository;
+import com.example.routebox.common.entity.OutboxEvent;
+import com.example.routebox.common.repository.OutboxEventRepository;
 import jakarta.persistence.criteria.Predicate;
 import lombok.Builder;
 import lombok.RequiredArgsConstructor;

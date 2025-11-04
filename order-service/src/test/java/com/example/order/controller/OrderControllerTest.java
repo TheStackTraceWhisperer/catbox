@@ -1,6 +1,6 @@
 package com.example.order.controller;
 
-import com.example.catbox.client.RouteBoxClientAutoConfiguration;
+import com.example.routebox.client.RouteBoxClientAutoConfiguration;
 import com.example.order.OrderServiceApplication;
 import com.example.order.dto.CreateOrderRequest;
 import com.example.order.dto.UpdateStatusRequest;

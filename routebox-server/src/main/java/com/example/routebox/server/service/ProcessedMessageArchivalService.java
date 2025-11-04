@@ -1,10 +1,10 @@
 package com.example.routebox.server.service;
 
-import com.example.catbox.common.entity.ProcessedMessage;
-import com.example.catbox.common.entity.ProcessedMessageArchive;
-import com.example.catbox.common.repository.ProcessedMessageArchiveRepository;
-import com.example.catbox.common.repository.ProcessedMessageRepository;
-import com.example.catbox.server.config.OutboxProcessingConfig;
+import com.example.routebox.common.entity.ProcessedMessage;
+import com.example.routebox.common.entity.ProcessedMessageArchive;
+import com.example.routebox.common.repository.ProcessedMessageArchiveRepository;
+import com.example.routebox.common.repository.ProcessedMessageRepository;
+import com.example.routebox.server.config.OutboxProcessingConfig;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;

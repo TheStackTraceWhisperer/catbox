@@ -1,7 +1,7 @@
 package com.example.routebox.server.controller;
 
-import com.example.catbox.common.entity.OutboxEvent;
-import com.example.catbox.server.service.OutboxService;
+import com.example.routebox.common.entity.OutboxEvent;
+import com.example.routebox.server.service.OutboxService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Sort;
@@ -28,7 +28,7 @@ public class OutboxController {
     }
 
     @GetMapping("/search")
-    public ResponseEntity<Page<com.example.catbox.server.service.OutboxService.OutboxEventSummaryDto>> searchOutbox(
+    public ResponseEntity<Page<com.example.routebox.server.service.OutboxService.OutboxEventSummaryDto>> searchOutbox(
             @RequestParam(required = false) Integer page,
             @RequestParam(required = false) Integer size,
             @RequestParam(required = false) String eventType,
@@ -38,7 +38,7 @@ public class OutboxController {
             @RequestParam(required = false, defaultValue = "createdAt") String sortBy,
             @RequestParam(required = false, defaultValue = "ASC") Sort.Direction direction
     ) {
-        Page<com.example.catbox.server.service.OutboxService.OutboxEventSummaryDto> result = outboxService.findPaged(
+        Page<com.example.routebox.server.service.OutboxService.OutboxEventSummaryDto> result = outboxService.findPaged(
                 page, size, eventType, aggregateType, aggregateId, pendingOnly, sortBy, direction
         );
         return ResponseEntity.ok(result);

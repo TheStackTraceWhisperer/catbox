@@ -1,8 +1,8 @@
 package com.example.routebox.client;
 
-import com.example.catbox.client.metrics.RouteBoxClientMetricsService;
-import com.example.catbox.common.entity.ProcessedMessage;
-import com.example.catbox.common.repository.ProcessedMessageRepository;
+import com.example.routebox.client.metrics.RouteBoxClientMetricsService;
+import com.example.routebox.common.entity.ProcessedMessage;
+import com.example.routebox.common.repository.ProcessedMessageRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.transaction.annotation.Propagation;

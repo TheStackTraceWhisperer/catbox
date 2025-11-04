@@ -1,8 +1,8 @@
 package com.example.routebox.client;
 
-import com.example.catbox.client.metrics.RouteBoxClientMetricsService;
-import com.example.catbox.common.entity.OutboxEvent;
-import com.example.catbox.common.repository.OutboxEventRepository;
+import com.example.routebox.client.metrics.RouteBoxClientMetricsService;
+import com.example.routebox.common.entity.OutboxEvent;
+import com.example.routebox.common.repository.OutboxEventRepository;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;

@@ -1,7 +1,7 @@
 package com.example.routebox.server;
 
-import com.example.catbox.common.entity.OutboxEvent;
-import com.example.catbox.common.repository.OutboxEventRepository;
+import com.example.routebox.common.entity.OutboxEvent;
+import com.example.routebox.common.repository.OutboxEventRepository;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.common.serialization.StringDeserializer;

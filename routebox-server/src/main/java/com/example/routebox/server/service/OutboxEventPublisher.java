@@ -1,13 +1,13 @@
 package com.example.routebox.server.service;
 
-import com.example.catbox.server.config.ClusterPublishingStrategy;
-import com.example.catbox.server.config.DynamicKafkaTemplateFactory;
-import com.example.catbox.server.config.OutboxRoutingConfig;
-import com.example.catbox.server.config.OutboxProcessingConfig;
-import com.example.catbox.server.config.RoutingRule;
-import com.example.catbox.server.metrics.OutboxMetricsService;
-import com.example.catbox.common.entity.OutboxEvent;
-import com.example.catbox.common.repository.OutboxEventRepository;
+import com.example.routebox.server.config.ClusterPublishingStrategy;
+import com.example.routebox.server.config.DynamicKafkaTemplateFactory;
+import com.example.routebox.server.config.OutboxRoutingConfig;
+import com.example.routebox.server.config.OutboxProcessingConfig;
+import com.example.routebox.server.config.RoutingRule;
+import com.example.routebox.server.metrics.OutboxMetricsService;
+import com.example.routebox.common.entity.OutboxEvent;
+import com.example.routebox.common.repository.OutboxEventRepository;
 import io.micrometer.observation.annotation.Observed;
 import io.micrometer.tracing.Tracer;
 import lombok.RequiredArgsConstructor;

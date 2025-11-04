@@ -1,8 +1,8 @@
 package com.example.routebox.server.kafka;
 
 import com.example.testconfig.TestKafkaOnlyApplication;
-import com.example.catbox.server.config.DynamicKafkaTemplateFactory;
-import com.example.catbox.server.config.OutboxRoutingConfig;
+import com.example.routebox.server.config.DynamicKafkaTemplateFactory;
+import com.example.routebox.server.config.OutboxRoutingConfig;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.common.serialization.StringDeserializer;
@@ -96,7 +96,7 @@ class KafkaIntegrationTest {
     @Test
     void testDynamicFactorySendAndReceive() throws Exception {
         // 1. Verify the routing rule was loaded
-        com.example.catbox.server.config.RoutingRule rule = routingConfig.getRoutingRule(TEST_EVENT_TYPE);
+        com.example.routebox.server.config.RoutingRule rule = routingConfig.getRoutingRule(TEST_EVENT_TYPE);
         assertThat(rule).isNotNull();
         assertThat(rule.getClusters()).containsExactly(TEST_CLUSTER_KEY);
 

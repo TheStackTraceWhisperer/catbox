@@ -1,12 +1,12 @@
 package com.example.routebox.server.metrics;
 
-import com.example.catbox.common.entity.OutboxEvent;
-import com.example.catbox.common.repository.OutboxEventRepository;
-import com.example.catbox.server.RouteBoxServerApplication;
-import com.example.catbox.server.entity.OutboxArchiveEvent;
-import com.example.catbox.server.entity.OutboxDeadLetterEvent;
-import com.example.catbox.server.repository.OutboxArchiveEventRepository;
-import com.example.catbox.server.repository.OutboxDeadLetterEventRepository;
+import com.example.routebox.common.entity.OutboxEvent;
+import com.example.routebox.common.repository.OutboxEventRepository;
+import com.example.routebox.server.RouteBoxServerApplication;
+import com.example.routebox.server.entity.OutboxArchiveEvent;
+import com.example.routebox.server.entity.OutboxDeadLetterEvent;
+import com.example.routebox.server.repository.OutboxArchiveEventRepository;
+import com.example.routebox.server.repository.OutboxDeadLetterEventRepository;
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.Gauge;
 import io.micrometer.core.instrument.MeterRegistry;

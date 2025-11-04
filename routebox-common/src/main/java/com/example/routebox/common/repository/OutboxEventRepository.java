@@ -1,6 +1,6 @@
 package com.example.routebox.common.repository;
 
-import com.example.catbox.common.entity.OutboxEvent;
+import com.example.routebox.common.entity.OutboxEvent;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;

@@ -15,7 +15,7 @@ import org.springframework.context.annotation.ComponentScan;
 })
 @ComponentScan(basePackages = {
         // only bring in the config components we need for Kafka dynamic factory
-        "com.example.catbox.server.config"
+        "com.example.routebox.server.config"
 })
 public class TestKafkaOnlyApplication {
 }

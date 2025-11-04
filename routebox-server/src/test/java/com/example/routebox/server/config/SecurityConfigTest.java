@@ -1,6 +1,6 @@
 package com.example.routebox.server.config;
 
-import com.example.catbox.server.CatboxServerApplication;
+import com.example.routebox.server.RouteBoxServerApplication;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -17,7 +17,7 @@ import static org.assertj.core.api.Assertions.assertThat;
  * Test for SecurityConfig to verify that security is properly disabled by default
  * and can be enabled via profile.
  */
-@SpringBootTest(classes = CatboxServerApplication.class)
+@SpringBootTest(classes = RouteBoxServerApplication.class)
 @Testcontainers
 class SecurityConfigTest {
 

@@ -1,8 +1,8 @@
 package com.example.routebox.server.controller;
 
-import com.example.catbox.common.entity.ProcessedMessage;
-import com.example.catbox.server.service.OutboxService;
-import com.example.catbox.server.service.ProcessedMessageService;
+import com.example.routebox.common.entity.ProcessedMessage;
+import com.example.routebox.server.service.OutboxService;
+import com.example.routebox.server.service.ProcessedMessageService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Sort;

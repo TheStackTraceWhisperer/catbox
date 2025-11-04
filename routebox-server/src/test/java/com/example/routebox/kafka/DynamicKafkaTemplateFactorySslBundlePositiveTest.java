@@ -1,8 +1,8 @@
 package com.example.routebox.server.kafka;
 
 import com.example.testconfig.TestKafkaOnlyApplication;
-import com.example.catbox.server.config.DynamicKafkaTemplateFactory;
-import com.example.catbox.server.config.KafkaClustersConfig;
+import com.example.routebox.server.config.DynamicKafkaTemplateFactory;
+import com.example.routebox.server.config.KafkaClustersConfig;
 import org.apache.kafka.common.config.SslConfigs;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
