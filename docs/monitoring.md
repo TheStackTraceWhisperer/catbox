@@ -235,7 +235,7 @@ The alerting stack consists of:
 
 ### Accessing Alertmanager
 
-**Web UI:** http://localhost:9093
+**Web UI:** http://localhost:9094
 
 The Alertmanager web interface shows:
 - Currently firing alerts
@@ -341,7 +341,7 @@ To verify the alerting system is working:
    - Alert should show as "Pending" then "Firing"
 
 6. **Check Alertmanager:**
-   - Navigate to http://localhost:9093
+   - Navigate to http://localhost:9094
    - Alert should appear in the Alertmanager UI
 
 7. **View email in Mailhog:**
@@ -384,7 +384,7 @@ To modify alerting behavior:
    ```bash
    docker compose restart alertmanager
    # Or use hot reload:
-   curl -X POST http://localhost:9093/-/reload
+   curl -X POST http://localhost:9094/-/reload
    ```
 
 ## Monitoring Recommendations
