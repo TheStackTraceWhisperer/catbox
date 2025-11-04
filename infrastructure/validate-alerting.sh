@@ -135,7 +135,7 @@ echo ""
 echo "Step 5: Checking if services are running..."
 echo "--------------------------------------------"
 
-if docker compose ps | grep -q "catbox-prometheus"; then
+if docker compose ps | grep -q "routebox-prometheus"; then
     prometheus_status=$(docker compose ps prometheus | grep prometheus | awk '{print $NF}')
     echo -n "Prometheus status... "
     if [ "$prometheus_status" = "running" ] || [ "$prometheus_status" = "healthy" ]; then
@@ -147,7 +147,7 @@ else
     echo -e "${YELLOW}⚠ Prometheus not started (start with: docker compose up -d)${NC}"
 fi
 
-if docker compose ps | grep -q "catbox-alertmanager"; then
+if docker compose ps | grep -q "routebox-alertmanager"; then
     alertmanager_status=$(docker compose ps alertmanager | grep alertmanager | awk '{print $NF}')
     echo -n "Alertmanager status... "
     if [ "$alertmanager_status" = "running" ] || [ "$alertmanager_status" = "healthy" ]; then
@@ -159,7 +159,7 @@ else
     echo -e "${YELLOW}⚠ Alertmanager not started (start with: docker compose up -d)${NC}"
 fi
 
-if docker compose ps | grep -q "catbox-mailhog"; then
+if docker compose ps | grep -q "routebox-mailhog"; then
     mailhog_status=$(docker compose ps mailhog | grep mailhog | awk '{print $NF}')
     echo -n "Mailhog status... "
     if [ "$mailhog_status" = "running" ] || [ "$mailhog_status" = "healthy" ]; then

@@ -185,7 +185,7 @@ cd jmeter-tests
 
 # 2. Start services (in separate terminals)
 mvn spring-boot:run -pl order-service -Dspring-boot.run.profiles=azuresql
-mvn spring-boot:run -pl catbox-server -Dspring-boot.run.profiles=azuresql
+mvn spring-boot:run -pl routebox-server -Dspring-boot.run.profiles=azuresql
 
 # 3. Run a single test
 ./scripts/run-test.sh order
@@ -258,7 +258,7 @@ The test suite is designed to validate Java 21 virtual threads:
 
 Tests verify the transactional outbox pattern:
 - Every order creation generates an outbox event
-- Events are processed concurrently by catbox-server
+- Events are processed concurrently by routebox-server
 - No event loss under high load
 - At-least-once delivery guarantees
 

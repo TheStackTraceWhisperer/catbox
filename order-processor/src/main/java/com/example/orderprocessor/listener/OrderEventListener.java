@@ -1,6 +1,6 @@
 package com.example.orderprocessor.listener;
 
-import com.example.catbox.client.OutboxFilter;
+import com.example.routebox.client.OutboxFilter;
 import com.example.orderprocessor.model.OrderCreatedPayload;
 import com.example.orderprocessor.model.OrderStatusChangedPayload;
 import com.example.orderprocessor.service.OrderEventProcessingService;

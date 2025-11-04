@@ -1,6 +1,6 @@
-# JMeter Test Suite for Catbox
+# JMeter Test Suite for RouteBox
 
-This directory contains comprehensive JMeter test plans for stress testing the Catbox application, including the Order Service and Outbox pattern implementation.
+This directory contains comprehensive JMeter test plans for stress testing the RouteBox application, including the Order Service and Outbox pattern implementation.
 
 ## Directory Structure
 
@@ -44,16 +44,16 @@ Before running tests, ensure both services and infrastructure are running:
 
 ```bash
 # 1. Start infrastructure (Azure SQL Edge and Kafka)
-cd /path/to/catbox/infrastructure
+cd /path/to/routebox/infrastructure
 docker compose up -d
 
 # 2. Start Order Service (in one terminal, from project root)
-cd /path/to/catbox
+cd /path/to/routebox
 mvn spring-boot:run -pl order-service -Dspring-boot.run.profiles=azuresql
 
-# 3. Start Catbox Server (in another terminal, from project root)
-cd /path/to/catbox
-mvn spring-boot:run -pl catbox-server -Dspring-boot.run.profiles=azuresql
+# 3. Start RouteBox Server (in another terminal, from project root)
+cd /path/to/routebox
+mvn spring-boot:run -pl routebox-server -Dspring-boot.run.profiles=azuresql
 ```
 
 Wait 10-15 seconds for services to be fully ready before starting tests.
@@ -224,7 +224,7 @@ While tests are running, monitor:
    # Order Service metrics
    curl http://localhost:8080/actuator/prometheus | grep outbox_events
    
-   # Catbox Server metrics
+   # RouteBox Server metrics
    curl http://localhost:8081/actuator/prometheus | grep outbox_events
    ```
 
@@ -323,12 +323,12 @@ The application uses Java 21 virtual threads, which should maintain performance 
 3. **Pending Events Growing**
    ```
    Possible causes:
-   - Catbox server not processing fast enough
+   - RouteBox server not processing fast enough
    - Kafka issues
    - Database locks
    
    Solutions:
-   - Check catbox-server logs
+   - Check routebox-server logs
    - Verify Kafka is running
    - Check database performance
    ```
@@ -391,7 +391,7 @@ Example GitHub Actions workflow snippet:
     # Start services
     cd infrastructure && docker compose up -d && cd ..
     mvn spring-boot:run -pl order-service -Dspring-boot.run.profiles=azuresql &
-    mvn spring-boot:run -pl catbox-server -Dspring-boot.run.profiles=azuresql &
+    mvn spring-boot:run -pl routebox-server -Dspring-boot.run.profiles=azuresql &
     sleep 20
     
     # Run tests using Docker
@@ -409,8 +409,8 @@ Example GitHub Actions workflow snippet:
 
 - [Apache JMeter Documentation](https://jmeter.apache.org/usermanual/index.html)
 - [JMeter Best Practices](https://jmeter.apache.org/usermanual/best-practices.html)
-- [Catbox Application README](../README.md)
-- [Catbox Testing Guide](../docs/testing.md)
+- [RouteBox Application README](../README.md)
+- [RouteBox Testing Guide](../docs/testing.md)
 
 ## Support
 

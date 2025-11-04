@@ -1,4 +1,4 @@
-# Catbox - Transactional Outbox Pattern
+# RouteBox - Transactional Outbox Pattern
 
 A Spring Boot 3.5.7 application demonstrating the transactional outbox pattern with Java 21 virtual threads, multi-cluster Kafka routing, and comprehensive observability.
 
@@ -43,7 +43,7 @@ See the [Quick Start Guide](docs/quick-start.md) for detailed setup instructions
 
 3. Create database:
    ```bash
-   docker exec catbox-azuresql /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P "${DB_PASSWORD}" -Q "CREATE DATABASE catbox" -C -No
+   docker exec routebox-azuresql /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P "${DB_PASSWORD}" -Q "CREATE DATABASE routebox" -C -No
    ```
 
 4. Run applications:
@@ -51,8 +51,8 @@ See the [Quick Start Guide](docs/quick-start.md) for detailed setup instructions
    # Terminal 1 - Order Service (port 8080)
    mvn spring-boot:run -pl order-service -Dspring-boot.run.profiles=azuresql
    
-   # Terminal 2 - Catbox Server (port 8081)
-   mvn spring-boot:run -pl catbox-server -Dspring-boot.run.profiles=azuresql
+   # Terminal 2 - RouteBox Server (port 8081)
+   mvn spring-boot:run -pl routebox-server -Dspring-boot.run.profiles=azuresql
    
    # Terminal 3 - Order Processor (port 8082)
    mvn spring-boot:run -pl order-processor -Dspring-boot.run.profiles=azuresql
@@ -72,7 +72,7 @@ By default, Hibernate SQL logging is disabled for cleaner console output. To ena
 ```bash
 # Run with SQL debug profile
 mvn spring-boot:run -pl order-service -Dspring-boot.run.profiles=azuresql,sql-debug
-mvn spring-boot:run -pl catbox-server -Dspring-boot.run.profiles=azuresql,sql-debug
+mvn spring-boot:run -pl routebox-server -Dspring-boot.run.profiles=azuresql,sql-debug
 ```
 
 The `sql-debug` profile enables:
@@ -85,7 +85,7 @@ The `sql-debug` profile enables:
 The system uses a decoupled, multi-module architecture with three Spring Boot applications:
 
 - **order-service (Port 8080)** - Business service that creates orders and writes outbox events in the same transaction
-- **catbox-server (Port 8081)** - Standalone processor that polls and publishes events to Kafka
+- **routebox-server (Port 8081)** - Standalone processor that polls and publishes events to Kafka
 - **order-processor (Port 8082)** - Kafka consumer that processes order events with deduplication
 
 This separation allows independent scaling and keeps business logic lightweight.
@@ -142,22 +142,22 @@ See [jmeter-tests/README.md](jmeter-tests/README.md) for performance testing det
 ## Project Structure
 
 ```
-catbox-parent
-├── catbox-common        # Shared code: OutboxEvent entity and repository
-├── catbox-client        # Client library for creating events
-├── catbox-server        # Standalone event processor (port 8081)
-├── order-service        # Business service (port 8080)
-├── order-processor      # Order event consumer with deduplication (port 8082)
-├── catbox-archunit      # Architecture testing with ArchUnit
-├── coverage-report      # Aggregated test coverage reports
-├── jmeter-tests         # JMeter load and stress test suites
-├── infrastructure       # Docker Compose and infrastructure
-│   ├── compose.yaml        # Docker Compose configuration
-│   ├── monitoring          # Prometheus, Grafana, Loki
-│   ├── kafka-security      # Kafka SSL/TLS and SASL
-│   └── keycloak            # Keycloak realm configuration
-├── docs                 # Documentation
-└── pom.xml              # Parent POM
+routebox-parent
+├── routebox-common        # Shared code: OutboxEvent entity and repository
+├── routebox-client        # Client library for creating events
+├── routebox-server        # Standalone event processor (port 8081)
+├── order-service          # Business service (port 8080)
+├── order-processor        # Order event consumer with deduplication (port 8082)
+├── routebox-archunit      # Architecture testing with ArchUnit
+├── coverage-report        # Aggregated test coverage reports
+├── jmeter-tests           # JMeter load and stress test suites
+├── infrastructure         # Docker Compose and infrastructure
+│   ├── compose.yaml          # Docker Compose configuration
+│   ├── monitoring            # Prometheus, Grafana, Loki
+│   ├── kafka-security        # Kafka SSL/TLS and SASL
+│   └── keycloak              # Keycloak realm configuration
+├── docs                   # Documentation
+└── pom.xml                # Parent POM
 ```
 
 ## Contributing

@@ -1,6 +1,6 @@
 # Security Configuration
 
-This document describes the security features available in the Catbox project.
+This document describes the security features available in the RouteBox project.
 
 ## Kafka Security
 
@@ -107,7 +107,7 @@ outbox:
 
 Check SCRAM users:
 ```bash
-docker exec catbox-kafka kafka-configs.sh \
+docker exec routebox-kafka kafka-configs.sh \
   --bootstrap-server localhost:9092 \
   --describe \
   --entity-type users
@@ -115,7 +115,7 @@ docker exec catbox-kafka kafka-configs.sh \
 
 List configured ACLs:
 ```bash
-docker exec catbox-kafka kafka-acls.sh \
+docker exec routebox-kafka kafka-acls.sh \
   --bootstrap-server localhost:9092 \
   --list
 ```
@@ -138,7 +138,7 @@ docker exec catbox-kafka kafka-acls.sh \
 
 For production, refer to:
 - `infrastructure/kafka-security/README.md` - Detailed security documentation
-- `catbox-server/src/main/resources/application-production.yml.example` - Production configuration template
+- `routebox-server/src/main/resources/application-production.yml.example` - Production configuration template
 
 **Production Security Checklist:**
 1. ✅ Use CA-signed certificates (not self-signed)
@@ -156,16 +156,16 @@ For production, refer to:
 
 ## Keycloak Security
 
-The catbox-server supports OAuth2/OIDC authentication via Keycloak. Security is **disabled by default** and can be enabled via Spring Boot profile.
+The routebox-server supports OAuth2/OIDC authentication via Keycloak. Security is **disabled by default** and can be enabled via Spring Boot profile.
 
 ### Keycloak Setup
 
 The Docker Compose configuration includes a Keycloak container that is automatically configured with:
 
-- **Realm**: `catbox`
-- **User**: `catbox` with password `catbox`
-- **Client ID**: `catbox-server`
-- **Client Secret**: `catbox-server-secret`
+- **Realm**: `routebox`
+- **User**: `routebox` with password `routebox`
+- **Client ID**: `routebox-server`
+- **Client Secret**: `routebox-server-secret`
 
 ### Running with Security Enabled
 
@@ -175,8 +175,8 @@ To enable authentication, use the `secure` profile:
 # Start Keycloak and other infrastructure
 cd infrastructure && docker compose up -d
 
-# Run catbox-server with security enabled (from project root)
-cd .. && mvn spring-boot:run -pl catbox-server -Dspring-boot.run.profiles=azuresql,secure
+# Run routebox-server with security enabled (from project root)
+cd .. && mvn spring-boot:run -pl routebox-server -Dspring-boot.run.profiles=azuresql,secure
 ```
 
 ### Accessing the Application
@@ -184,8 +184,8 @@ cd .. && mvn spring-boot:run -pl catbox-server -Dspring-boot.run.profiles=azures
 1. Navigate to `http://localhost:8081`
 2. You will be redirected to Keycloak login page
 3. Login with:
-   - **Username**: `catbox`
-   - **Password**: `catbox`
+   - **Username**: `routebox`
+   - **Password**: `routebox`
 4. After successful authentication, you'll be redirected back to the application
 
 ### Keycloak Admin Console
@@ -213,7 +213,7 @@ The configuration allows:
 
 ### Customizing Keycloak Configuration
 
-The Keycloak realm configuration is defined in `infrastructure/keycloak/catbox-realm.json`. You can modify this file to:
+The Keycloak realm configuration is defined in `infrastructure/keycloak/routebox-realm.json`. You can modify this file to:
 - Add additional users
 - Configure roles and permissions
 - Set up client scopes

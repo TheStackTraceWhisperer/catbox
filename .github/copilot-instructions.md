@@ -1,4 +1,4 @@
-# Copilot Instructions for Catbox Project
+# Copilot Instructions for RouteBox Project
 
 ## Technology Requirements
 

@@ -1,10 +1,10 @@
 # Distributed Tracing with OpenTelemetry and Tempo
 
-This guide explains how to use distributed tracing in the Catbox project to trace requests across services and observe event processing lifecycles.
+This guide explains how to use distributed tracing in the RouteBox project to trace requests across services and observe event processing lifecycles.
 
 ## Overview
 
-The Catbox project implements distributed tracing using:
+The RouteBox project implements distributed tracing using:
 - **OpenTelemetry** - Industry-standard tracing instrumentation
 - **Micrometer Tracing** - Spring Boot's observability abstraction
 - **Grafana Tempo** - Trace storage and visualization backend
@@ -16,7 +16,7 @@ The Catbox project implements distributed tracing using:
 
 ```
 ┌──────────────┐     HTTP      ┌──────────────┐     Kafka     ┌────────────┐
-│ Order Service│───────────────▶│Catbox Server │──────────────▶│  Consumers │
+│ Order Service│───────────────▶│RouteBox Server │──────────────▶│  Consumers │
 │  (Port 8080) │  Trace Context │ (Port 8081)  │  correlationId│            │
 └──────────────┘                └──────────────┘               └────────────┘
        │                               │                             │
@@ -41,7 +41,7 @@ The Catbox project implements distributed tracing using:
 2. **Span Creation** → `@Observed` methods automatically create spans
 3. **Correlation ID** → Trace ID is used as the correlation ID for outbox events
 4. **Event Storage** → OutboxEvent is saved with correlationId in database
-5. **Event Publishing** → Catbox Server claims event and creates new span
+5. **Event Publishing** → RouteBox Server claims event and creates new span
 6. **Kafka Headers** → correlationId is added to Kafka message headers
 7. **Trace Export** → All spans are sent to Tempo via OTLP
 
@@ -151,13 +151,13 @@ Query: <trace-id>
 ```
 Service Name: order-service
 OR
-Service Name: catbox
+Service Name: routebox
 ```
 
 #### By Correlation ID
 Use Loki to find trace IDs by correlation ID:
 ```
-{container_name="catbox-order-service"} |~ "correlation.id.*abc123"
+{container_name="routebox-order-service"} |~ "correlation.id.*abc123"
 ```
 
 ### Trace-to-Logs Correlation

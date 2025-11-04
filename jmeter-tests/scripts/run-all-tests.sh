@@ -76,7 +76,7 @@ fi
 if ! check_service "$OUTBOX_HOST" "$OUTBOX_PORT" "Outbox Service"; then
     echo ""
     echo "Error: Outbox Service is not running!"
-    echo "Please start it with: mvn spring-boot:run -pl catbox-server -Dspring-boot.run.profiles=azuresql"
+    echo "Please start it with: mvn spring-boot:run -pl routebox-server -Dspring-boot.run.profiles=azuresql"
     exit 1
 fi
 

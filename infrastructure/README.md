@@ -1,6 +1,6 @@
 # Infrastructure
 
-This directory contains all Docker infrastructure files and configurations for the Catbox project.
+This directory contains all Docker infrastructure files and configurations for the RouteBox project.
 
 ## Contents
 
@@ -83,7 +83,7 @@ For information on configuring Keycloak, see [keycloak/README.md](keycloak/READM
 The default realm includes:
 - Realm: `catbox`
 - User: `catbox` / `catbox`
-- Client ID: `catbox-server`
+- Client ID: `routebox-server`
 
 ### Kafka UI Configuration
 
@@ -116,10 +116,10 @@ For multi-cluster routing examples, see the [Multi-Cluster Routing documentation
 
 The monitoring stack includes pre-configured dashboards, data sources, and alerting:
 
-- **Prometheus**: Scrapes metrics from both order-service (port 8080) and catbox-server (port 8081)
+- **Prometheus**: Scrapes metrics from both order-service (port 8080) and routebox-server (port 8081)
 - **Alertmanager**: Routes alerts to Mailhog for testing the alerting pipeline
 - **Mailhog**: Captures alert emails for testing - Web UI at http://localhost:8025
-- **Grafana**: Includes a pre-configured dashboard at `monitoring/grafana/dashboards/catbox-dashboard.json`
+- **Grafana**: Includes a pre-configured dashboard at `monitoring/grafana/dashboards/routebox-dashboard.json`
 - **Loki**: Aggregates logs from all Docker containers via Promtail
 
 ### Alerting Configuration
@@ -151,7 +151,7 @@ Mailhog acts as a fake SMTP server to capture alert emails without sending real 
 To test the alerting pipeline:
 1. Start all services: `docker compose up -d`
 2. Wait for services to be healthy
-3. Create a condition that triggers an alert (e.g., stop catbox-server to trigger `NoEventProcessing`)
+3. Create a condition that triggers an alert (e.g., stop routebox-server to trigger `NoEventProcessing`)
 4. Check Prometheus alerts: http://localhost:9090/alerts
 5. View emails in Mailhog: http://localhost:8025
 

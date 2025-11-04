@@ -1,6 +1,6 @@
 package com.example.order.service;
 
-import com.example.catbox.client.OutboxClient;
+import com.example.routebox.client.OutboxClient;
 import com.example.order.dto.CreateOrderRequest;
 import com.example.order.entity.Order;
 import com.example.order.exception.OrderNotFoundException;

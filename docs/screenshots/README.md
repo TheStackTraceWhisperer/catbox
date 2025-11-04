@@ -1,6 +1,6 @@
-# Catbox UI Screenshots
+# RouteBox UI Screenshots
 
-This folder contains screenshots of the Catbox administrative web interface.
+This folder contains screenshots of the RouteBox administrative web interface.
 
 ## Admin Pages
 
@@ -42,7 +42,7 @@ Example consumer groups shown:
 
 ## Accessing the UI
 
-When the catbox-server is running, access the admin interface at:
+When the routebox-server is running, access the admin interface at:
 - **Outbox Events**: `http://localhost:8081/admin`
 - **Processed Messages**: `http://localhost:8081/admin/processed-messages`
 

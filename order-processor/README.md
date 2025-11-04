@@ -115,7 +115,7 @@ spring:
 2. **Running infrastructure**:
    - SQL Server (Azure SQL Edge)
    - Kafka
-   - Catbox Server (to publish events)
+   - RouteBox Server (to publish events)
    - Order Service (to create events)
 
 ### Start Infrastructure
@@ -129,7 +129,7 @@ docker compose up -d
 
 ```bash
 DB_PASSWORD="YourStrong!Passw0rd"
-docker exec catbox-azuresql /opt/mssql-tools18/bin/sqlcmd \
+docker exec routebox-azuresql /opt/mssql-tools18/bin/sqlcmd \
   -S localhost -U sa -P "${DB_PASSWORD}" \
   -Q "CREATE DATABASE catbox" -C -No
 ```
@@ -325,11 +325,11 @@ If messages are being processed multiple times:
 
 ## Related Components
 
-- **catbox-client**: Provides the `OutboxFilter` interface and `DatabaseOutboxFilter` implementation
-- **catbox-server**: Publishes events to Kafka from the outbox table
+- **routebox-client**: Provides the `OutboxFilter` interface and `DatabaseOutboxFilter` implementation
+- **routebox-server**: Publishes events to Kafka from the outbox table
 - **order-service**: Creates orders and writes to the outbox table
-- **catbox-common**: Contains shared entities and repositories
+- **routebox-common**: Contains shared entities and repositories
 
 ## License
 
-This is part of the Catbox project and follows the same license.
+This is part of the RouteBox project and follows the same license.

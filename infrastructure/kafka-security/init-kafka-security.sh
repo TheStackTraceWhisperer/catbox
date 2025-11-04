@@ -16,7 +16,7 @@ MAX_RETRIES=30
 RETRY_COUNT=0
 
 while [ $RETRY_COUNT -lt $MAX_RETRIES ]; do
-    if docker exec catbox-kafka kafka-broker-api-versions.sh --bootstrap-server localhost:9092 &>/dev/null; then
+    if docker exec routebox-kafka kafka-broker-api-versions.sh --bootstrap-server localhost:9092 &>/dev/null; then
         echo -e "${GREEN}✅ Kafka is ready${NC}"
         break
     fi
@@ -34,7 +34,7 @@ echo -e "${BLUE}Creating SCRAM-SHA-512 credentials${NC}"
 
 # Admin user
 echo -e "${GREEN}Creating admin user...${NC}"
-docker exec catbox-kafka kafka-configs.sh \
+docker exec routebox-kafka kafka-configs.sh \
   --bootstrap-server localhost:9092 \
   --alter \
   --add-config 'SCRAM-SHA-512=[password=admin-secret]' \
@@ -43,7 +43,7 @@ docker exec catbox-kafka kafka-configs.sh \
 
 # Producer user
 echo -e "${GREEN}Creating producer user...${NC}"
-docker exec catbox-kafka kafka-configs.sh \
+docker exec routebox-kafka kafka-configs.sh \
   --bootstrap-server localhost:9092 \
   --alter \
   --add-config 'SCRAM-SHA-512=[password=producer-secret]' \
@@ -52,7 +52,7 @@ docker exec catbox-kafka kafka-configs.sh \
 
 # Consumer user
 echo -e "${GREEN}Creating consumer user...${NC}"
-docker exec catbox-kafka kafka-configs.sh \
+docker exec routebox-kafka kafka-configs.sh \
   --bootstrap-server localhost:9092 \
   --alter \
   --add-config 'SCRAM-SHA-512=[password=consumer-secret]' \
@@ -61,7 +61,7 @@ docker exec catbox-kafka kafka-configs.sh \
 
 # Create test topics
 echo -e "${BLUE}Creating test topics${NC}"
-docker exec catbox-kafka kafka-topics.sh \
+docker exec routebox-kafka kafka-topics.sh \
   --bootstrap-server localhost:9092 \
   --create \
   --topic OrderCreated \
@@ -69,7 +69,7 @@ docker exec catbox-kafka kafka-topics.sh \
   --replication-factor 1 \
   --if-not-exists
 
-docker exec catbox-kafka kafka-topics.sh \
+docker exec routebox-kafka kafka-topics.sh \
   --bootstrap-server localhost:9092 \
   --create \
   --topic OrderStatusChanged \
@@ -82,7 +82,7 @@ echo -e "${BLUE}Configuring ACLs${NC}"
 
 # Producer ACLs - allow producer user to write to order topics
 echo -e "${GREEN}Granting producer permissions...${NC}"
-docker exec catbox-kafka kafka-acls.sh \
+docker exec routebox-kafka kafka-acls.sh \
   --bootstrap-server localhost:9092 \
   --add \
   --allow-principal User:producer \
@@ -91,7 +91,7 @@ docker exec catbox-kafka kafka-acls.sh \
   --operation Create \
   --topic OrderCreated
 
-docker exec catbox-kafka kafka-acls.sh \
+docker exec routebox-kafka kafka-acls.sh \
   --bootstrap-server localhost:9092 \
   --add \
   --allow-principal User:producer \
@@ -102,7 +102,7 @@ docker exec catbox-kafka kafka-acls.sh \
 
 # Consumer ACLs - allow consumer user to read from order topics
 echo -e "${GREEN}Granting consumer permissions...${NC}"
-docker exec catbox-kafka kafka-acls.sh \
+docker exec routebox-kafka kafka-acls.sh \
   --bootstrap-server localhost:9092 \
   --add \
   --allow-principal User:consumer \
@@ -110,7 +110,7 @@ docker exec catbox-kafka kafka-acls.sh \
   --operation Describe \
   --topic OrderCreated
 
-docker exec catbox-kafka kafka-acls.sh \
+docker exec routebox-kafka kafka-acls.sh \
   --bootstrap-server localhost:9092 \
   --add \
   --allow-principal User:consumer \
@@ -122,7 +122,7 @@ docker exec catbox-kafka kafka-acls.sh \
 # NOTE: Using wildcard '*' for development convenience
 # PRODUCTION: Use specific consumer group names for better security
 # Example: --group order-consumer-group
-docker exec catbox-kafka kafka-acls.sh \
+docker exec routebox-kafka kafka-acls.sh \
   --bootstrap-server localhost:9092 \
   --add \
   --allow-principal User:consumer \
@@ -131,13 +131,13 @@ docker exec catbox-kafka kafka-acls.sh \
 
 # List all ACLs
 echo -e "${BLUE}Current ACL Configuration:${NC}"
-docker exec catbox-kafka kafka-acls.sh \
+docker exec routebox-kafka kafka-acls.sh \
   --bootstrap-server localhost:9092 \
   --list
 
 # Verify SCRAM users
 echo -e "${BLUE}Verifying SCRAM users:${NC}"
-docker exec catbox-kafka kafka-configs.sh \
+docker exec routebox-kafka kafka-configs.sh \
   --bootstrap-server localhost:9092 \
   --describe \
   --entity-type users
