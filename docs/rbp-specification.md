@@ -222,6 +222,34 @@ public class GcsRbpStorageService implements RbpStorageService {
 
 ### 4.2 Data Model Changes
 
+#### RBPSpec Value Object
+
+First, we introduce a value object to encapsulate RBP metadata:
+
+```java
+/**
+ * Really Big Payload specification containing metadata about externally stored payloads.
+ * This is stored as a JSON column in the database.
+ */
+public record RBPSpec(
+    String uri,                    // Storage URI (e.g., "azure://container/correlation-id")
+    Long sizeBytes,                // Original payload size in bytes
+    LocalDateTime storedAt         // When payload was stored externally
+) {
+    public RBPSpec {
+        if (uri == null || uri.isBlank()) {
+            throw new IllegalArgumentException("RBP URI cannot be null or blank");
+        }
+        if (sizeBytes == null || sizeBytes <= 0) {
+            throw new IllegalArgumentException("RBP size must be positive");
+        }
+        if (storedAt == null) {
+            throw new IllegalArgumentException("RBP storedAt cannot be null");
+        }
+    }
+}
+```
+
 #### OutboxEvent Entity Enhancement
 
 ```java
@@ -230,25 +258,63 @@ public class GcsRbpStorageService implements RbpStorageService {
 public class OutboxEvent {
     // ... existing fields ...
     
-    @Column
-    private Boolean isRbp = false; // Flag indicating payload is externally stored
+    /**
+     * Optional RBP specification. Present when payload is stored externally.
+     * Stored as JSON in the database.
+     */
+    @Column(columnDefinition = "TEXT")
+    @Convert(converter = RBPSpecConverter.class)
+    private RBPSpec rbp;
     
-    @Column
-    private String rbpUri; // URI/path to external payload (e.g., "s3://bucket/key")
+    // When rbp is present, the `payload` column contains metadata/reference only
     
-    @Column
-    private Long rbpSizeBytes; // Original payload size in bytes
+    public Optional<RBPSpec> getRbp() {
+        return Optional.ofNullable(rbp);
+    }
     
-    @Column
-    private LocalDateTime rbpStoredAt; // When payload was stored externally
+    public void setRbp(RBPSpec rbp) {
+        this.rbp = rbp;
+    }
+}
+```
+
+#### JPA Converter for RBPSpec
+
+```java
+@Converter
+public class RBPSpecConverter implements AttributeConverter<RBPSpec, String> {
+    private final ObjectMapper objectMapper = new ObjectMapper()
+        .registerModule(new JavaTimeModule());
     
-    // When isRbp=true, the `payload` column contains metadata/reference only
+    @Override
+    public String convertToDatabaseColumn(RBPSpec rbpSpec) {
+        if (rbpSpec == null) {
+            return null;
+        }
+        try {
+            return objectMapper.writeValueAsString(rbpSpec);
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException("Failed to serialize RBPSpec", e);
+        }
+    }
+    
+    @Override
+    public RBPSpec convertToEntityAttribute(String dbData) {
+        if (dbData == null || dbData.isBlank()) {
+            return null;
+        }
+        try {
+            return objectMapper.readValue(dbData, RBPSpec.class);
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException("Failed to deserialize RBPSpec", e);
+        }
+    }
 }
 ```
 
 **Migration Strategy:**
-- Add new columns with default values (backwards compatible)
-- Existing events continue to work (isRbp=false, rbpUri=null)
+- Add single `rbp` column with TEXT type (stores JSON)
+- Existing events continue to work (rbp=null)
 - No data migration required
 - **Correlation ID Requirement**: For RBP events, a correlation ID is required and will be auto-generated if not provided. This correlation ID serves as the unique retrieval key for the payload.
 
@@ -256,16 +322,23 @@ public class OutboxEvent {
 
 ```sql
 ALTER TABLE outbox_events 
-ADD COLUMN is_rbp BOOLEAN DEFAULT FALSE,
-ADD COLUMN rbp_uri VARCHAR(2048),
-ADD COLUMN rbp_size_bytes BIGINT,
-ADD COLUMN rbp_stored_at TIMESTAMP;
+ADD COLUMN rbp TEXT;
 
--- Optional index for RBP cleanup queries
+-- Optional index for RBP cleanup queries (PostgreSQL example with JSON path)
 CREATE INDEX idx_outbox_events_rbp_cleanup 
-ON outbox_events(rbp_stored_at, is_rbp) 
-WHERE is_rbp = TRUE AND sent_at IS NOT NULL;
+ON outbox_events((rbp->>'storedAt'))
+WHERE rbp IS NOT NULL AND sent_at IS NOT NULL;
+
+-- For databases without JSON support, the converter handles JSON serialization
 ```
+
+**Benefits of the Optional Approach:**
+- **Type Safety**: `Optional<RBPSpec>` provides compile-time safety and clear semantics
+- **Null Safety**: Eliminates need for null checks on individual fields
+- **Clean API**: `event.getRbp().ifPresent(payload -> ...)` provides elegant conditional logic
+- **Cohesion**: Related RBP fields are grouped together in a single value object
+- **Extensibility**: Easy to add new RBP metadata fields without schema changes (just update JSON)
+- **Single Column**: Reduces schema complexity - one TEXT column instead of multiple columns
 
 ### 4.3 Client API Design
 
@@ -319,15 +392,19 @@ public class DefaultOutboxClient implements OutboxClient {
         // Store payload externally
         String rbpUri = rbpStorage.store(effectiveCorrelationId, payloadBytes);
         
+        // Create RBPSpec with metadata
+        RBPSpec rbpSpec = new RBPSpec(
+            rbpUri,
+            (long) payloadBytes.length,
+            LocalDateTime.now()
+        );
+        
         // Create lightweight reference event
         OutboxEvent event = new OutboxEvent(
             aggregateType, aggregateId, eventType, effectiveCorrelationId,
             createRbpReferencePayload(effectiveCorrelationId)
         );
-        event.setIsRbp(true);
-        event.setRbpUri(rbpUri);
-        event.setRbpSizeBytes((long) payloadBytes.length);
-        event.setRbpStoredAt(LocalDateTime.now());
+        event.setRbp(rbpSpec);  // Set the RBP specification
         
         outboxEventRepository.save(event);
     }
@@ -386,19 +463,19 @@ public class DefaultRbpClient implements RbpClient {
     public byte[] getRaw(String correlationId) {
         OutboxEvent event = repository.findByCorrelationId(correlationId)
             .orElseThrow(() -> new RbpNotFoundException(correlationId));
-            
-        if (!Boolean.TRUE.equals(event.getIsRbp())) {
-            throw new IllegalStateException("Event is not an RBP: " + correlationId);
-        }
         
-        return storageService.retrieve(event.getRbpUri());
+        // Use Optional pattern to check if RBP is present
+        return event.getRbp()
+            .map(rbpSpec -> storageService.retrieve(rbpSpec.uri()))
+            .orElseThrow(() -> new IllegalStateException(
+                "Event is not an RBP: " + correlationId));
     }
     
     @Override
     public boolean exists(String correlationId) {
         return repository.findByCorrelationId(correlationId)
-            .map(e -> Boolean.TRUE.equals(e.getIsRbp()))
-            .orElse(false);
+            .flatMap(OutboxEvent::getRbp)
+            .isPresent();
     }
 }
 ```
@@ -427,10 +504,26 @@ public class OrderEventConsumer {
 
 The OutboxEventPublisher continues to work without modification:
 - For normal events, it publishes the payload as usual
-- For RBP events (isRbp=true), it publishes only the small reference payload
+- For RBP events (when `event.getRbp().isPresent()`), it publishes only the small reference payload
 - Consumers detect the RBP reference and use RbpClient to fetch the actual data
 
 **No changes required to OutboxEventPublisher** - it remains payload-agnostic.
+
+**Example Usage in Event Processing:**
+```java
+// Processing outbox events
+public void processEvent(OutboxEvent event) {
+    // Use Optional pattern to handle RBP events
+    event.getRbp().ifPresent(rbpSpec -> {
+        log.info("Publishing RBP event with URI: {}, size: {} bytes", 
+                 rbpSpec.uri(), rbpSpec.sizeBytes());
+        // Additional RBP-specific logging or metrics
+    });
+    
+    // Publish to Kafka (works for both RBP and normal events)
+    kafkaTemplate.send(event.getEventType(), event.getPayload());
+}
+```
 
 ### 4.5 Lifecycle Management
 
@@ -446,15 +539,17 @@ public void cleanupExpiredRbps() {
     List<OutboxEvent> expiredRbps = repository.findExpiredRbps(cutoff);
     
     for (OutboxEvent event : expiredRbps) {
-        try {
-            storageService.delete(event.getRbpUri());
-            // Option: delete entire event or just clear RBP fields
-            event.setRbpUri(null);
-            event.setIsRbp(false);
-            repository.save(event);
-        } catch (Exception e) {
-            log.error("Failed to cleanup RBP: {}", event.getRbpUri(), e);
-        }
+        // Use Optional pattern to safely handle RBP cleanup
+        event.getRbp().ifPresent(rbpSpec -> {
+            try {
+                storageService.delete(rbpSpec.uri());
+                // Option: delete entire event or just clear RBP field
+                event.setRbp(null);
+                repository.save(event);
+            } catch (Exception e) {
+                log.error("Failed to cleanup RBP: {}", rbpSpec.uri(), e);
+            }
+        });
     }
 }
 ```
