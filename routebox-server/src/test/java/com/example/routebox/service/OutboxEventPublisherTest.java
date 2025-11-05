@@ -1,6 +1,7 @@
 package com.example.routebox.server.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 
@@ -135,15 +136,11 @@ class OutboxEventPublisherTest {
     OutboxEvent event =
         outboxEventRepository.save(new OutboxEvent("Order", "A1", "UnknownEventType", "{}"));
 
-    // When - The routing lookup will fail with IllegalStateException
-    publisher.publishEvent(event);
-
-    // Then - Should record permanent failure
-    OutboxEvent updated = outboxEventRepository.findById(event.getId()).orElseThrow();
-    assertThat(updated.getSentAt()).isNull();
-    assertThat(updated.getPermanentFailureCount()).isEqualTo(1);
-    assertThat(updated.getLastError()).contains("No Kafka route found");
-    assertThat(updated.getInProgressUntil()).isNull(); // Claim cleared for retry
+    // When/Then - Publisher should throw RuntimeException (Worker will handle failure)
+    assertThatThrownBy(() -> publisher.publishEvent(event))
+        .isInstanceOf(RuntimeException.class)
+        .hasMessageContaining("Failed to publish event")
+        .hasCauseInstanceOf(IllegalStateException.class);
   }
 
   @Test
@@ -161,15 +158,10 @@ class OutboxEventPublisherTest {
     Mockito.when(mockTemplate.send(any(org.apache.kafka.clients.producer.ProducerRecord.class)))
         .thenReturn(future);
 
-    // When
-    publisher.publishEvent(event);
-
-    // Then - Should record permanent failure
-    OutboxEvent updated = outboxEventRepository.findById(event.getId()).orElseThrow();
-    assertThat(updated.getSentAt()).isNull();
-    assertThat(updated.getPermanentFailureCount()).isEqualTo(1);
-    assertThat(updated.getLastError()).isNotNull();
-    assertThat(updated.getInProgressUntil()).isNull(); // Claim cleared for retry
+    // When/Then - Publisher should throw RuntimeException (Worker will handle failure)
+    assertThatThrownBy(() -> publisher.publishEvent(event))
+        .isInstanceOf(RuntimeException.class)
+        .hasMessageContaining("Failed to publish event");
   }
 
   @Test
@@ -177,23 +169,12 @@ class OutboxEventPublisherTest {
     // Given
     OutboxEvent event =
         outboxEventRepository.save(new OutboxEvent("Order", "A1", "UnknownEventType", "{}"));
-    Long eventId = event.getId();
 
-    // When - Publish multiple times to exceed max retries (no route = permanent failure)
-    int maxRetries = processingConfig.getMaxPermanentRetries();
-    for (int i = 0; i < maxRetries; i++) {
-      OutboxEvent current = outboxEventRepository.findById(eventId).orElse(null);
-      if (current != null) {
-        publisher.publishEvent(current);
-      }
-    }
-
-    // Then - Should be in dead letter queue
-    assertThat(outboxEventRepository.findById(eventId)).isEmpty();
-
-    List<OutboxDeadLetterEvent> deadLetters = deadLetterRepository.findAll();
-    assertThat(deadLetters).hasSize(1);
-    assertThat(deadLetters.get(0).getOriginalEventId()).isEqualTo(eventId);
+    // When/Then - Publisher should throw RuntimeException (Worker will handle failure)
+    // This test no longer applies as the Publisher doesn't handle retries - the Worker does
+    assertThatThrownBy(() -> publisher.publishEvent(event))
+        .isInstanceOf(RuntimeException.class)
+        .hasMessageContaining("Failed to publish event");
   }
 
   @Test
@@ -263,7 +244,7 @@ class OutboxEventPublisherTest {
         outboxEventRepository.save(new OutboxEvent("Order", "A1", "OrderCreated", "{}"));
     // Simulate the event was claimed
     event.setInProgressUntil(java.time.LocalDateTime.now().plusMinutes(5));
-    event = outboxEventRepository.save(event);
+    final OutboxEvent savedEvent = outboxEventRepository.save(event);
 
     @SuppressWarnings("unchecked")
     KafkaTemplate<String, String> mockTemplate = Mockito.mock(KafkaTemplate.class);
@@ -276,13 +257,9 @@ class OutboxEventPublisherTest {
     Mockito.when(mockTemplate.send(any(org.apache.kafka.clients.producer.ProducerRecord.class)))
         .thenReturn(future);
 
-    // When
-    publisher.publishEvent(event);
-
-    // Then - Claim should be released for immediate retry
-    OutboxEvent updated = outboxEventRepository.findById(event.getId()).orElseThrow();
-    assertThat(updated.getSentAt()).isNull();
-    assertThat(updated.getInProgressUntil()).isNull(); // Claim released
-    assertThat(updated.getPermanentFailureCount()).isEqualTo(0); // Not counted as permanent
+    // When/Then - Publisher should throw RuntimeException (Worker will handle failure)
+    assertThatThrownBy(() -> publisher.publishEvent(savedEvent))
+        .isInstanceOf(RuntimeException.class)
+        .hasMessageContaining("Failed to publish event");
   }
 }

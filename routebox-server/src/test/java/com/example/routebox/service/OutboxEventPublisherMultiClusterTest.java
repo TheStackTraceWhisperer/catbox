@@ -1,6 +1,7 @@
 package com.example.routebox.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 
@@ -147,13 +148,10 @@ class OutboxEventPublisherMultiClusterTest {
         .thenReturn(successFuture)
         .thenReturn(failureFuture);
 
-    // When
-    publisher.publishEvent(event);
-
-    // Then - Should not be marked as sent due to one failure
-    OutboxEvent updated = outboxEventRepository.findById(event.getId()).orElseThrow();
-    assertThat(updated.getSentAt()).isNull();
-    assertThat(updated.getInProgressUntil()).isNull(); // Claim cleared for retry
+    // When/Then - Publisher should throw RuntimeException (Worker will handle failure)
+    assertThatThrownBy(() -> publisher.publishEvent(event))
+        .isInstanceOf(RuntimeException.class)
+        .hasMessageContaining("Failed to publish event");
   }
 
   @Test
@@ -200,12 +198,10 @@ class OutboxEventPublisherMultiClusterTest {
     Mockito.when(mockTemplate.send(any(org.apache.kafka.clients.producer.ProducerRecord.class)))
         .thenReturn(failureFuture);
 
-    // When
-    publisher.publishEvent(event);
-
-    // Then - Should not be marked as sent
-    OutboxEvent updated = outboxEventRepository.findById(event.getId()).orElseThrow();
-    assertThat(updated.getSentAt()).isNull();
+    // When/Then - Publisher should throw RuntimeException (Worker will handle failure)
+    assertThatThrownBy(() -> publisher.publishEvent(event))
+        .isInstanceOf(RuntimeException.class)
+        .hasMessageContaining("Failed to publish event");
   }
 
   @Test
@@ -259,11 +255,9 @@ class OutboxEventPublisherMultiClusterTest {
         .thenReturn(failureFuture)
         .thenReturn(successFuture);
 
-    // When
-    publisher.publishEvent(event);
-
-    // Then - Should not be marked as sent because required failed
-    OutboxEvent updated = outboxEventRepository.findById(event.getId()).orElseThrow();
-    assertThat(updated.getSentAt()).isNull();
+    // When/Then - Publisher should throw RuntimeException (Worker will handle failure)
+    assertThatThrownBy(() -> publisher.publishEvent(event))
+        .isInstanceOf(RuntimeException.class)
+        .hasMessageContaining("Failed to publish event");
   }
 }
