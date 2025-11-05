@@ -71,4 +71,11 @@ class OutboxProcessingConfigTest {
     assertThat(config.getPollFixedDelay()).isEqualTo(java.time.Duration.ofSeconds(2));
     assertThat(config.getPollInitialDelay()).isEqualTo(java.time.Duration.ofSeconds(10));
   }
+
+  @Test
+  void config_hasBackpressureSettings() {
+    // Then - Backpressure settings should have correct defaults
+    assertThat(config.getWorkerConcurrency()).isEqualTo(50);
+    assertThat(config.getQueueCapacity()).isEqualTo(200);
+  }
 }
