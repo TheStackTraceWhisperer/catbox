@@ -23,6 +23,7 @@ import org.springframework.kafka.core.DefaultKafkaConsumerFactory;
 import org.springframework.kafka.listener.ContainerProperties;
 import org.springframework.kafka.listener.KafkaMessageListenerContainer;
 import org.springframework.kafka.listener.MessageListener;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.testcontainers.containers.KafkaContainer;
@@ -35,6 +36,7 @@ import org.testcontainers.utility.DockerImageName;
  * End-to-End test for dynamic Kafka routing across multiple clusters. Tests that events are routed
  * to the correct Kafka cluster based on routing rules.
  */
+@ActiveProfiles("azuresql")
 @SpringBootTest(classes = RouteBoxServerApplication.class)
 @Testcontainers
 class E2EPollerMultiClusterTest {

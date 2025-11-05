@@ -22,11 +22,13 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.kafka.core.DefaultKafkaProducerFactory;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.test.annotation.DirtiesContext;
+import org.springframework.test.context.ActiveProfiles;
 
 /**
  * Tests to verify SSL bundle configuration in DynamicKafkaTemplateFactory. This test uses mocked
  * SslBundles to avoid needing actual SSL certificates.
  */
+@ActiveProfiles("azuresql")
 @SpringBootTest(
     classes = {
       TestKafkaOnlyApplication.class,

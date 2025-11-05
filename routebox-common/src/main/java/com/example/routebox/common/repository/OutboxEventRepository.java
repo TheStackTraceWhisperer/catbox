@@ -14,18 +14,6 @@ import org.springframework.stereotype.Repository;
 public interface OutboxEventRepository
     extends JpaRepository<OutboxEvent, Long>, JpaSpecificationExecutor<OutboxEvent> {
 
-  @Query(
-      value =
-          """
-        SELECT TOP (:batchSize) * FROM outbox_events WITH (UPDLOCK, READPAST, ROWLOCK)
-        WHERE sent_at IS NULL
-        AND (in_progress_until IS NULL OR in_progress_until < :now)
-        ORDER BY created_at ASC
-        """,
-      nativeQuery = true)
-  List<OutboxEvent> claimPendingEvents(
-      @Param("now") LocalDateTime now, @Param("batchSize") int batchSize);
-
   List<OutboxEvent> findBySentAtIsNullOrderByCreatedAtAsc();
 
   List<OutboxEvent> findAllByOrderByCreatedAtAsc();

@@ -27,6 +27,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.kafka.support.SendResult;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
@@ -39,6 +40,7 @@ import org.testcontainers.junit.jupiter.Testcontainers;
  * BlockingQueue properly limits concurrent publishing operations.
  */
 @SpringBootTest(classes = RouteBoxServerApplication.class)
+@ActiveProfiles("azuresql")
 @Testcontainers
 class OutboxEventBackpressureTest {
 
@@ -79,7 +81,7 @@ class OutboxEventBackpressureTest {
   @BeforeEach
   void setUp() {
     eventRepository.deleteAll();
-    
+
     // Clear the queue - workers might be consuming
     while (!eventQueue.isEmpty()) {
       eventQueue.poll();
@@ -180,7 +182,7 @@ class OutboxEventBackpressureTest {
     // but with 5 workers and 1000ms delay, most should still be queued
     OutboxEvent extraEvent = new OutboxEvent("Order", "order-extra", "OrderCreated", "{}");
     extraEvent.setId(999L);
-    
+
     // Queue should have events (may not be completely full due to workers)
     int sizeBeforeAttempt = eventQueue.size();
     boolean added = eventQueue.offer(extraEvent, 50, TimeUnit.MILLISECONDS);

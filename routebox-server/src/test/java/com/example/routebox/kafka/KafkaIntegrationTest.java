@@ -26,6 +26,7 @@ import org.springframework.kafka.listener.MessageListener;
 import org.springframework.kafka.test.EmbeddedKafkaBroker;
 import org.springframework.kafka.test.context.EmbeddedKafka;
 import org.springframework.test.annotation.DirtiesContext;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 
@@ -34,6 +35,7 @@ import org.springframework.test.context.DynamicPropertySource;
  * can: 1. Read test properties for a cluster 2. Build a template for that cluster 3. Send a message
  * to the EmbeddedKafka broker
  */
+@ActiveProfiles("azuresql")
 @SpringBootTest(classes = TestKafkaOnlyApplication.class)
 @EmbeddedKafka(partitions = 1, topics = KafkaIntegrationTest.TEST_TOPIC)
 @DirtiesContext

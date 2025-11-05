@@ -23,6 +23,7 @@ import org.springframework.kafka.core.DefaultKafkaConsumerFactory;
 import org.springframework.kafka.listener.ContainerProperties;
 import org.springframework.kafka.listener.KafkaMessageListenerContainer;
 import org.springframework.kafka.listener.MessageListener;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.testcontainers.containers.KafkaContainer;
@@ -35,6 +36,7 @@ import org.testcontainers.utility.DockerImageName;
  * End-to-End test for the OutboxEventPoller, OutboxEventClaimer, and OutboxEventPublisher. Tests
  * the complete processing loop from event creation to Kafka publication.
  */
+@ActiveProfiles("azuresql")
 @SpringBootTest(classes = RouteBoxServerApplication.class)
 @Testcontainers
 class E2EPollerTest {

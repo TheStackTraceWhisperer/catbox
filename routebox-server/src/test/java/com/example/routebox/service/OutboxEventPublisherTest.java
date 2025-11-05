@@ -11,9 +11,7 @@ import com.example.routebox.server.RouteBoxServerApplication;
 import com.example.routebox.server.config.DynamicKafkaTemplateFactory;
 import com.example.routebox.server.config.OutboxProcessingConfig;
 import com.example.routebox.server.config.OutboxRoutingConfig;
-import com.example.routebox.server.entity.OutboxDeadLetterEvent;
 import com.example.routebox.server.repository.OutboxDeadLetterEventRepository;
-import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.clients.producer.RecordMetadata;
@@ -25,6 +23,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.kafka.support.SendResult;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
@@ -33,6 +32,7 @@ import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
 /** Tests for OutboxEventPublisher focusing on permanent vs transient failure classification. */
+@ActiveProfiles("azuresql")
 @SpringBootTest(classes = RouteBoxServerApplication.class)
 @Testcontainers
 class OutboxEventPublisherTest {

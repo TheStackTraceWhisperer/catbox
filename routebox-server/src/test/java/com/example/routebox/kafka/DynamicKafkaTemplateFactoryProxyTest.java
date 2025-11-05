@@ -10,12 +10,14 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.ApplicationContext;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.test.annotation.DirtiesContext;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.TestPropertySource;
 
 /**
  * Tests to verify that KafkaTemplate instances created by DynamicKafkaTemplateFactory are properly
  * managed Spring beans with AOP proxy support.
  */
+@ActiveProfiles("azuresql")
 @SpringBootTest(classes = TestKafkaOnlyApplication.class)
 @TestPropertySource(
     properties = {

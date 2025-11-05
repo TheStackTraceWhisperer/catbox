@@ -5,12 +5,14 @@ import static org.assertj.core.api.Assertions.assertThat;
 import com.example.routebox.common.entity.OutboxEvent;
 import com.example.routebox.common.repository.OutboxEventRepository;
 import com.example.routebox.server.RouteBoxServerApplication;
+import com.example.routebox.server.service.claim.EventClaimStrategy;
 import java.time.LocalDateTime;
 import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.transaction.annotation.Transactional;
@@ -20,6 +22,7 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 
 @SpringBootTest(classes = RouteBoxServerApplication.class)
 @Transactional
+@ActiveProfiles("azuresql")
 @Testcontainers
 class OutboxEventClaimTest {
 
@@ -46,6 +49,8 @@ class OutboxEventClaimTest {
 
   @Autowired OutboxEventRepository outboxEventRepository;
 
+  @Autowired EventClaimStrategy claimStrategy;
+
   @BeforeEach
   void setup() {
     outboxEventRepository.deleteAll();
@@ -60,7 +65,7 @@ class OutboxEventClaimTest {
 
     // When: Claim events
     LocalDateTime now = LocalDateTime.now();
-    List<OutboxEvent> claimed = outboxEventRepository.claimPendingEvents(now, 10);
+    List<OutboxEvent> claimed = claimStrategy.claimPendingEvents(now, 10);
 
     // Then: Events should be claimed
     assertThat(claimed).hasSize(3);
@@ -78,7 +83,7 @@ class OutboxEventClaimTest {
 
     // When: Claim events with batch size of 2
     LocalDateTime now = LocalDateTime.now();
-    List<OutboxEvent> claimed = outboxEventRepository.claimPendingEvents(now, 2);
+    List<OutboxEvent> claimed = claimStrategy.claimPendingEvents(now, 2);
 
     // Then: Only 2 events should be claimed
     assertThat(claimed).hasSize(2);
@@ -96,7 +101,7 @@ class OutboxEventClaimTest {
 
     // When: Claim events
     LocalDateTime now = LocalDateTime.now();
-    List<OutboxEvent> claimed = outboxEventRepository.claimPendingEvents(now, 10);
+    List<OutboxEvent> claimed = claimStrategy.claimPendingEvents(now, 10);
 
     // Then: Only unsent events should be claimed
     assertThat(claimed).hasSize(2);
@@ -117,7 +122,7 @@ class OutboxEventClaimTest {
 
     // When: Claim events
     LocalDateTime now = LocalDateTime.now();
-    List<OutboxEvent> claimed = outboxEventRepository.claimPendingEvents(now, 10);
+    List<OutboxEvent> claimed = claimStrategy.claimPendingEvents(now, 10);
 
     // Then: Only events not in progress should be claimed
     assertThat(claimed).hasSize(2);
@@ -137,7 +142,7 @@ class OutboxEventClaimTest {
 
     // When: Claim events
     LocalDateTime now = LocalDateTime.now();
-    List<OutboxEvent> claimed = outboxEventRepository.claimPendingEvents(now, 10);
+    List<OutboxEvent> claimed = claimStrategy.claimPendingEvents(now, 10);
 
     // Then: Both events should be claimed, including the one with expired lease
     assertThat(claimed).hasSize(2);
@@ -167,7 +172,7 @@ class OutboxEventClaimTest {
 
     // When: Claim events
     LocalDateTime now = LocalDateTime.now();
-    List<OutboxEvent> claimed = outboxEventRepository.claimPendingEvents(now, 10);
+    List<OutboxEvent> claimed = claimStrategy.claimPendingEvents(now, 10);
 
     // Then: Events should be ordered by created_at (event2, then event1, then event3)
     assertThat(claimed).hasSize(3);

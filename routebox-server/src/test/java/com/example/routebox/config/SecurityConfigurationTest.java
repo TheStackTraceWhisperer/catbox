@@ -9,12 +9,14 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.kafka.KafkaProperties;
 import org.springframework.boot.ssl.SslBundles;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.TestPropertySource;
 
 /**
  * Test to verify that the security configuration (SSL bundles and SASL) is properly loaded from
  * application.yml and available in the application context.
  */
+@ActiveProfiles("azuresql")
 @SpringBootTest(classes = TestKafkaOnlyApplication.class)
 @TestPropertySource(
     properties = {

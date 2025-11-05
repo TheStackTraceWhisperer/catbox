@@ -10,12 +10,14 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.ApplicationContext;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.test.annotation.DirtiesContext;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.TestPropertySource;
 
 /**
  * Tests to verify the eviction logic in DynamicKafkaTemplateFactory. These tests validate that the
  * eviction mechanism works correctly without relying on long waits for idle timeouts.
  */
+@ActiveProfiles("azuresql")
 @SpringBootTest(classes = TestKafkaOnlyApplication.class)
 @TestPropertySource(
     properties = {

@@ -14,9 +14,11 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.kafka.core.DefaultKafkaProducerFactory;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.test.annotation.DirtiesContext;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.TestPropertySource;
 
 /** Tests to verify that DynamicKafkaTemplateFactory properly handles SSL Bundle configuration. */
+@ActiveProfiles("azuresql")
 @SpringBootTest(classes = TestKafkaOnlyApplication.class)
 @TestPropertySource(
     properties = {
