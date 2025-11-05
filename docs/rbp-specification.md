@@ -268,14 +268,33 @@ public class OutboxEvent {
     
     // When rbp is present, the `payload` column contains metadata/reference only
     
-    public Optional<RBPSpec> getRbp() {
+    /**
+     * Canonical-style accessor for RBP specification.
+     * @return Optional containing RBPSpec if present, empty otherwise
+     */
+    public Optional<RBPSpec> rbp() {
         return Optional.ofNullable(rbp);
+    }
+    
+    /**
+     * Traditional getter for RBP specification (for JPA/framework compatibility).
+     * Use rbp() for cleaner code.
+     */
+    public Optional<RBPSpec> getRbp() {
+        return rbp();
     }
     
     public void setRbp(RBPSpec rbp) {
         this.rbp = rbp;
     }
 }
+```
+
+**Note on Records**: While JPA entities cannot be records (they need to be mutable for JPA to work), we provide a canonical-style accessor `rbp()` that mimics the record pattern for cleaner code. This allows usage like:
+
+```java
+event.rbp().ifPresent(spec -> ...);  // Clean, canonical style
+event.getRbp().ifPresent(spec -> ...);  // Traditional style (also works)
 ```
 
 #### JPA Converter for RBPSpec
@@ -335,7 +354,7 @@ WHERE rbp IS NOT NULL AND sent_at IS NOT NULL;
 **Benefits of the Optional Approach:**
 - **Type Safety**: `Optional<RBPSpec>` provides compile-time safety and clear semantics
 - **Null Safety**: Eliminates need for null checks on individual fields
-- **Clean API**: `event.getRbp().ifPresent(payload -> ...)` provides elegant conditional logic
+- **Clean API**: `event.rbp().ifPresent(payload -> ...)` provides elegant conditional logic with canonical-style accessor
 - **Cohesion**: Related RBP fields are grouped together in a single value object
 - **Extensibility**: Easy to add new RBP metadata fields without schema changes (just update JSON)
 - **Single Column**: Reduces schema complexity - one TEXT column instead of multiple columns
@@ -464,8 +483,8 @@ public class DefaultRbpClient implements RbpClient {
         OutboxEvent event = repository.findByCorrelationId(correlationId)
             .orElseThrow(() -> new RbpNotFoundException(correlationId));
         
-        // Use Optional pattern to check if RBP is present
-        return event.getRbp()
+        // Use Optional pattern with canonical-style accessor
+        return event.rbp()
             .map(rbpSpec -> storageService.retrieve(rbpSpec.uri()))
             .orElseThrow(() -> new IllegalStateException(
                 "Event is not an RBP: " + correlationId));
@@ -474,7 +493,7 @@ public class DefaultRbpClient implements RbpClient {
     @Override
     public boolean exists(String correlationId) {
         return repository.findByCorrelationId(correlationId)
-            .flatMap(OutboxEvent::getRbp)
+            .flatMap(OutboxEvent::rbp)
             .isPresent();
     }
 }
@@ -504,7 +523,7 @@ public class OrderEventConsumer {
 
 The OutboxEventPublisher continues to work without modification:
 - For normal events, it publishes the payload as usual
-- For RBP events (when `event.getRbp().isPresent()`), it publishes only the small reference payload
+- For RBP events (when `event.rbp().isPresent()`), it publishes only the small reference payload
 - Consumers detect the RBP reference and use RbpClient to fetch the actual data
 
 **No changes required to OutboxEventPublisher** - it remains payload-agnostic.
@@ -513,8 +532,8 @@ The OutboxEventPublisher continues to work without modification:
 ```java
 // Processing outbox events
 public void processEvent(OutboxEvent event) {
-    // Use Optional pattern to handle RBP events
-    event.getRbp().ifPresent(rbpSpec -> {
+    // Use Optional pattern with canonical-style accessor
+    event.rbp().ifPresent(rbpSpec -> {
         log.info("Publishing RBP event with URI: {}, size: {} bytes", 
                  rbpSpec.uri(), rbpSpec.sizeBytes());
         // Additional RBP-specific logging or metrics
@@ -539,8 +558,8 @@ public void cleanupExpiredRbps() {
     List<OutboxEvent> expiredRbps = repository.findExpiredRbps(cutoff);
     
     for (OutboxEvent event : expiredRbps) {
-        // Use Optional pattern to safely handle RBP cleanup
-        event.getRbp().ifPresent(rbpSpec -> {
+        // Use Optional pattern with canonical-style accessor
+        event.rbp().ifPresent(rbpSpec -> {
             try {
                 storageService.delete(rbpSpec.uri());
                 // Option: delete entire event or just clear RBP field
