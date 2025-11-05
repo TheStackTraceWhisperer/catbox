@@ -249,7 +249,7 @@ public class DefaultOutboxClient implements OutboxClient {
     
     private String createRbpReferencePayload(String correlationId) {
         // Small JSON with reference information
-        return String.format("{\"rbpRef\":\"%s\",\"message\":\"Retrieve via client.getRbp()\"}", 
+        return String.format("{\"rbpRef\":\"%s\",\"message\":\"Retrieve via RbpClient.get()\"}", 
                            correlationId);
     }
 }
