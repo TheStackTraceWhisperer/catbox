@@ -6,6 +6,7 @@ import com.example.routebox.server.config.OutboxProcessingConfig;
 import com.example.routebox.server.entity.OutboxDeadLetterEvent;
 import com.example.routebox.server.metrics.OutboxMetricsService;
 import com.example.routebox.server.repository.OutboxDeadLetterEventRepository;
+import java.util.Set;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -118,5 +119,55 @@ public class OutboxFailureHandler {
 
     event.setInProgressUntil(null);
     outboxEventRepository.save(event);
+  }
+
+  /**
+   * Handles a failure for an event by determining if it's permanent or transient and taking
+   * appropriate action. This is the main entry point for failure handling from the worker.
+   *
+   * @param event The event that failed
+   * @param exception The exception that occurred
+   */
+  public void handleFailure(OutboxEvent event, Exception exception) {
+    // Record failure metric first to ensure it's tracked even if logging fails
+    metricsService.recordPublishFailure();
+
+    // Determine if this is a permanent or transient failure
+    if (isPermanentFailure(exception)) {
+      // PERMANENT: Call the failure handler
+      log.error(
+          "Permanent failure publishing event: {}. Recording failure. Error: {}",
+          event.getId(),
+          exception.getMessage());
+      recordPermanentFailure(event.getId(), exception.getMessage());
+    } else {
+      // TRANSIENT: Release the claim so event can be retried immediately
+      log.warn(
+          "Transient failure publishing event: {}. Releasing claim for re-polling. Error: {}",
+          event.getId(),
+          exception.getMessage());
+      releaseClaimForTransientFailure(event.getId());
+    }
+  }
+
+  /**
+   * Classifies exceptions based on the configurable list. This method recursively checks the
+   * exception and its causes.
+   */
+  private boolean isPermanentFailure(Throwable e) {
+    final Set<String> permanentErrors = processingConfig.getPermanentExceptionSet();
+
+    Throwable current = e;
+    while (current != null) {
+      String exceptionName = current.getClass().getName();
+      if (permanentErrors.contains(exceptionName)) {
+        return true;
+      }
+      // Move to the cause, but stop if we hit a circular reference
+      current = (current.getCause() == current) ? null : current.getCause();
+    }
+
+    // No match found in the exception chain
+    return false;
   }
 }

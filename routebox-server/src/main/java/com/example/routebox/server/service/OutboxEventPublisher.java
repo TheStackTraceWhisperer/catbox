@@ -45,17 +45,17 @@ public class OutboxEventPublisher {
   @Observed(name = "outbox.event.publish", contextualName = "publish-outbox-event")
   @Transactional(propagation = Propagation.REQUIRES_NEW)
   public void publishEvent(OutboxEvent event) {
-    // Add correlationId to span if present
-    if (event.getCorrelationId() != null && tracer.currentSpan() != null) {
-      tracer.currentSpan().tag("correlation.id", event.getCorrelationId());
-      tracer.currentSpan().tag("event.type", event.getEventType());
-      tracer.currentSpan().tag("aggregate.type", event.getAggregateType());
-      tracer.currentSpan().tag("aggregate.id", event.getAggregateId());
-    }
-
-    LocalDateTime claimTime = calculateEventClaimTime(event);
-
     try {
+      // Add correlationId to span if present
+      if (event.getCorrelationId() != null && tracer.currentSpan() != null) {
+        tracer.currentSpan().tag("correlation.id", event.getCorrelationId());
+        tracer.currentSpan().tag("event.type", event.getEventType());
+        tracer.currentSpan().tag("aggregate.type", event.getAggregateType());
+        tracer.currentSpan().tag("aggregate.id", event.getAggregateId());
+      }
+
+      LocalDateTime claimTime = calculateEventClaimTime(event);
+
       // Publish to Kafka using our dynamic, routing factory
       publishToKafka(event);
 
@@ -74,27 +74,9 @@ public class OutboxEventPublisher {
       // Record metrics
       metricsService.recordPublishSuccess();
       metricsService.recordProcessingDuration(claimTime);
-
     } catch (Exception e) {
-      // Record failure metric first to ensure it's tracked even if logging fails
-      metricsService.recordPublishFailure();
-
-      // FAILURE: Differentiate error type
-      if (isPermanentFailure(e)) {
-        // PERMANENT: Call the failure handler
-        log.error(
-            "Permanent failure publishing event: {}. Recording failure. Error: {}",
-            event.getId(),
-            e.getMessage());
-        failureHandler.recordPermanentFailure(event.getId(), e.getMessage());
-      } else {
-        // TRANSIENT: Release the claim so event can be retried immediately
-        log.warn(
-            "Transient failure publishing event: {}. Releasing claim for re-polling. Error: {}",
-            event.getId(),
-            e.getMessage());
-        failureHandler.releaseClaimForTransientFailure(event.getId());
-      }
+      // Re-throw as unchecked exception so it propagates to the Worker
+      throw new RuntimeException("Failed to publish event", e);
     }
   }
 
@@ -255,26 +237,5 @@ public class OutboxEventPublisher {
       default:
         throw new IllegalArgumentException("Unknown strategy: " + strategy);
     }
-  }
-
-  /**
-   * Classifies exceptions based on the configurable list. This method recursively checks the
-   * exception and its causes.
-   */
-  private boolean isPermanentFailure(Throwable e) {
-    final Set<String> permanentErrors = processingConfig.getPermanentExceptionSet();
-
-    Throwable current = e;
-    while (current != null) {
-      String exceptionName = current.getClass().getName();
-      if (permanentErrors.contains(exceptionName)) {
-        return true;
-      }
-      // Move to the cause, but stop if we hit a circular reference
-      current = (current.getCause() == current) ? null : current.getCause();
-    }
-
-    // No match found in the exception chain
-    return false;
   }
 }

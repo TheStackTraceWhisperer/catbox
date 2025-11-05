@@ -28,14 +28,14 @@ public class OutboxEventPoller {
 
       // Add each event to the queue. This will block if the queue is full,
       // providing natural backpressure
-      for (OutboxEvent event : claimedEvents) {
-        try {
+      try {
+        for (OutboxEvent event : claimedEvents) {
           eventQueue.put(event); // Blocks until space is available
-        } catch (InterruptedException e) {
-          Thread.currentThread().interrupt();
-          log.error("Poller interrupted while adding event to queue", e);
-          break; // Stop processing this batch
         }
+      } catch (InterruptedException e) {
+        Thread.currentThread().interrupt();
+        log.warn("Poller thread interrupted while queuing events. Stopping current poll cycle.");
+        // Allow the method to exit gracefully. Spring will reschedule the next run.
       }
     }
   }
