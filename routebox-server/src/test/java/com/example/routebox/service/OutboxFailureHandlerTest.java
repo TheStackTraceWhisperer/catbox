@@ -186,4 +186,29 @@ class OutboxFailureHandlerTest {
         .isInstanceOf(IllegalArgumentException.class)
         .hasMessageContaining("Event not found");
   }
+
+  @Test
+  void releaseClaimForTransientFailure_releasesEventClaim() {
+    // Given
+    OutboxEvent event =
+        outboxEventRepository.save(new OutboxEvent("Order", "A1", "OrderCreated", "{}"));
+    // Simulate that the event was claimed
+    event.setInProgressUntil(java.time.LocalDateTime.now().plusMinutes(5));
+    outboxEventRepository.save(event);
+
+    // When
+    failureHandler.releaseClaimForTransientFailure(event.getId());
+
+    // Then
+    OutboxEvent updated = outboxEventRepository.findById(event.getId()).orElseThrow();
+    assertThat(updated.getInProgressUntil()).isNull();
+  }
+
+  @Test
+  void releaseClaimForTransientFailure_throwsExceptionWhenEventNotFound() {
+    // When & Then
+    assertThatThrownBy(() -> failureHandler.releaseClaimForTransientFailure(99999L))
+        .isInstanceOf(IllegalArgumentException.class)
+        .hasMessageContaining("Event not found");
+  }
 }

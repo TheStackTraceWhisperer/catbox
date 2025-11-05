@@ -88,12 +88,12 @@ public class OutboxEventPublisher {
             e.getMessage());
         failureHandler.recordPermanentFailure(event.getId(), e.getMessage());
       } else {
-        // TRANSIENT: Log and let transaction roll back for later retry
+        // TRANSIENT: Release the claim so event can be retried immediately
         log.warn(
-            "Transient failure publishing event: {}. Will retry after ~{} ms. Error: {}",
+            "Transient failure publishing event: {}. Releasing claim for retry. Error: {}",
             event.getId(),
-            processingConfig.getClaimTimeout().toMillis(),
             e.getMessage());
+        failureHandler.releaseClaimForTransientFailure(event.getId());
       }
     }
   }

@@ -42,6 +42,9 @@ public class OrderEventListener {
    * <p>Uses OutboxFilter to deduplicate messages based on correlation ID. Only processes each
    * unique correlation ID once per consumer group.
    *
+   * <p>Error handling is managed by Spring Kafka's DefaultErrorHandler, which retries transient
+   * errors and routes permanent errors to a Dead Letter Topic (DLT).
+   *
    * @param message the JSON message payload
    * @param correlationId the correlation ID from the message header
    * @param acknowledgment manual acknowledgment for the message
@@ -53,7 +56,8 @@ public class OrderEventListener {
   public void handleOrderCreated(
       @Payload String message,
       @Header(value = "correlationId", required = false) String correlationId,
-      Acknowledgment acknowledgment) {
+      Acknowledgment acknowledgment)
+      throws Exception {
 
     log.debug("Received OrderCreated message - correlationId: {}", correlationId);
 
@@ -64,33 +68,15 @@ public class OrderEventListener {
       return;
     }
 
-    try {
-      // Parse the message
-      OrderCreatedPayload payload = objectMapper.readValue(message, OrderCreatedPayload.class);
+    // Parse the message
+    OrderCreatedPayload payload = objectMapper.readValue(message, OrderCreatedPayload.class);
 
-      // Process the event
-      processingService.processOrderCreated(payload, correlationId);
+    // Process the event
+    processingService.processOrderCreated(payload, correlationId);
 
-      // Acknowledge the message after successful processing
-      acknowledgment.acknowledge();
-      log.debug("Acknowledged OrderCreated message - correlationId: {}", correlationId);
-
-    } catch (OrderEventProcessingService.ProcessingException e) {
-      // For intermittent failures, don't acknowledge - message will be retried
-      log.error(
-          "Processing failed for OrderCreated - correlationId: {}. Message will be retried.",
-          correlationId,
-          e);
-      // Note: Not acknowledging will cause Kafka to redeliver the message
-
-    } catch (Exception e) {
-      // For unexpected errors, log and acknowledge to avoid blocking the queue
-      log.error(
-          "Unexpected error processing OrderCreated - correlationId: {}. Acknowledging to continue.",
-          correlationId,
-          e);
-      acknowledgment.acknowledge();
-    }
+    // Acknowledge the message after successful processing
+    acknowledgment.acknowledge();
+    log.debug("Acknowledged OrderCreated message - correlationId: {}", correlationId);
   }
 
   /**
@@ -98,6 +84,9 @@ public class OrderEventListener {
    *
    * <p>Uses OutboxFilter to deduplicate messages based on correlation ID. Only processes each
    * unique correlation ID once per consumer group.
+   *
+   * <p>Error handling is managed by Spring Kafka's DefaultErrorHandler, which retries transient
+   * errors and routes permanent errors to a Dead Letter Topic (DLT).
    *
    * @param message the JSON message payload
    * @param correlationId the correlation ID from the message header
@@ -110,7 +99,8 @@ public class OrderEventListener {
   public void handleOrderStatusChanged(
       @Payload String message,
       @Header(value = "correlationId", required = false) String correlationId,
-      Acknowledgment acknowledgment) {
+      Acknowledgment acknowledgment)
+      throws Exception {
 
     log.debug("Received OrderStatusChanged message - correlationId: {}", correlationId);
 
@@ -121,33 +111,15 @@ public class OrderEventListener {
       return;
     }
 
-    try {
-      // Parse the message
-      OrderStatusChangedPayload payload =
-          objectMapper.readValue(message, OrderStatusChangedPayload.class);
+    // Parse the message
+    OrderStatusChangedPayload payload =
+        objectMapper.readValue(message, OrderStatusChangedPayload.class);
 
-      // Process the event
-      processingService.processOrderStatusChanged(payload, correlationId);
+    // Process the event
+    processingService.processOrderStatusChanged(payload, correlationId);
 
-      // Acknowledge the message after successful processing
-      acknowledgment.acknowledge();
-      log.debug("Acknowledged OrderStatusChanged message - correlationId: {}", correlationId);
-
-    } catch (OrderEventProcessingService.ProcessingException e) {
-      // For intermittent failures, don't acknowledge - message will be retried
-      log.error(
-          "Processing failed for OrderStatusChanged - correlationId: {}. Message will be retried.",
-          correlationId,
-          e);
-      // Note: Not acknowledging will cause Kafka to redeliver the message
-
-    } catch (Exception e) {
-      // For unexpected errors, log and acknowledge to avoid blocking the queue
-      log.error(
-          "Unexpected error processing OrderStatusChanged - correlationId: {}. Acknowledging to continue.",
-          correlationId,
-          e);
-      acknowledgment.acknowledge();
-    }
+    // Acknowledge the message after successful processing
+    acknowledgment.acknowledge();
+    log.debug("Acknowledged OrderStatusChanged message - correlationId: {}", correlationId);
   }
 }

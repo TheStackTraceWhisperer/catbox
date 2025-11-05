@@ -98,4 +98,25 @@ public class OutboxFailureHandler {
       event.setLastError(null);
     }
   }
+
+  /**
+   * Releases the claim for an event that failed with a transient error. This allows the event to be
+   * retried on the next polling cycle instead of waiting for the full claim timeout.
+   *
+   * @param eventId The ID of the event to release
+   */
+  @Transactional(propagation = Propagation.REQUIRES_NEW)
+  public void releaseClaimForTransientFailure(Long eventId) {
+    OutboxEvent event =
+        outboxEventRepository
+            .findById(eventId)
+            .orElseThrow(() -> new IllegalArgumentException("Event not found: " + eventId));
+
+    log.warn(
+        "Releasing claim for event {} due to transient failure. Event will be retried on next poll.",
+        eventId);
+
+    event.setInProgressUntil(null);
+    outboxEventRepository.save(event);
+  }
 }
