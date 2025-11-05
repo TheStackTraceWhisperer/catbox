@@ -153,6 +153,10 @@ public class OutboxFailureHandler {
   /**
    * Classifies exceptions based on the configurable list. This method recursively checks the
    * exception and its causes.
+   *
+   * @param e The exception to classify
+   * @return true if the exception (or any of its causes) matches a permanent failure type
+   *     configured in the permanent-failure-exceptions list; false if it's a transient failure
    */
   private boolean isPermanentFailure(Throwable e) {
     final Set<String> permanentErrors = processingConfig.getPermanentExceptionSet();
