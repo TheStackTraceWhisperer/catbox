@@ -8,7 +8,7 @@ The Order Processor is a Kafka consumer application that demonstrates the use of
 - **Deduplication**: Uses `OutboxFilter` to prevent duplicate message processing
 - **Manual Acknowledgment**: Fine-grained control over message acknowledgment
 - **Simulated Processing**: Demonstrates happy path, duplicate handling, and intermittent failures
-- **Virtual Threads**: Leverages Java 21 virtual threads for efficient concurrency
+- **Virtual Threads**: Uses Java 21 virtual threads for concurrency
 - **Database Persistence**: Tracks processed messages in the database for multi-instance safety
 
 ## Architecture
@@ -285,7 +285,7 @@ public void processOrderShipped(OrderShippedPayload payload, String correlationI
 - **Virtual Threads**: Uses Java 21 virtual threads for efficient concurrency
 - **Batch Processing**: Kafka consumers can process messages in batches
 - **Database Indexes**: Unique index on correlation ID for fast lookups
-- **Connection Pooling**: Database connection pool for optimal performance
+- **Connection Pooling**: Database connection pool for performance
 
 ## Troubleshooting
 
