@@ -11,7 +11,12 @@ import org.springframework.kafka.annotation.EnableKafka;
 import org.springframework.kafka.config.ConcurrentKafkaListenerContainerFactory;
 import org.springframework.kafka.core.ConsumerFactory;
 import org.springframework.kafka.core.DefaultKafkaConsumerFactory;
+import org.springframework.kafka.core.KafkaTemplate;
+import org.springframework.kafka.listener.CommonErrorHandler;
 import org.springframework.kafka.listener.ContainerProperties;
+import org.springframework.kafka.listener.DeadLetterPublishingRecoverer;
+import org.springframework.kafka.listener.DefaultErrorHandler;
+import org.springframework.util.backoff.FixedBackOff;
 
 /**
  * Kafka consumer configuration for the order processor.
@@ -52,7 +57,37 @@ public class KafkaConsumerConfig {
   }
 
   @Bean
-  public ConcurrentKafkaListenerContainerFactory<String, String> kafkaListenerContainerFactory() {
+  public DeadLetterPublishingRecoverer deadLetterPublishingRecoverer(
+      KafkaTemplate<String, String> kafkaTemplate) {
+    return new DeadLetterPublishingRecoverer(
+        kafkaTemplate,
+        (record, ex) -> {
+          // Derive DLT name from original topic (e.g., OrderCreated -> OrderCreated.DLT)
+          String originalTopic = record.topic();
+          String dltTopic = originalTopic + ".DLT";
+          return new org.apache.kafka.common.TopicPartition(dltTopic, 0);
+        });
+  }
+
+  @Bean
+  public CommonErrorHandler defaultErrorHandler(
+      DeadLetterPublishingRecoverer deadLetterPublishingRecoverer) {
+    // Configure retry policy: 3 retries, 1 second apart
+    DefaultErrorHandler errorHandler =
+        new DefaultErrorHandler(deadLetterPublishingRecoverer, new FixedBackOff(1000L, 3L));
+
+    // Classify permanent errors that should not be retried
+    errorHandler.addNotRetryableExceptions(
+        NullPointerException.class,
+        IllegalArgumentException.class,
+        com.fasterxml.jackson.core.JsonProcessingException.class);
+
+    return errorHandler;
+  }
+
+  @Bean
+  public ConcurrentKafkaListenerContainerFactory<String, String> kafkaListenerContainerFactory(
+      CommonErrorHandler defaultErrorHandler) {
     ConcurrentKafkaListenerContainerFactory<String, String> factory =
         new ConcurrentKafkaListenerContainerFactory<>();
     factory.setConsumerFactory(consumerFactory());
@@ -62,6 +97,9 @@ public class KafkaConsumerConfig {
 
     // Set concurrency to leverage virtual threads
     factory.setConcurrency(3);
+
+    // Set the error handler
+    factory.setCommonErrorHandler(defaultErrorHandler);
 
     return factory;
   }

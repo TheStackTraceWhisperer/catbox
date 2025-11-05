@@ -255,4 +255,34 @@ class OutboxEventPublisherTest {
     assertThat(updated.getKafkaOffset()).isEqualTo(expectedOffset);
     assertThat(updated.getKafkaTimestamp()).isNotNull();
   }
+
+  @Test
+  void publishEvent_handlesTransientFailure_releaseClaim() throws Exception {
+    // Given
+    OutboxEvent event =
+        outboxEventRepository.save(new OutboxEvent("Order", "A1", "OrderCreated", "{}"));
+    // Simulate the event was claimed
+    event.setInProgressUntil(java.time.LocalDateTime.now().plusMinutes(5));
+    event = outboxEventRepository.save(event);
+
+    @SuppressWarnings("unchecked")
+    KafkaTemplate<String, String> mockTemplate = Mockito.mock(KafkaTemplate.class);
+    // Use a transient exception (not in permanent-failure-exceptions list)
+    CompletableFuture<SendResult<String, String>> future = new CompletableFuture<>();
+    future.completeExceptionally(
+        new org.apache.kafka.common.errors.TimeoutException("Transient network error"));
+
+    Mockito.when(kafkaTemplateFactory.getTemplate(eq("cluster-a"))).thenReturn(mockTemplate);
+    Mockito.when(mockTemplate.send(any(org.apache.kafka.clients.producer.ProducerRecord.class)))
+        .thenReturn(future);
+
+    // When
+    publisher.publishEvent(event);
+
+    // Then - Claim should be released for immediate retry
+    OutboxEvent updated = outboxEventRepository.findById(event.getId()).orElseThrow();
+    assertThat(updated.getSentAt()).isNull();
+    assertThat(updated.getInProgressUntil()).isNull(); // Claim released
+    assertThat(updated.getPermanentFailureCount()).isEqualTo(0); // Not counted as permanent
+  }
 }

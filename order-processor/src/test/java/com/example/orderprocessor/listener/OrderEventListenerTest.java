@@ -77,7 +77,7 @@ class OrderEventListenerTest {
   }
 
   @Test
-  void testHandleOrderCreated_ProcessingException_NotAcknowledged() throws Exception {
+  void testHandleOrderCreated_ProcessingException_Thrown() throws Exception {
     // Given
     String correlationId = "test-corr-fail";
     OrderCreatedPayload payload =
@@ -89,30 +89,36 @@ class OrderEventListenerTest {
         .when(processingService)
         .processOrderCreated(eq(payload), eq(correlationId));
 
-    // When
-    listener.handleOrderCreated(message, correlationId, acknowledgment);
-
-    // Then
-    verify(outboxFilter).deduped(correlationId, "order-processor");
-    verify(processingService).processOrderCreated(eq(payload), eq(correlationId));
-    verify(acknowledgment, never()).acknowledge();
+    // When/Then - Exception should propagate to be handled by DefaultErrorHandler
+    try {
+      listener.handleOrderCreated(message, correlationId, acknowledgment);
+      throw new AssertionError("Expected ProcessingException to be thrown");
+    } catch (OrderEventProcessingService.ProcessingException e) {
+      // Expected - error handler will retry this
+      verify(outboxFilter).deduped(correlationId, "order-processor");
+      verify(processingService).processOrderCreated(eq(payload), eq(correlationId));
+      verify(acknowledgment, never()).acknowledge();
+    }
   }
 
   @Test
-  void testHandleOrderCreated_UnexpectedException_Acknowledged() throws Exception {
+  void testHandleOrderCreated_JsonProcessingException_Thrown() throws Exception {
     // Given
     String correlationId = "test-corr-unexpected";
     String invalidMessage = "{ invalid json";
 
     when(outboxFilter.deduped(correlationId, "order-processor")).thenReturn(false);
 
-    // When
-    listener.handleOrderCreated(invalidMessage, correlationId, acknowledgment);
-
-    // Then
-    verify(outboxFilter).deduped(correlationId, "order-processor");
-    verify(processingService, never()).processOrderCreated(any(), anyString());
-    verify(acknowledgment).acknowledge(); // Should acknowledge to avoid blocking
+    // When/Then - Exception should propagate to be handled by DefaultErrorHandler
+    try {
+      listener.handleOrderCreated(invalidMessage, correlationId, acknowledgment);
+      throw new AssertionError("Expected JsonProcessingException to be thrown");
+    } catch (com.fasterxml.jackson.core.JsonProcessingException e) {
+      // Expected - error handler will route to DLT (non-retryable)
+      verify(outboxFilter).deduped(correlationId, "order-processor");
+      verify(processingService, never()).processOrderCreated(any(), anyString());
+      verify(acknowledgment, never()).acknowledge();
+    }
   }
 
   @Test
