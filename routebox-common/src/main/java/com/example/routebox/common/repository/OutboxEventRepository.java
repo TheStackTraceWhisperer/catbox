@@ -22,10 +22,11 @@ public interface OutboxEventRepository
   /**
    * Finds and pessimistically locks a batch of pending outbox events.
    * <p>
-   * This query uses standard JPA pessimistic locking with a "SKIP_LOCKED" hint.
+   * This query uses standard JPA pessimistic locking with a lock timeout hint set to -2,
+   * which tells Hibernate to use SKIP_LOCKED behavior (non-blocking lock acquisition).
    * This is the database-agnostic way to achieve the non-blocking "SELECT ... FOR UPDATE SKIP LOCKED"
    * (PostgreSQL/MySQL) or "SELECT ... WITH (UPDLOCK, READPAST)" (MS SQL) behavior.
-   * The JPA provider (Hibernate) will generate the correct dialect.
+   * The JPA provider (Hibernate) will generate the correct dialect-specific SQL.
    *
    * @param now      The current timestamp to find events whose claims have expired.
    * @param pageable A Pageable object (e.g., PageRequest.of(0, batchSize)) to limit the result set.
