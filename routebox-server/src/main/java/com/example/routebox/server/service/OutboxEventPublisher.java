@@ -90,7 +90,7 @@ public class OutboxEventPublisher {
       } else {
         // TRANSIENT: Release the claim so event can be retried immediately
         log.warn(
-            "Transient failure publishing event: {}. Releasing claim for retry. Error: {}",
+            "Transient failure publishing event: {}. Releasing claim for re-polling. Error: {}",
             event.getId(),
             e.getMessage());
         failureHandler.releaseClaimForTransientFailure(event.getId());
