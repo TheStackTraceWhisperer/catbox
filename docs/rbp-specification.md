@@ -166,6 +166,7 @@ public class OutboxEvent {
 - Add new columns with default values (backwards compatible)
 - Existing events continue to work (isRbp=false, rbpUri=null)
 - No data migration required
+- **Correlation ID Requirement**: For RBP events, a correlation ID is required and will be auto-generated if not provided. This correlation ID serves as the unique retrieval key for the payload.
 
 #### Database Schema
 
@@ -433,9 +434,13 @@ routebox:
 ### 5.3 Correlation ID as Security Key
 
 The correlation ID serves as the retrieval key. Considerations:
-- Use UUIDs for unpredictability
-- Consider adding HMAC signature for additional security
-- Implement rate limiting on RbpClient.get() to prevent abuse
+- **Uniqueness**: The correlationId field in OutboxEvent is marked as `unique = true` in the database schema, ensuring global uniqueness across all events
+- **Generation**: When not provided, the system automatically generates a UUID v4, providing unpredictability
+- **Security**: Consider adding HMAC signature for additional security in high-security environments
+- **Rate Limiting**: Implement rate limiting on RbpClient.get() to prevent abuse and enumeration attacks
+- **Access Control**: For sensitive payloads, consider additional authentication/authorization checks beyond correlation ID
+
+**Note on Uniqueness**: Since correlation IDs are globally unique in the current schema, they can safely be used as the sole retrieval key. If the schema changes in the future to allow non-unique correlation IDs, the retrieval API should be updated to use a composite key (e.g., `aggregateType + aggregateId + correlationId` or the outbox event ID).
 
 ## 6. Performance and Scalability
 
