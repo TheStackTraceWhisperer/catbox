@@ -52,7 +52,7 @@ outbox:
 
 ### Strategy 2: AT_LEAST_ONE
 
-The event is marked as "sent" if publishing succeeds to **at least one** of the clusters in the `clusters` list. This is useful for high-availability geographic replication. This prioritizes availability over consistency.
+The event is marked as "sent" if publishing succeeds to **at least one** of the clusters in the `clusters` list. This configuration provides high-availability for geographic replication and prioritizes availability over consistency.
 
 **Configuration:**
 ```yaml

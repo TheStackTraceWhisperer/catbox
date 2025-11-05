@@ -59,9 +59,9 @@ management:
       probability: 0.1
 ```
 
-**Recommendations:**
+**Configuration options:**
 - **Development**: 1.0 (100%) - Full tracing for debugging
-- **Staging**: 0.5 (50%) - Good coverage for testing
+- **Staging**: 0.5 (50%) - Coverage for testing
 - **Production**: 0.1 (10%) - Minimal performance impact
 
 ### OTLP Endpoint

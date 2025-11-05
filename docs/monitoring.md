@@ -18,7 +18,7 @@ Gauges provide real-time measurements of specific values.
 
 **Use Case:** Monitor the backlog of events waiting to be processed
 
-**Alert Threshold:** Consider alerting if this value exceeds 100 for extended periods
+**Alert Threshold:** Alert if this value exceeds 100 for extended periods
 
 #### `outbox_events_oldest_age_seconds`
 
@@ -26,7 +26,7 @@ Gauges provide real-time measurements of specific values.
 
 **Use Case:** Detect processing delays or stalled event processing
 
-**Alert Threshold:** Consider alerting if this value exceeds 300 seconds (5 minutes)
+**Alert Threshold:** Alert if this value exceeds 300 seconds (5 minutes)
 
 #### `outbox_events_archived_total`
 
@@ -34,7 +34,7 @@ Gauges provide real-time measurements of specific values.
 
 **Use Case:** Monitor the size of the archive table to track historical event data
 
-**Alert Threshold:** Monitor growth rate; consider cleanup if archive grows too large
+**Alert Threshold:** Monitor growth rate; cleanup may be needed if archive grows large
 
 #### `outbox_events_deadletter_total`
 
@@ -461,7 +461,7 @@ description: Archive table has exceeded 1 million events - consider purging old 
 
 **Success/Failure Ratios:**
 - Calculate failure percentage: `failures / (successes + failures)`
-- Normal operation should have < 1% failure rate
+- Typical operation has < 1% failure rate
 - Investigate sustained increases
 
 **Backlog Growth:**

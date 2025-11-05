@@ -251,11 +251,11 @@ open results/order_service_report_*/index.html
 **Key Metrics to Review:**
 
 1. **Throughput**: Requests per second
-   - Order creation: Target > 50 req/sec
-   - Order reads: Target > 100 req/sec
-   - Get order by ID: Target > 100 req/sec
-   - Order updates: Target > 50 req/sec
-   - Admin UI page loads: Target > 30 req/sec
+   - Order creation: > 50 req/sec
+   - Order reads: > 100 req/sec
+   - Get order by ID: > 100 req/sec
+   - Order updates: > 50 req/sec
+   - Admin UI page loads: > 30 req/sec
 
 2. **Response Times**:
    - 90th percentile < 500ms
@@ -263,8 +263,8 @@ open results/order_service_report_*/index.html
    - 99th percentile < 2000ms
 
 3. **Error Rate**:
-   - Target: < 0.1% for normal load
-   - Target: < 1% for stress tests
+   - < 0.1% for normal load
+   - < 1% for stress tests
 
 4. **Outbox Processing**:
    - Events should be processed within 5-10 seconds
@@ -291,7 +291,7 @@ Performance may be 20-40% lower when running with Docker Compose due to containe
 
 ### Virtual Threads Impact
 
-The application uses Java 21 virtual threads, which should maintain performance even with:
+The application uses Java 21 virtual threads, which supports:
 - 200+ concurrent threads
 - Thousands of active connections
 - High I/O operations (database + Kafka)
@@ -353,14 +353,14 @@ The application uses Java 21 virtual threads, which should maintain performance 
 ## Best Practices
 
 1. **Tests run in Docker containers**
-   - No local JMeter installation needed
+   - No local JMeter installation required
    - Consistent environment across platforms
-   - Easier CI/CD integration
+   - CI/CD integration
 
 2. **Use appropriate ramp-up times**
-   - Prevents overwhelming the system immediately
+   - Prevents immediate system overload
    - Allows connection pools to scale
-   - Recommended: 1 second per 2-3 threads
+   - Configuration: 1 second per 2-3 threads
 
 3. **Monitor system resources**
    - CPU usage
