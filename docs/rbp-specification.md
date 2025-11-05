@@ -61,13 +61,13 @@ The Really Big Payload (RBP) feature introduces an external storage mechanism fo
 
 ## 4. Architecture Design
 
-### 4.1 Storage Backend Options
+### 4.1 Cloud Storage Backend
 
-#### Option A: Cloud Storage (Recommended for Production)
+RouteBox RBP uses cloud object storage for reliable, scalable payload storage. The design supports multiple cloud providers through a common abstraction layer.
 
-**Pros:**
+**Benefits:**
 - **Scalability**: Virtually unlimited storage capacity
-- **Durability**: Built-in redundancy (e.g., S3 11 nines of durability)
+- **Durability**: Built-in redundancy (99.999999999% durability for most services)
 - **High Availability**: Multi-region replication options
 - **Cost-Effective**: Pay-per-use pricing for large storage volumes
 - **Separation of Concerns**: Storage decoupled from application servers
@@ -75,66 +75,150 @@ The Really Big Payload (RBP) feature introduces an external storage mechanism fo
 - **Security**: Built-in encryption at rest and in transit
 - **Lifecycle Management**: Automatic expiration policies
 
-**Cons:**
+**Considerations:**
 - External dependency (network latency, availability)
 - Additional cloud service costs
-- More complex configuration and IAM setup
+- IAM and access control configuration required
 
-**Recommended Services:**
-- **AWS S3**: Industry-standard object storage
-- **Azure Blob Storage**: Enterprise-grade storage
-- **Google Cloud Storage**: Flexible storage classes
-- **MinIO**: S3-compatible on-premises option
+#### Supported Cloud Providers
 
-**Implementation Approach:**
+**Azure Blob Storage** and **Google Cloud Storage** are the recommended cloud storage providers for RouteBox RBP.
+
+**Storage Interface:**
 ```java
 public interface RbpStorageService {
+    /**
+     * Store payload and return URI for retrieval.
+     * @param correlationId Unique identifier for this payload
+     * @param payload Payload bytes to store
+     * @return Storage URI (e.g., "azure://container/correlation-id" or "gcs://bucket/correlation-id")
+     */
     String store(String correlationId, byte[] payload);
+    
+    /**
+     * Retrieve payload by URI.
+     * @param uri Storage URI returned from store()
+     * @return Payload bytes
+     */
     byte[] retrieve(String uri);
+    
+    /**
+     * Delete payload from storage.
+     * @param uri Storage URI
+     */
     void delete(String uri);
 }
-
-@Service
-public class S3RbpStorageService implements RbpStorageService {
-    private final S3Client s3Client;
-    private final String bucketName;
-    // Implementation using AWS SDK v2
-}
 ```
 
-#### Option B: OutboxServer Local Disk
+#### Azure Blob Storage Implementation
 
-**Pros:**
-- **Simplicity**: No external dependencies
-- **Low Latency**: Direct filesystem access
-- **Cost**: No additional service costs
-- **Control**: Full control over storage location
-- **Offline Operation**: Works without internet connectivity
+**Features:**
+- Hot, Cool, and Archive storage tiers for cost optimization
+- Geo-redundant storage (GRS) for cross-region redundancy
+- Lifecycle management policies for automatic archival/deletion
+- Azure AD integration for secure access control
+- Server-side encryption with customer-managed keys
 
-**Cons:**
-- **Limited Scalability**: Constrained by disk capacity
-- **Single Point of Failure**: Data lost if server fails
-- **No Redundancy**: Manual backup required
-- **Operational Burden**: Disk monitoring and cleanup required
-- **Multi-Node Complexity**: Requires shared filesystem (NFS, EFS) for horizontal scaling
-- **Security**: Manual encryption and access control
-
-**Implementation Approach:**
+**Implementation Example:**
 ```java
 @Service
-public class DiskRbpStorageService implements RbpStorageService {
-    private final Path storageRoot;
-    // Implementation using java.nio.file APIs
+public class AzureBlobRbpStorageService implements RbpStorageService {
+    private final BlobServiceClient blobServiceClient;
+    private final String containerName;
+    
+    @Override
+    public String store(String correlationId, byte[] payload) {
+        BlobClient blobClient = blobServiceClient
+            .getBlobContainerClient(containerName)
+            .getBlobClient(correlationId);
+        
+        blobClient.upload(new ByteArrayInputStream(payload), payload.length, true);
+        
+        return String.format("azure://%s/%s", containerName, correlationId);
+    }
+    
+    @Override
+    public byte[] retrieve(String uri) {
+        // Parse URI: azure://container/correlation-id
+        String correlationId = extractCorrelationId(uri);
+        
+        BlobClient blobClient = blobServiceClient
+            .getBlobContainerClient(containerName)
+            .getBlobClient(correlationId);
+        
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+        blobClient.downloadStream(outputStream);
+        return outputStream.toByteArray();
+    }
+    
+    @Override
+    public void delete(String uri) {
+        String correlationId = extractCorrelationId(uri);
+        blobServiceClient
+            .getBlobContainerClient(containerName)
+            .getBlobClient(correlationId)
+            .delete();
+    }
 }
 ```
 
-#### Recommendation
+**Configuration:**
+- Use Managed Identity for authentication (recommended for Azure VMs/AKS)
+- Connection string for development/testing
+- Configure lifecycle policies for automatic cleanup
 
-**For Production**: Use **Cloud Storage (Option A)** for reliability, scalability, and operational simplicity.
+#### Google Cloud Storage Implementation
 
-**For Development/Testing**: Either option works; local disk may be simpler for quick setup.
+**Features:**
+- Standard, Nearline, Coldline, and Archive storage classes
+- Multi-regional and dual-regional replication
+- Object lifecycle management with automatic deletion rules
+- IAM and signed URLs for fine-grained access control
+- Customer-managed encryption keys (CMEK)
 
-**Hybrid Approach**: Support both through strategy pattern, allowing configuration-based selection.
+**Implementation Example:**
+```java
+@Service
+public class GcsRbpStorageService implements RbpStorageService {
+    private final Storage storage;
+    private final String bucketName;
+    
+    @Override
+    public String store(String correlationId, byte[] payload) {
+        BlobId blobId = BlobId.of(bucketName, correlationId);
+        BlobInfo blobInfo = BlobInfo.newBuilder(blobId)
+            .setContentType("application/octet-stream")
+            .build();
+        
+        storage.create(blobInfo, payload);
+        
+        return String.format("gcs://%s/%s", bucketName, correlationId);
+    }
+    
+    @Override
+    public byte[] retrieve(String uri) {
+        // Parse URI: gcs://bucket/correlation-id
+        String correlationId = extractCorrelationId(uri);
+        
+        BlobId blobId = BlobId.of(bucketName, correlationId);
+        Blob blob = storage.get(blobId);
+        
+        return blob.getContent();
+    }
+    
+    @Override
+    public void delete(String uri) {
+        String correlationId = extractCorrelationId(uri);
+        BlobId blobId = BlobId.of(bucketName, correlationId);
+        storage.delete(blobId);
+    }
+}
+```
+
+**Configuration:**
+- Use Workload Identity for GKE clusters (recommended)
+- Service account key file for VMs
+- Configure object lifecycle rules for automatic expiration
 
 ### 4.2 Data Model Changes
 
@@ -392,15 +476,20 @@ routebox:
     enabled: true
     threshold-bytes: 102400  # 100KB - payloads larger than this use RBP
     storage:
-      type: s3  # or 'disk'
-      # S3 configuration
-      s3:
+      type: azure  # or 'gcs'
+      # Azure Blob Storage configuration
+      azure:
+        connection-string: ${AZURE_STORAGE_CONNECTION_STRING}
+        container-name: routebox-rbp-prod
+        # Optional: Use Managed Identity instead of connection string
+        # account-name: ${AZURE_STORAGE_ACCOUNT_NAME}
+        # use-managed-identity: true
+      # Google Cloud Storage configuration
+      gcs:
         bucket-name: routebox-rbp-prod
-        region: us-east-1
-        prefix: rbp/  # Optional path prefix
-      # Disk configuration
-      disk:
-        base-path: /var/routebox/rbp
+        project-id: ${GCP_PROJECT_ID}
+        # Optional: specify credentials file
+        # credentials-file: /path/to/service-account-key.json
     retention:
       days: 7  # Keep RBPs for 7 days after event sent
       cleanup-cron: "0 0 2 * * *"  # Daily cleanup at 2 AM
@@ -416,20 +505,27 @@ routebox:
 - Bucket policies restricting access
 - VPC endpoints for private network access
 
-**Local Disk:**
-- File system permissions (e.g., 700 on storage directory)
-- Run RouteBox server as dedicated user
-- Consider encryption at rest (LUKS, dm-crypt)
+**Cloud Storage Access Control:**
+- **Azure**: Use Managed Identity for authentication (no credentials in config)
+  - Assign "Storage Blob Data Contributor" role to RouteBox service principal
+  - Configure container-level access policies
+- **GCP**: Use Workload Identity for GKE or service account with minimal permissions
+  - Grant "Storage Object Admin" role for specific bucket
+  - Use signed URLs for time-limited access if needed
 
 ### 5.2 Data Encryption
 
 **In Transit:**
-- HTTPS/TLS for cloud storage API calls
+- HTTPS/TLS for cloud storage API calls (enforced by default)
 - Kafka SSL/TLS (already supported)
 
 **At Rest:**
-- Cloud storage: Enable server-side encryption (SSE-S3, SSE-KMS)
-- Local disk: Consider filesystem-level encryption
+- **Azure**: Enable server-side encryption with platform-managed or customer-managed keys
+  - Platform-managed keys: Enabled by default
+  - Customer-managed keys: Use Azure Key Vault for key management
+- **GCP**: Server-side encryption enabled by default
+  - Google-managed encryption keys: Automatic
+  - Customer-managed encryption keys (CMEK): Use Cloud KMS for key management
 
 ### 5.3 Correlation ID as Security Key
 
@@ -447,7 +543,9 @@ The correlation ID serves as the retrieval key. Considerations:
 ### 6.1 Performance Impact
 
 **Write Path:**
-- Additional latency for external storage write (10-100ms for S3)
+- Additional latency for external storage write:
+  - Azure Blob Storage: 10-50ms for standard tier, 50-100ms for cool tier
+  - Google Cloud Storage: 10-50ms for standard class, varies by region
 - Still within same database transaction (ACID guarantees maintained)
 - Configurable: only large payloads incur this cost
 
@@ -458,15 +556,21 @@ The correlation ID serves as the retrieval key. Considerations:
 
 ### 6.2 Scalability
 
-**Cloud Storage:**
-- S3: 3,500 PUT/s and 5,500 GET/s per prefix
-- Virtually unlimited total throughput with partitioning
+**Azure Blob Storage:**
+- Up to 20,000 requests per second per blob storage account
+- Maximum throughput: 60 Gb/s ingress, 120 Gb/s egress per account
+- Virtually unlimited storage capacity
 - Auto-scales with demand
 
-**Local Disk:**
-- Limited by disk IOPS and throughput
-- Requires NFS/EFS for multi-node deployments
-- May need separate storage tier for high volume
+**Google Cloud Storage:**
+- 5,000 write requests per second and 10,000 read requests per second per bucket
+- Bandwidth: Up to 200 Gb/s per bucket
+- Unlimited storage capacity
+- Auto-scales with demand
+
+**Multi-Region Considerations:**
+- Use geo-replication for cross-region disaster recovery
+- Configure region-specific buckets/containers to minimize latency
 
 ### 6.3 Monitoring Metrics
 
@@ -504,7 +608,8 @@ public class RbpMetricsService {
 
 ### Phase 1: Foundation (Sprint 1-2)
 - [ ] Add database schema changes (migration scripts)
-- [ ] Implement RbpStorageService interface and S3 implementation
+- [ ] Implement RbpStorageService interface
+- [ ] Implement Azure Blob Storage backend
 - [ ] Update OutboxEvent entity with RBP fields
 - [ ] Add configuration support for RBP settings
 - [ ] Unit tests for storage service
@@ -522,16 +627,16 @@ public class RbpMetricsService {
 - [ ] Admin UI integration for RBP status
 - [ ] Cleanup monitoring and alerting
 
-### Phase 4: Alternative Storage (Sprint 6 - Optional)
-- [ ] Implement DiskRbpStorageService
-- [ ] Add storage strategy selection
-- [ ] Performance comparison testing
-- [ ] Documentation updates
+### Phase 4: Google Cloud Storage Support (Sprint 6)
+- [ ] Implement GCS backend implementation
+- [ ] Add GCS-specific configuration options
+- [ ] Integration tests for GCS backend
+- [ ] Documentation updates for multi-cloud support
 
 ### Phase 5: Production Hardening (Sprint 7-8)
 - [ ] Load testing with large payloads
 - [ ] Security audit and penetration testing
-- [ ] Failover and disaster recovery testing
+- [ ] Multi-region failover testing
 - [ ] Production deployment guide
 - [ ] Runbook for operations
 
@@ -558,7 +663,7 @@ public class RbpMetricsService {
 ## 9. Testing Strategy
 
 ### Unit Tests
-- RbpStorageService implementations (mock S3, filesystem)
+- RbpStorageService implementations (Azure, GCS with mocked clients)
 - OutboxClient RBP detection logic
 - RbpClient retrieval and deserialization
 - Cleanup job logic
@@ -572,7 +677,7 @@ public class RbpMetricsService {
 ### Performance Tests
 - Large payload write latency
 - Concurrent retrieval throughput
-- Storage backend comparison (S3 vs disk)
+- Storage backend comparison (Azure vs GCS)
 - Impact on normal (non-RBP) event processing
 
 ### Security Tests
@@ -600,18 +705,20 @@ public class RbpMetricsService {
 ### Future Enhancements
 - Support for streaming large payloads (avoid loading entire payload in memory)
 - RBP payload compression option
-- Multi-region replication for cloud storage
+- Multi-region replication strategies and failover
 - RBP analytics and usage reporting
-- Support for additional storage backends (Azure Blob, GCS)
 - Async retrieval API with callbacks
 - RBP payload transformation/filtering APIs
+- Support for additional cloud providers (AWS S3, Alibaba Cloud OSS)
 
 ## 12. References
 
-- [AWS S3 Best Practices](https://docs.aws.amazon.com/AmazonS3/latest/userguide/best-practices.html)
+- [Azure Blob Storage Documentation](https://docs.microsoft.com/en-us/azure/storage/blobs/)
+- [Azure Blob Storage Best Practices](https://docs.microsoft.com/en-us/azure/storage/blobs/storage-performance-checklist)
+- [Google Cloud Storage Documentation](https://cloud.google.com/storage/docs)
+- [Google Cloud Storage Best Practices](https://cloud.google.com/storage/docs/best-practices)
 - [Kafka Message Size Best Practices](https://kafka.apache.org/documentation/#design_messages)
 - [Transactional Outbox Pattern](https://microservices.io/patterns/data/transactional-outbox.html)
-- [Spring Cloud AWS S3 Integration](https://docs.awspring.io/spring-cloud-aws/docs/current/reference/html/index.html#s3-integration)
 
 ## 13. Appendix: Example Code
 
@@ -685,7 +792,7 @@ public class DocumentProcessorService {
 }
 ```
 
-### S3 Storage Configuration Example
+### Azure Blob Storage Configuration Example
 
 ```yaml
 # application.yml
@@ -694,36 +801,83 @@ routebox:
     enabled: true
     threshold-bytes: 102400  # 100KB
     storage:
-      type: s3
-      s3:
-        bucket-name: ${RBP_S3_BUCKET:routebox-rbp}
-        region: ${AWS_REGION:us-east-1}
-        prefix: ${RBP_S3_PREFIX:payloads/}
+      type: azure
+      azure:
+        connection-string: ${AZURE_STORAGE_CONNECTION_STRING}
+        container-name: routebox-rbp
+        # Alternative: Use Managed Identity (recommended for production)
+        # account-name: ${AZURE_STORAGE_ACCOUNT_NAME}
+        # use-managed-identity: true
     retention:
       days: 7
       cleanup-cron: "0 0 2 * * *"
 
-# AWS credentials should be provided via:
-# - IAM instance role (recommended for EC2/ECS)
-# - Environment variables (AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY)
-# - AWS credentials file (~/.aws/credentials)
+# Azure authentication options:
+# 1. Connection string (development/testing)
+# 2. Managed Identity (recommended for Azure VMs/AKS - no credentials needed)
+# 3. Service Principal with client ID/secret
+```
+
+### Google Cloud Storage Configuration Example
+
+```yaml
+# application.yml
+routebox:
+  rbp:
+    enabled: true
+    threshold-bytes: 102400  # 100KB
+    storage:
+      type: gcs
+      gcs:
+        bucket-name: routebox-rbp
+        project-id: ${GCP_PROJECT_ID}
+        # Optional: specify credentials file for development
+        # credentials-file: /path/to/service-account-key.json
+    retention:
+      days: 7
+      cleanup-cron: "0 0 2 * * *"
+
+# GCP authentication options:
+# 1. Workload Identity (recommended for GKE - no credentials needed)
+# 2. Service account key file (development/testing)
+# 3. Application Default Credentials (ADC)
 ```
 
 ### Maven Dependencies
 
+#### Azure Blob Storage
+
 ```xml
-<!-- For S3 storage -->
+<!-- Azure Storage Blob SDK -->
 <dependency>
-    <groupId>software.amazon.awssdk</groupId>
-    <artifactId>s3</artifactId>
-    <version>2.20.0</version>
+    <groupId>com.azure</groupId>
+    <artifactId>azure-storage-blob</artifactId>
+    <version>12.25.0</version>
 </dependency>
 
-<!-- For Spring Cloud AWS (optional, provides auto-configuration) -->
+<!-- Azure Identity for Managed Identity support -->
 <dependency>
-    <groupId>io.awspring.cloud</groupId>
-    <artifactId>spring-cloud-aws-starter-s3</artifactId>
-    <version>3.0.0</version>
+    <groupId>com.azure</groupId>
+    <artifactId>azure-identity</artifactId>
+    <version>1.11.0</version>
+</dependency>
+```
+
+#### Google Cloud Storage
+
+```xml
+<!-- Google Cloud Storage SDK -->
+<dependency>
+    <groupId>com.google.cloud</groupId>
+    <artifactId>google-cloud-storage</artifactId>
+    <version>2.30.0</version>
+</dependency>
+
+<!-- Spring Cloud GCP (optional, provides auto-configuration) -->
+<dependency>
+    <groupId>com.google.cloud</groupId>
+    <artifactId>spring-cloud-gcp-starter-storage</artifactId>
+    <version>4.9.0</version>
 </dependency>
 ```
 
