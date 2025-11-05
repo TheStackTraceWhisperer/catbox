@@ -48,6 +48,12 @@ public class OutboxProcessingConfig {
    */
   private int archivalRetentionDays = 7; // default 7 days
 
+  /** Maximum number of concurrent worker threads that process events from the queue. */
+  private int workerConcurrency = 50; // default
+
+  /** Maximum capacity of the in-memory event queue for backpressure. */
+  private int queueCapacity = 200; // default
+
   // A Set for efficient O(1) lookups
   private final Set<String> permanentExceptionSet = new HashSet<>();
 
