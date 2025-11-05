@@ -104,6 +104,7 @@ For detailed architecture information, see [Architecture Documentation](docs/arc
 - **[Distributed Tracing](docs/distributed-tracing.md)** - OpenTelemetry, Tempo, and end-to-end tracing
 - **[Multi-Cluster Routing](docs/multi-cluster-routing.md)** - Advanced Kafka routing strategies
 - **[Virtual Threads](docs/virtual-threads.md)** - Java 21 virtual threads implementation
+- **[Really Big Payloads (RBP)](docs/rbp-specification.md)** - Specification for handling large payloads
 - **[Testing Guide](docs/testing.md)** - Testing framework and coverage reports
 - **[Troubleshooting](docs/troubleshooting.md)** - Known issues and workarounds
 
