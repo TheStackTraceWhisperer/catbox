@@ -80,6 +80,24 @@ The `sql-debug` profile enables:
 - SQL formatting (`format_sql: true`)
 - SQL parameter binding (`org.hibernate.type.descriptor.sql.BasicBinder: TRACE`)
 
+### Distributed Tracing Profile
+
+By default, distributed tracing is disabled. To enable OpenTelemetry distributed tracing with Grafana Tempo:
+
+```bash
+# Run with tracing profile
+mvn spring-boot:run -pl order-service -Dspring-boot.run.profiles=azuresql,tracing
+mvn spring-boot:run -pl routebox-server -Dspring-boot.run.profiles=azuresql,tracing
+mvn spring-boot:run -pl order-processor -Dspring-boot.run.profiles=azuresql,tracing
+```
+
+The `tracing` profile enables:
+- OpenTelemetry trace export to Tempo via OTLP
+- 10% sampling rate (configurable)
+- End-to-end request tracing across services
+
+See [Distributed Tracing Documentation](docs/distributed-tracing.md) for detailed configuration and usage.
+
 ## Architecture
 
 The system uses a decoupled, multi-module architecture with three Spring Boot applications:
