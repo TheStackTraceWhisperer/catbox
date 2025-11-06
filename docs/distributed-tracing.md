@@ -14,25 +14,26 @@ The RouteBox project implements distributed tracing using:
 
 ### Components
 
-```
-┌──────────────┐     HTTP      ┌──────────────┐     Kafka     ┌────────────┐
-│ Order Service│───────────────▶│RouteBox Server │──────────────▶│  Consumers │
-│  (Port 8080) │  Trace Context │ (Port 8081)  │  correlationId│            │
-└──────────────┘                └──────────────┘               └────────────┘
-       │                               │                             │
-       │ OTLP/HTTP                    │ OTLP/HTTP                   │
-       ▼                               ▼                             ▼
-┌─────────────────────────────────────────────────────────────────────┐
-│                          Grafana Tempo                              │
-│                       (Port 3200, 4317, 4318)                       │
-└─────────────────────────────────────────────────────────────────────┘
-       │                                │
-       │ Trace Query                    │ Metrics/Logs Correlation
-       ▼                                ▼
-┌──────────────┐                 ┌──────────────┐
-│   Grafana    │                 │ Prometheus   │
-│  (Port 3000) │◀────────────────│   Loki       │
-└──────────────┘                 └──────────────┘
+```mermaid
+graph TB
+    OrderService["Order Service<br/>(Port 8080)"]
+    RouteBoxServer["RouteBox Server<br/>(Port 8081)"]
+    Consumers["Consumers"]
+    Tempo["Grafana Tempo<br/>(Port 3200, 4317, 4318)"]
+    Grafana["Grafana<br/>(Port 3000)"]
+    Prometheus["Prometheus"]
+    Loki["Loki"]
+    
+    OrderService -->|HTTP<br/>Trace Context| RouteBoxServer
+    RouteBoxServer -->|Kafka<br/>correlationId| Consumers
+    OrderService -->|OTLP/HTTP| Tempo
+    RouteBoxServer -->|OTLP/HTTP| Tempo
+    Consumers -->|OTLP/HTTP| Tempo
+    Tempo -->|Trace Query| Grafana
+    Tempo -->|Metrics/Logs Correlation| Prometheus
+    Tempo -->|Metrics/Logs Correlation| Loki
+    Prometheus -->|Data| Grafana
+    Loki -->|Data| Grafana
 ```
 
 ### Trace Flow
