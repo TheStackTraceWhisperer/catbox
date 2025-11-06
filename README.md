@@ -7,9 +7,9 @@ A Spring Boot 3.5.7 application demonstrating the transactional outbox pattern w
 - **Transactional Outbox Pattern** - Reliable event publishing with at-least-once delivery guarantees
 - **Java 21 Virtual Threads** - High-performance concurrent event processing
 - **Multi-Cluster Kafka Routing** - Flexible routing strategies for geographic replication and high availability
-- **Admin Web UI** - Professional dashboard for monitoring and managing outbox events
+- **Admin Web UI** - Dashboard for monitoring and managing outbox events
 - **Event Lifecycle Management** - Automatic archival and dead letter queue for failed events
-- **Spring Boot 3.5.7** - Modern Spring ecosystem with WebMVC, Data JPA, and Kafka
+- **Spring Boot 3.5.7** - Spring ecosystem with WebMVC, Data JPA, and Kafka
 - **Production-Ready Alerting** - 12 pre-configured alerts for outbox health, application status, and JVM metrics with email notifications
 - **Comprehensive Observability** - Custom Prometheus metrics, Grafana dashboards, Loki log aggregation, and distributed tracing with OpenTelemetry/Tempo
 - **Distributed Tracing** - End-to-end request tracing with correlation IDs across services and Kafka
@@ -67,7 +67,7 @@ See the [Quick Start Guide](docs/quick-start.md) for detailed setup instructions
 
 ### SQL Debug Profile
 
-By default, Hibernate SQL logging is disabled for cleaner console output. To enable SQL logging for debugging:
+By default, Hibernate SQL logging is disabled. To enable SQL logging for debugging:
 
 ```bash
 # Run with SQL debug profile
@@ -88,7 +88,7 @@ The system uses a decoupled, multi-module architecture with three Spring Boot ap
 - **routebox-server (Port 8081)** - Standalone processor that polls and publishes events to Kafka
 - **order-processor (Port 8082)** - Kafka consumer that processes order events with deduplication
 
-This separation allows independent scaling and keeps business logic lightweight.
+This separation allows independent scaling of the business service and the event processor.
 
 For detailed architecture information, see [Architecture Documentation](docs/architecture.md).
 
@@ -162,7 +162,7 @@ routebox-parent
 
 ## Contributing
 
-Contributions are welcome! Please ensure:
+Please ensure:
 - All tests pass: `mvn test`
 - Code coverage is maintained
 - Documentation is updated for new features

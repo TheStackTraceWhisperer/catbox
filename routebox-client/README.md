@@ -19,9 +19,9 @@ public void createOrder(Order order) {
 }
 ```
 
-### OutboxFilter - Production-Ready Deduplication for Kafka Consumers
+### OutboxFilter - Database-Backed Deduplication for Kafka Consumers
 
-The `OutboxFilter` provides a database-backed mechanism to deduplicate Kafka event listener messages based on correlation IDs and consumer groups. This is essential for implementing idempotent consumers that can handle at-least-once delivery semantics.
+The `OutboxFilter` provides a database-backed mechanism to deduplicate Kafka event listener messages based on correlation IDs and consumer groups. This is useful for implementing idempotent consumers that handle at-least-once delivery semantics.
 
 #### Quick Start
 
@@ -79,7 +79,7 @@ The default `DatabaseOutboxFilter` implementation:
 - **Persistent**: Uses a database table (`processed_messages`) for storage
 - **Multi-instance safe**: Works correctly across multiple consumer instances
 - **Per-consumer-group tracking**: Supports different consumer groups processing the same messages
-- **Production-ready**: Designed for high-concurrency environments
+- **Production deployment**: Designed for high-concurrency environments
 - **Automatic archival**: Old records are archived to prevent unbounded growth
 
 Database schema:
@@ -176,10 +176,10 @@ For integration tests, use the real `DatabaseOutboxFilter` with a test database.
 
 #### Best Practices
 
-1. **Always use consumer groups**: Pass the Kafka consumer group ID to the filter
-2. **Use correlation IDs**: Ensure your outbox events have unique correlation IDs
-3. **Monitor the admin UI**: Regularly check processed message counts and trends
-4. **Configure archival**: Set appropriate retention periods for your use case
+1. **Use consumer groups**: Pass the Kafka consumer group ID to the filter
+2. **Use correlation IDs**: Ensure outbox events have unique correlation IDs
+3. **Monitor the admin UI**: Check processed message counts and trends
+4. **Configure archival**: Set retention periods for your use case
 5. **Handle null correlation IDs**: The filter treats null/empty correlation IDs as not processed
 
 #### Example with Correlation ID Generation

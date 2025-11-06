@@ -1,10 +1,10 @@
 # Testing Guide
 
-Comprehensive testing documentation for the RouteBox transactional outbox pattern implementation.
+Testing documentation for the RouteBox transactional outbox pattern implementation.
 
 ## Overview
 
-The RouteBox project includes a mature, multi-layered testing strategy:
+The RouteBox project includes a multi-layered testing strategy:
 
 1. **Unit Tests** - Fast, isolated component tests
 2. **Integration Tests** - Tests with real dependencies (database, Kafka)

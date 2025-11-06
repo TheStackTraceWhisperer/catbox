@@ -9,7 +9,7 @@ This project demonstrates a transactional outbox pattern using a decoupled, mult
 * **`order-service` (Port 8080):** A business-facing service responsible for creating and updating orders. When it writes to its `orders` table, it also writes an `OutboxEvent` to a shared table in the *same transaction*, ensuring data consistency.
 * **`routebox-server` (Port 8081):** A standalone processor that polls the `outbox_events` table. It uses a `SELECT FOR UPDATE SKIP LOCKED` query (via `OutboxEventClaimer`) to safely claim events and publish them to Kafka using a dynamic, multi-cluster routing factory.
 
-This separation ensures that the business service (`order-service`) is lightweight and not burdened with event publishing logic, while the `routebox-server` can be scaled independently to handle event throughput.
+This separation ensures that the business service (`order-service`) does not contain event publishing logic, while the `routebox-server` can be scaled independently to handle event throughput.
 
 ## Phase 1: Order Submission (Atomic Transaction)
 

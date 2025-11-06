@@ -1,6 +1,6 @@
 # Production Deployment Guide
 
-This guide provides recommendations and best practices for deploying RouteBox in production environments.
+This guide provides configuration information and considerations for deploying RouteBox in production environments.
 
 ## Overview
 
@@ -10,11 +10,11 @@ The Docker Compose setup in this repository is designed for **development and te
 
 ### Production Kafka Configuration
 
-For production Kafka deployments, consider the following:
+For production Kafka deployments, consider the following configuration options:
 
 #### 1. Hardware and Resources
 
-**Minimum recommended per broker:**
+**Configuration per broker:**
 - CPU: 4-8 cores
 - Memory: 8-16 GB RAM (increase based on throughput)
 - Storage: SSD-backed volumes with sufficient IOPS
@@ -30,7 +30,7 @@ For production Kafka deployments, consider the following:
 
 #### 2. Security Configuration
 
-**Required for production:**
+**Production configuration options:**
 
 ✅ **SSL/TLS Encryption**
 - Use CA-signed certificates (not self-signed)
@@ -103,7 +103,7 @@ properties:
 
 #### 4. Monitoring and Observability
 
-**Essential metrics to monitor:**
+**Metrics to monitor:**
 - Broker metrics:
   - CPU and memory utilization
   - Disk I/O and utilization
@@ -121,7 +121,7 @@ properties:
 - Prometheus + Grafana for metrics
 - Kafka JMX exporter
 - Confluent Control Center (if using Confluent Platform)
-- Datadog, New Relic, or other APM tools
+- APM tools (Datadog, New Relic, etc.)
 
 **Enable JMX monitoring:**
 ```yaml
@@ -171,7 +171,7 @@ For multi-cluster deployments (geographic distribution, disaster recovery):
 
 ### Azure SQL / SQL Server
 
-**Production recommendations:**
+**Production configuration options:**
 
 1. **Use Azure SQL Database Managed Instance** or dedicated SQL Server
    - Not Azure SQL Edge (development only)
@@ -234,7 +234,7 @@ spring:
 
 ### JVM Configuration
 
-**Recommended JVM settings for production:**
+**JVM settings for production:**
 
 ```bash
 # Basic JVM settings
@@ -306,7 +306,7 @@ spring:
 
 ### Container Orchestration
 
-**Kubernetes (Recommended):**
+**Kubernetes:**
 
 1. **Use Helm charts** for deployment management
 2. **Configure resource limits and requests:**
@@ -358,7 +358,7 @@ spring:
 
 ### CI/CD Pipeline
 
-**Recommended pipeline:**
+**Pipeline stages:**
 
 1. **Build:**
    - Run unit and integration tests

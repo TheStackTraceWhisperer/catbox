@@ -98,11 +98,11 @@ Based on analysis of the routebox codebase, these tests enforce:
 
 ## Benefits
 
-- **Prevents Architectural Erosion**: Automatically catches violations of architectural principles
-- **Documentation**: Serves as living documentation of architectural decisions
-- **CI/CD Integration**: Can be run as part of the build pipeline to prevent bad code from being merged
-- **Team Alignment**: Ensures all team members follow the same architectural patterns
-- **Refactoring Safety**: Provides confidence when refactoring that architecture is maintained
+- **Architectural Validation**: Catches violations of architectural principles
+- **Documentation**: Serves as documentation of architectural decisions
+- **CI/CD Integration**: Can run as part of the build pipeline
+- **Team Alignment**: Ensures team members follow the same architectural patterns
+- **Refactoring Support**: Provides confidence when refactoring
 
 ## Adding New Rules
 

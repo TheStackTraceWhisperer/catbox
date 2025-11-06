@@ -4,7 +4,7 @@ This document describes the Java 21 virtual threads implementation in the RouteB
 
 ## Overview
 
-The application leverages Java 21 virtual threads for high-performance concurrent processing. Virtual threads are lightweight threads managed by the JVM rather than the operating system, enabling massive concurrency with minimal resource overhead.
+The application leverages Java 21 virtual threads for concurrent processing. Virtual threads are lightweight threads managed by the JVM rather than the operating system.
 
 ## Why Virtual Threads?
 
@@ -24,12 +24,12 @@ The application leverages Java 21 virtual threads for high-performance concurren
 
 ### Benefits for Outbox Pattern
 
-The outbox pattern is ideal for virtual threads because:
+The outbox pattern characteristics when using virtual threads:
 
-1. **High Concurrency:** Process hundreds of events simultaneously
-2. **I/O Bound:** Publishing to Kafka involves network I/O (waiting)
-3. **Variable Load:** Event volume fluctuates; need elastic concurrency
-4. **Simple Code:** Write synchronous code that performs asynchronously
+1. **High Concurrency:** Can process hundreds of events simultaneously
+2. **I/O Bound:** Publishing to Kafka involves network I/O
+3. **Variable Load:** Event volume fluctuates; concurrency scales dynamically
+4. **Code Pattern:** Synchronous code that executes asynchronously
 
 ## Virtual Threads in RouteBox
 
@@ -49,10 +49,10 @@ public TomcatProtocolHandlerCustomizer<?> protocolHandlerVirtualThreadExecutorCu
 ```
 
 **Impact:**
-- Each HTTP request runs in its own virtual thread
-- Thousands of concurrent requests possible
-- No thread pool to configure or tune
-- Automatic scaling based on demand
+- Each HTTP request runs in a virtual thread
+- Supports thousands of concurrent requests
+- No thread pool configuration required
+- Scales based on demand
 
 ### 2. Async Task Execution
 
@@ -74,7 +74,7 @@ public AsyncTaskExecutor applicationTaskExecutor() {
 **Impact:**
 - Async methods execute in virtual threads
 - No fixed thread pool size
-- Scales automatically with workload
+- Scales with workload
 - MDC (Mapped Diagnostic Context) preserved across threads
 
 ### 3. Event Processing
@@ -179,9 +179,9 @@ try (var scope = new StructuredTaskScope.ShutdownOnFailure()) {
 
 **DO:**
 - ✅ Use for I/O-bound operations (network, database, file I/O)
-- ✅ Create threads freely; they're cheap
-- ✅ Use blocking APIs (they're efficient with virtual threads)
-- ✅ Use synchronized blocks sparingly (they're pinning points)
+- ✅ Create threads as needed; they have low cost
+- ✅ Use blocking APIs (they work with virtual threads)
+- ✅ Use synchronized blocks sparingly (they can pin threads)
 
 **DON'T:**
 - ❌ Don't use for CPU-intensive operations
@@ -280,10 +280,10 @@ public AsyncTaskExecutor applicationTaskExecutor() {
 ```
 
 **Changes:**
-- No pool size configuration needed
+- No pool size configuration
 - No queue capacity tuning
 - Simpler configuration
-- Better scaling
+- Different scaling characteristics
 
 ## Requirements
 

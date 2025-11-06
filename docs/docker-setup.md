@@ -39,12 +39,12 @@ Primary message broker using KRaft mode (no Zookeeper).
 - CPU: 2 cores (max), 0.5 cores (reserved)
 - Memory: 2GB (max), 512MB (reserved)
 
-**Production Recommendations:**
-- Increase memory to 4-8GB for optimal performance
+**Production Configuration:**
+- Increase memory to 4-8GB for performance
 - Increase CPUs to 4+ cores for high-throughput scenarios
 - Use dedicated hosts or Kubernetes nodes
 - Set replication factor to 3 for high availability
-- Enable JMX monitoring for better observability
+- Enable JMX monitoring for observability
 
 ### 3. Apache Kafka Cluster 2 (cluster-c)
 

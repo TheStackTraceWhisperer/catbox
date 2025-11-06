@@ -8,7 +8,7 @@
 - Do not downgrade to earlier Java versions
 
 ### Virtual Threads
-- The application leverages Java 21 virtual threads for high-performance concurrent processing
+- The application uses Java 21 virtual threads for concurrent processing
 - Virtual threads are used for:
   - Web request handling (Tomcat protocol handler)
   - Async task execution (Spring's async task executor)
