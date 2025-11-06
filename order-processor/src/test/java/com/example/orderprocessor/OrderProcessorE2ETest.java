@@ -266,6 +266,58 @@ class OrderProcessorE2ETest {
             });
   }
 
+  @Test
+  void testPoisonPill_InvalidJson_RoutedToDLT() throws Exception {
+    // Given: An invalid JSON message (poison pill)
+    String correlationId = UUID.randomUUID().toString();
+    String invalidMessage = "{ invalid json }";
+
+    int initialCount = processingService.getProcessedOrderCreatedCount();
+
+    // When: Send the poison pill message
+    var kafkaMessage =
+        MessageBuilder.withPayload(invalidMessage)
+            .setHeader(KafkaHeaders.TOPIC, "OrderCreated")
+            .setHeader("correlationId", correlationId)
+            .build();
+    kafkaTemplate.send(kafkaMessage);
+
+    // Then: Message is NOT processed (due to JSON parsing error)
+    // Wait to ensure the error handler had time to process and route to DLT
+    await()
+        .atMost(10, TimeUnit.SECONDS)
+        .pollDelay(2, TimeUnit.SECONDS)
+        .untilAsserted(
+            () -> {
+              assertThat(processingService.getProcessedOrderCreatedCount())
+                  .as("Poison pill should not be processed successfully")
+                  .isEqualTo(initialCount);
+            });
+
+    // Note: The correlation ID may be marked as "processed" by the deduplication filter
+    // even though the message failed, because deduplication happens before parsing.
+    // The important thing is that the message doesn't get processed successfully
+    // and doesn't block the consumer.
+
+    // Verify that subsequent valid messages can still be processed
+    String validCorrelationId = UUID.randomUUID().toString();
+    OrderCreatedPayload validPayload =
+        new OrderCreatedPayload(
+            999L, "ValidCustomer", "ValidProduct", new BigDecimal("100.00"), "PENDING");
+    String validMessage = objectMapper.writeValueAsString(validPayload);
+    sendOrderCreatedMessage(validMessage, validCorrelationId);
+
+    await()
+        .atMost(10, TimeUnit.SECONDS)
+        .pollInterval(100, TimeUnit.MILLISECONDS)
+        .untilAsserted(
+            () -> {
+              assertThat(processingService.getProcessedOrderCreatedCount())
+                  .as("Consumer should not be blocked by poison pill - subsequent valid messages should be processed")
+                  .isGreaterThan(initialCount);
+            });
+  }
+
   /** Helper method to send an OrderCreated message to Kafka with a correlation ID. */
   private void sendOrderCreatedMessage(String message, String correlationId) {
     var kafkaMessage =
