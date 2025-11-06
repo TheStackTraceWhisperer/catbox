@@ -3,14 +3,12 @@ package com.example.routebox.server.config;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.example.routebox.server.RouteBoxServerApplication;
+import com.example.routebox.test.listener.SharedTestcontainers;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.test.context.DynamicPropertyRegistry;
-import org.springframework.test.context.DynamicPropertySource;
 import org.testcontainers.junit.jupiter.Testcontainers;
-import com.example.routebox.test.listener.SharedTestcontainers;
 
 /**
  * Test for SecurityConfig to verify that security is properly disabled by default and can be
@@ -23,15 +21,6 @@ class SecurityConfigTest {
   static {
     SharedTestcontainers.ensureInitialized();
   }
-
-  @Container
-  static MSSQLServerContainer<?> sqlServer =
-      new MSSQLServerContainer<>("mcr.microsoft.com/mssql/server:2022-latest")
-          .acceptLicense()
-          .withReuse(true);
-
-  @DynamicPropertySource
-  static void configureProperties(DynamicPropertyRegistry registry) {registry.add("spring.jpa.hibernate.ddl-auto", () -> "create-drop");}
 
   @Autowired private SecurityFilterChain securityFilterChain;
 
