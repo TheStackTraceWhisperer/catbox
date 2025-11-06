@@ -466,15 +466,17 @@ docker pull mcr.microsoft.com/mssql/server:2022-latest
 **Tests are slow**
 
 ```bash
-# Run in parallel (use with caution for integration tests)
-mvn test -T 1C
-
 # Skip integration tests for faster feedback
 mvn test -DskipITs
 
 # Increase Maven memory
 export MAVEN_OPTS="-Xmx2048m"
+
+# For advanced parallel test execution, see:
+# docs/junit5-parallelization-specification.md
 ```
+
+**Note**: For comprehensive strategies to improve test execution time through JUnit 5 parallel execution, refer to the [JUnit 5 Parallelization Specification](junit5-parallelization-specification.md).
 
 ### Coverage Report Issues
 
@@ -555,6 +557,7 @@ ls -la target/jacoco-it/jacoco.exec
 
 ## Additional Resources
 
+- **[JUnit 5 Parallelization Specification](junit5-parallelization-specification.md)** - Comprehensive guide for parallel test execution
 - **[JMeter Testing](../jmeter-tests/README.md)** - Detailed performance testing guide
 - **[Architecture Documentation](architecture.md)** - System design and patterns
 - **[Quick Start Guide](quick-start.md)** - Setup and running the application
