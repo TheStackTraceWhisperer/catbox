@@ -6,7 +6,12 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
 
-/** Tests that verify tracing configuration is minimal by default. */
+/**
+ * Tests that verify tracing configuration is minimal by default.
+ *
+ * <p>Note: Similar tests exist in routebox-server. This duplication is intentional to ensure each
+ * module can verify its own tracing configuration independently.
+ */
 @SpringBootTest(
     webEnvironment = SpringBootTest.WebEnvironment.NONE,
     properties = {

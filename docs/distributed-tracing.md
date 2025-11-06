@@ -155,15 +155,6 @@ mvn spring-boot:run -pl order-service \
   -Dspring-boot.run.arguments="--management.tracing.sampling.probability=1.0"
 ```
 
-```yaml
-management:
-  otlp:
-    tracing:
-      endpoint: http://localhost:4318/v1/traces
-```
-
-**Note**: When running in Docker, use the service name: `http://tempo:4318/v1/traces`
-
 ### Log Correlation
 
 Logs include trace and span IDs for correlation:

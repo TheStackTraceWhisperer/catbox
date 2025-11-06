@@ -9,7 +9,12 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 
-/** Tests that verify the tracing profile can be enabled. */
+/**
+ * Tests that verify the tracing profile can be enabled.
+ *
+ * <p>Note: Similar tests exist in routebox-server. This duplication is intentional to ensure each
+ * module can verify its own tracing configuration independently.
+ */
 @SpringBootTest(
     webEnvironment = SpringBootTest.WebEnvironment.NONE,
     properties = {
