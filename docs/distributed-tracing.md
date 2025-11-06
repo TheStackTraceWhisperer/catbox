@@ -10,6 +10,38 @@ The RouteBox project implements distributed tracing using:
 - **Grafana Tempo** - Trace storage and visualization backend
 - **Correlation IDs** - Links traces with outbox events and Kafka messages
 
+**Note:** Distributed tracing is **disabled by default**. Activate the `tracing` profile to enable it.
+
+## Quick Start
+
+### Enable Tracing
+
+To enable distributed tracing, activate the `tracing` Spring profile:
+
+```bash
+# Using Maven
+mvn spring-boot:run -pl order-service -Dspring-boot.run.profiles=tracing
+
+# Using Java
+java -jar order-service.jar --spring.profiles.active=tracing
+
+# Combine with other profiles
+mvn spring-boot:run -pl order-service -Dspring-boot.run.profiles=azuresql,tracing
+```
+
+### Start All Services with Tracing
+
+```bash
+# Terminal 1 - Order Service
+mvn spring-boot:run -pl order-service -Dspring-boot.run.profiles=azuresql,tracing
+
+# Terminal 2 - RouteBox Server
+mvn spring-boot:run -pl routebox-server -Dspring-boot.run.profiles=azuresql,tracing
+
+# Terminal 3 - Order Processor
+mvn spring-boot:run -pl order-processor -Dspring-boot.run.profiles=azuresql,tracing
+```
+
 ## Architecture
 
 ### Components
@@ -48,6 +80,23 @@ graph TB
 
 ## Configuration
 
+### Enabling Tracing
+
+Distributed tracing is controlled by the `tracing` Spring profile. When this profile is not active, the OTLP exporter endpoint is not configured, effectively disabling trace export to Tempo.
+
+**Default behavior (tracing profile not active):**
+- Tracer beans are created (for dependency injection)
+- No traces are exported to external systems
+- No OTLP endpoint is configured
+- Minimal performance overhead
+
+**With tracing profile active:**
+- Traces are exported to Grafana Tempo
+- OTLP endpoint is configured
+- Sampling rate is set to 10% (configurable)
+
+The `tracing` profile is defined in `application-tracing.yml` files for each service.
+
 ### Sampling Rate
 
 To balance observability with performance, tracing uses a sampling strategy:
@@ -67,7 +116,7 @@ management:
 
 ### OTLP Endpoint
 
-Both services send traces to Tempo via HTTP:
+When the `tracing` profile is active, services send traces to Tempo via HTTP:
 
 ```yaml
 management:
@@ -77,6 +126,35 @@ management:
 ```
 
 **Note**: When running in Docker, use the service name: `http://tempo:4318/v1/traces`
+
+### Customizing the Tracing Profile
+
+You can customize the tracing configuration by:
+
+1. **Editing the profile file** (`application-tracing.yml`):
+```yaml
+management:
+  tracing:
+    sampling:
+      probability: 1.0  # 100% sampling for development
+  otlp:
+    tracing:
+      endpoint: http://your-tempo-instance:4318/v1/traces
+```
+
+2. **Using environment variables**:
+```bash
+export MANAGEMENT_TRACING_SAMPLING_PROBABILITY=1.0
+export MANAGEMENT_OTLP_TRACING_ENDPOINT=http://your-tempo-instance:4318/v1/traces
+mvn spring-boot:run -pl order-service -Dspring-boot.run.profiles=tracing
+```
+
+3. **Using command-line properties**:
+```bash
+mvn spring-boot:run -pl order-service \
+  -Dspring-boot.run.profiles=tracing \
+  -Dspring-boot.run.arguments="--management.tracing.sampling.probability=1.0"
+```
 
 ### Log Correlation
 
