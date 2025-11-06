@@ -9,6 +9,7 @@ import com.example.routebox.common.entity.OutboxEvent;
 import com.example.routebox.common.repository.OutboxEventRepository;
 import com.example.routebox.server.RouteBoxServerApplication;
 import com.example.routebox.server.config.DynamicKafkaTemplateFactory;
+import com.example.routebox.test.listener.SharedTestcontainers;
 import java.util.concurrent.CompletableFuture;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.clients.producer.RecordMetadata;
@@ -20,9 +21,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.kafka.support.SendResult;
+import org.springframework.test.context.DynamicPropertyRegistry;
+import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.testcontainers.junit.jupiter.Testcontainers;
-import com.example.routebox.test.listener.SharedTestcontainers;
 
 /** Tests for multi-cluster publishing scenarios in OutboxEventPublisher. */
 @SpringBootTest(classes = RouteBoxServerApplication.class)
@@ -33,7 +35,24 @@ class OutboxEventPublisherMultiClusterTest {
     SharedTestcontainers.ensureInitialized();
   }
 
-  
+  @DynamicPropertySource
+  static void configureRouting(DynamicPropertyRegistry registry) {
+    // Configure multi-cluster routing
+    // Test event with all-must-succeed strategy
+    registry.add("outbox.routing.rules.OrderCreated.clusters[0]", () -> "cluster-a");
+    registry.add("outbox.routing.rules.OrderCreated.clusters[1]", () -> "cluster-b");
+    registry.add("outbox.routing.rules.OrderCreated.strategy", () -> "all-must-succeed");
+
+    // Test event with at-least-one strategy
+    registry.add("outbox.routing.rules.OrderStatusChanged.clusters[0]", () -> "cluster-a");
+    registry.add("outbox.routing.rules.OrderStatusChanged.clusters[1]", () -> "cluster-b");
+    registry.add("outbox.routing.rules.OrderStatusChanged.strategy", () -> "at-least-one");
+
+    // Test event with optional clusters
+    registry.add("outbox.routing.rules.InventoryAdjusted.clusters[0]", () -> "cluster-a");
+    registry.add("outbox.routing.rules.InventoryAdjusted.optional[0]", () -> "cluster-b");
+    registry.add("outbox.routing.rules.InventoryAdjusted.strategy", () -> "all-must-succeed");
+  }
 
   @Autowired OutboxEventRepository outboxEventRepository;
 
