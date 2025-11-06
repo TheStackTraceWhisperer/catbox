@@ -506,33 +506,26 @@ Use health endpoints for:
 
 ## Monitoring Stack Architecture
 
-```
-┌─────────────────┐
-│ routebox-server   │──── metrics ────┐
-└─────────────────┘                  │
-                                     │
-┌─────────────────┐                  ▼
-│ order-service   │──── metrics ───►┌────────────┐
-└─────────────────┘                 │ Prometheus │◄──── alert rules
-                                    └──────┬─────┘
-┌─────────────────┐                        │
-│ Application     │──── logs ─────┐        │ alerts
-│ Containers      │                │        │
-└─────────────────┘                ▼        ▼
-                              ┌──────┐  ┌──────────────┐
-                              │ Loki │  │ Alertmanager │
-                              └───┬──┘  └──────┬───────┘
-                                  │            │ email
-                                  │            ▼
-                                  │       ┌─────────┐
-                                  │       │ Mailhog │
-                                  │       └─────────┘
-                                  └────┬────────┘
-                                       │
-                                       ▼
-                                  ┌─────────┐
-                                  │ Grafana │
-                                  └─────────┘
+```mermaid
+graph TB
+    RouteBoxServer[routebox-server]
+    OrderService[order-service]
+    AppContainers[Application<br/>Containers]
+    Prometheus[Prometheus]
+    Loki[Loki]
+    Alertmanager[Alertmanager]
+    Mailhog[Mailhog]
+    Grafana[Grafana]
+    AlertRules[alert rules]
+    
+    RouteBoxServer -->|metrics| Prometheus
+    OrderService -->|metrics| Prometheus
+    AppContainers -->|logs| Loki
+    AlertRules -->|rules| Prometheus
+    Prometheus -->|alerts| Alertmanager
+    Alertmanager -->|email| Mailhog
+    Prometheus -->|data| Grafana
+    Loki -->|data| Grafana
 ```
 
 ## Configuration Files
