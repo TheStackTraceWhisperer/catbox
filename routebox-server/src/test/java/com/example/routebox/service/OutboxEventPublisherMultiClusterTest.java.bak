@@ -20,20 +20,54 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.kafka.support.SendResult;
+import org.springframework.test.context.DynamicPropertyRegistry;
+import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.testcontainers.containers.MSSQLServerContainer;
+import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
-import com.example.routebox.test.listener.SharedTestcontainers;
 
 /** Tests for multi-cluster publishing scenarios in OutboxEventPublisher. */
 @SpringBootTest(classes = RouteBoxServerApplication.class)
 @Testcontainers
 class OutboxEventPublisherMultiClusterTest {
 
-  static {
-    SharedTestcontainers.ensureInitialized();
-  }
+  @Container
+  static MSSQLServerContainer<?> mssql =
+      new MSSQLServerContainer<>("mcr.microsoft.com/mssql/server:2022-latest")
+          .acceptLicense()
+          .withReuse(true);
 
-  
+  @DynamicPropertySource
+  static void sqlProps(DynamicPropertyRegistry registry) {
+    registry.add(
+        "spring.datasource.url",
+        () -> mssql.getJdbcUrl() + ";encrypt=true;trustServerCertificate=true");
+    registry.add("spring.datasource.username", mssql::getUsername);
+    registry.add("spring.datasource.password", mssql::getPassword);
+    registry.add(
+        "spring.datasource.driver-class-name",
+        () -> "com.microsoft.sqlserver.jdbc.SQLServerDriver");
+    registry.add(
+        "spring.jpa.properties.hibernate.dialect", () -> "org.hibernate.dialect.SQLServerDialect");
+    registry.add("spring.jpa.hibernate.ddl-auto", () -> "create-drop");
+
+    // Configure multi-cluster routing
+    // Test event with all-must-succeed strategy
+    registry.add("outbox.routing.rules.OrderCreated.clusters[0]", () -> "cluster-a");
+    registry.add("outbox.routing.rules.OrderCreated.clusters[1]", () -> "cluster-b");
+    registry.add("outbox.routing.rules.OrderCreated.strategy", () -> "all-must-succeed");
+
+    // Test event with at-least-one strategy
+    registry.add("outbox.routing.rules.OrderStatusChanged.clusters[0]", () -> "cluster-a");
+    registry.add("outbox.routing.rules.OrderStatusChanged.clusters[1]", () -> "cluster-b");
+    registry.add("outbox.routing.rules.OrderStatusChanged.strategy", () -> "at-least-one");
+
+    // Test event with optional clusters
+    registry.add("outbox.routing.rules.InventoryAdjusted.clusters[0]", () -> "cluster-a");
+    registry.add("outbox.routing.rules.InventoryAdjusted.optional[0]", () -> "cluster-b");
+    registry.add("outbox.routing.rules.InventoryAdjusted.strategy", () -> "all-must-succeed");
+  }
 
   @Autowired OutboxEventRepository outboxEventRepository;
 

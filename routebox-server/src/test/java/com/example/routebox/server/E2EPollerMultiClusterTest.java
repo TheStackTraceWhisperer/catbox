@@ -5,6 +5,7 @@ import static org.awaitility.Awaitility.await;
 
 import com.example.routebox.common.entity.OutboxEvent;
 import com.example.routebox.common.repository.OutboxEventRepository;
+import com.example.routebox.test.listener.SharedTestcontainers;
 import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
@@ -25,11 +26,7 @@ import org.springframework.kafka.listener.KafkaMessageListenerContainer;
 import org.springframework.kafka.listener.MessageListener;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
-import org.testcontainers.containers.KafkaContainer;
-import org.testcontainers.containers.MSSQLServerContainer;
-import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
-import org.testcontainers.utility.DockerImageName;
 
 /**
  * End-to-End test for dynamic Kafka routing across multiple clusters. Tests that events are routed
@@ -39,53 +36,12 @@ import org.testcontainers.utility.DockerImageName;
 @Testcontainers
 class E2EPollerMultiClusterTest {
 
-  @Container
-  static MSSQLServerContainer<?> mssql =
-      new MSSQLServerContainer<>("mcr.microsoft.com/mssql/server:2022-latest")
-          .acceptLicense()
-          .withReuse(true);
-
-  @Container
-  static KafkaContainer kafkaA =
-      new KafkaContainer(DockerImageName.parse("confluentinc/cp-kafka:7.9.1")).withReuse(true);
-
-  @Container
-  static KafkaContainer kafkaB =
-      new KafkaContainer(DockerImageName.parse("confluentinc/cp-kafka:7.9.1")).withReuse(true);
+  static {
+    SharedTestcontainers.ensureInitialized();
+  }
 
   @DynamicPropertySource
   static void configureProperties(DynamicPropertyRegistry registry) {
-    // Database configuration
-    registry.add(
-        "spring.datasource.url",
-        () -> mssql.getJdbcUrl() + ";encrypt=true;trustServerCertificate=true");
-    registry.add("spring.datasource.username", mssql::getUsername);
-    registry.add("spring.datasource.password", mssql::getPassword);
-    registry.add(
-        "spring.datasource.driver-class-name",
-        () -> "com.microsoft.sqlserver.jdbc.SQLServerDriver");
-    registry.add(
-        "spring.jpa.properties.hibernate.dialect", () -> "org.hibernate.dialect.SQLServerDialect");
-    registry.add("spring.jpa.hibernate.ddl-auto", () -> "create-drop");
-
-    // Kafka cluster A configuration
-    registry.add("kafka.clusters.cluster-a.bootstrap-servers", kafkaA::getBootstrapServers);
-    registry.add(
-        "kafka.clusters.cluster-a.producer.key-serializer",
-        () -> "org.apache.kafka.common.serialization.StringSerializer");
-    registry.add(
-        "kafka.clusters.cluster-a.producer.value-serializer",
-        () -> "org.apache.kafka.common.serialization.StringSerializer");
-
-    // Kafka cluster B configuration
-    registry.add("kafka.clusters.cluster-b.bootstrap-servers", kafkaB::getBootstrapServers);
-    registry.add(
-        "kafka.clusters.cluster-b.producer.key-serializer",
-        () -> "org.apache.kafka.common.serialization.StringSerializer");
-    registry.add(
-        "kafka.clusters.cluster-b.producer.value-serializer",
-        () -> "org.apache.kafka.common.serialization.StringSerializer");
-
     // Routing configuration - route different event types to different clusters
     registry.add("outbox.routing.rules.OrderCreated", () -> "cluster-a");
     registry.add("outbox.routing.rules.InventoryAdjusted", () -> "cluster-b");
@@ -113,14 +69,17 @@ class E2EPollerMultiClusterTest {
     recordsOrderCreatedA = new LinkedBlockingQueue<>();
     containerOrderCreatedA =
         createConsumer(
-            kafkaA.getBootstrapServers(), "OrderCreated", "group-a-order", recordsOrderCreatedA);
+            SharedTestcontainers.kafkaA.getBootstrapServers(),
+            "OrderCreated",
+            "group-a-order",
+            recordsOrderCreatedA);
     containerOrderCreatedA.start();
 
     // Set up consumer for InventoryAdjusted on cluster-a (should receive nothing)
     recordsInventoryAdjustedA = new LinkedBlockingQueue<>();
     containerInventoryAdjustedA =
         createConsumer(
-            kafkaA.getBootstrapServers(),
+            SharedTestcontainers.kafkaA.getBootstrapServers(),
             "InventoryAdjusted",
             "group-a-inventory",
             recordsInventoryAdjustedA);
@@ -130,14 +89,17 @@ class E2EPollerMultiClusterTest {
     recordsOrderCreatedB = new LinkedBlockingQueue<>();
     containerOrderCreatedB =
         createConsumer(
-            kafkaB.getBootstrapServers(), "OrderCreated", "group-b-order", recordsOrderCreatedB);
+            SharedTestcontainers.kafkaB.getBootstrapServers(),
+            "OrderCreated",
+            "group-b-order",
+            recordsOrderCreatedB);
     containerOrderCreatedB.start();
 
     // Set up consumer for InventoryAdjusted on cluster-b
     recordsInventoryAdjustedB = new LinkedBlockingQueue<>();
     containerInventoryAdjustedB =
         createConsumer(
-            kafkaB.getBootstrapServers(),
+            SharedTestcontainers.kafkaB.getBootstrapServers(),
             "InventoryAdjusted",
             "group-b-inventory",
             recordsInventoryAdjustedB);
