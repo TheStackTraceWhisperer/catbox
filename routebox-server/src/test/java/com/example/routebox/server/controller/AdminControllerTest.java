@@ -1,10 +1,14 @@
 package com.example.routebox.server.controller;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 import com.example.routebox.common.entity.OutboxEvent;
+import com.example.routebox.common.entity.ProcessedMessage;
 import com.example.routebox.common.repository.OutboxEventRepository;
+import com.example.routebox.common.repository.ProcessedMessageRepository;
 import com.example.routebox.server.RouteBoxServerApplication;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -51,9 +55,12 @@ class AdminControllerTest {
 
   @Autowired private OutboxEventRepository outboxEventRepository;
 
+  @Autowired private ProcessedMessageRepository processedMessageRepository;
+
   @BeforeEach
   void setup() {
     outboxEventRepository.deleteAll();
+    processedMessageRepository.deleteAll();
   }
 
   @Test
@@ -145,5 +152,39 @@ class AdminControllerTest {
         .andExpect(model().attribute("aggregateType", ""))
         .andExpect(model().attribute("aggregateId", ""))
         .andExpect(model().attribute("pendingOnly", false));
+  }
+
+  @Test
+  void markUnprocessed_ShouldDeleteProcessedMessage() throws Exception {
+    // Given
+    processedMessageRepository.save(
+        new ProcessedMessage("corr-1", "consumer-group-1", "OrderCreated", "Order", "A1"));
+
+    // When & Then
+    mockMvc
+        .perform(
+            post("/admin/processed-messages/mark-unprocessed")
+                .param("correlationId", "corr-1")
+                .param("consumerGroup", "consumer-group-1"))
+        .andExpect(status().isOk())
+        .andExpect(content().string("Message marked as unprocessed"));
+
+    // Verify message was deleted - check using exists
+    assertThat(
+            processedMessageRepository.existsByCorrelationIdAndConsumerGroup(
+                "corr-1", "consumer-group-1"))
+        .isFalse();
+  }
+
+  @Test
+  void markUnprocessed_ShouldHandleNonExistentMessage() throws Exception {
+    // When & Then - Should not throw exception
+    mockMvc
+        .perform(
+            post("/admin/processed-messages/mark-unprocessed")
+                .param("correlationId", "non-existent")
+                .param("consumerGroup", "consumer-group-1"))
+        .andExpect(status().isOk())
+        .andExpect(content().string("Message marked as unprocessed"));
   }
 }
