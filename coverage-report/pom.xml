@@ -37,6 +37,11 @@
             <artifactId>order-service</artifactId>
             <version>${project.version}</version>
         </dependency>
+        <dependency>
+            <groupId>com.example</groupId>
+            <artifactId>order-processor</artifactId>
+            <version>${project.version}</version>
+        </dependency>
     </dependencies>
 
     <build>
@@ -55,6 +60,10 @@
                         </goals>
                         <configuration>
                             <outputDirectory>${project.build.directory}/site/jacoco-aggregate</outputDirectory>
+                            <dataFileIncludes>
+                                <dataFileInclude>**/jacoco-ut/jacoco.exec</dataFileInclude>
+                                <dataFileInclude>**/jacoco-it/jacoco.exec</dataFileInclude>
+                            </dataFileIncludes>
                         </configuration>
                     </execution>
                 </executions>
