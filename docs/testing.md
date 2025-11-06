@@ -390,7 +390,7 @@ cd infrastructure && docker compose down
 
 ### GitHub Actions
 
-The project includes CI workflows that run tests automatically:
+The project includes CI workflows that run tests automatically with Docker layer caching enabled for faster builds:
 
 ```yaml
 jobs:
@@ -409,6 +409,26 @@ jobs:
       - name: Upload coverage reports
         uses: codecov/codecov-action@v3
 ```
+
+#### Docker Layer Caching
+
+To improve build times, the CI workflow implements Docker layer caching for Testcontainers images:
+
+**Cached Images**:
+- `mcr.microsoft.com/mssql/server:2022-latest` - MS SQL Server for integration tests
+- `confluentinc/cp-kafka:7.5.0` - Kafka for multi-cluster tests
+- `confluentinc/cp-kafka:7.9.1` - Kafka for integration tests
+
+**How it Works**:
+1. Images are loaded from GitHub Actions cache if available
+2. Missing images are pulled from container registries
+3. All images are saved to cache for subsequent builds
+4. Cache is automatically invalidated when POM files change
+
+**Benefits**:
+- Significantly faster builds on cache hits (no image download time)
+- Reduced network usage and registry rate limiting
+- More reliable builds with pre-warmed container images
 
 ## Troubleshooting
 
