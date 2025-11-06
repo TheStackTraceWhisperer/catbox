@@ -416,7 +416,6 @@ To improve build times, the CI workflow implements Docker layer caching for Test
 
 **Cached Images**:
 - `mcr.microsoft.com/mssql/server:2022-latest` - MS SQL Server for integration tests
-- `confluentinc/cp-kafka:7.5.0` - Kafka for multi-cluster tests
 - `confluentinc/cp-kafka:7.9.1` - Kafka for integration tests
 
 **How it Works**:

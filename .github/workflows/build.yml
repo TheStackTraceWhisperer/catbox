@@ -55,13 +55,6 @@ jobs:
             docker save mcr.microsoft.com/mssql/server:2022-latest -o ~/docker-images/mssql-2022.tar
           fi
           
-          # Pull and save Kafka 7.5.0 image
-          if ! docker image inspect confluentinc/cp-kafka:7.5.0 > /dev/null 2>&1; then
-            echo "Pulling confluentinc/cp-kafka:7.5.0"
-            docker pull confluentinc/cp-kafka:7.5.0
-            docker save confluentinc/cp-kafka:7.5.0 -o ~/docker-images/kafka-7.5.0.tar
-          fi
-          
           # Pull and save Kafka 7.9.1 image
           if ! docker image inspect confluentinc/cp-kafka:7.9.1 > /dev/null 2>&1; then
             echo "Pulling confluentinc/cp-kafka:7.9.1"
