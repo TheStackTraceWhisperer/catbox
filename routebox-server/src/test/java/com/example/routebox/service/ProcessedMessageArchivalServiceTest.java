@@ -64,20 +64,22 @@ class ProcessedMessageArchivalServiceTest {
   @Test
   void archiveOldMessages_deletesOldMessages() {
     // Given - Create old processed messages
+    int retentionDays = processingConfig.getArchivalRetentionDays();
+    
     ProcessedMessage oldMessage1 =
         new ProcessedMessage("corr-1", "consumer-group-1", "OrderCreated", "Order", "A1");
-    oldMessage1.setProcessedAt(LocalDateTime.now().minusDays(10));
+    oldMessage1.setProcessedAt(LocalDateTime.now().minusDays(retentionDays + 3));
     processedMessageRepository.save(oldMessage1);
 
     ProcessedMessage oldMessage2 =
         new ProcessedMessage("corr-2", "consumer-group-1", "OrderUpdated", "Order", "A2");
-    oldMessage2.setProcessedAt(LocalDateTime.now().minusDays(8));
+    oldMessage2.setProcessedAt(LocalDateTime.now().minusDays(retentionDays + 1));
     processedMessageRepository.save(oldMessage2);
 
     // Create a recent message (should not be deleted)
     ProcessedMessage recentMessage =
         new ProcessedMessage("corr-3", "consumer-group-1", "OrderCreated", "Order", "A3");
-    recentMessage.setProcessedAt(LocalDateTime.now().minusDays(3));
+    recentMessage.setProcessedAt(LocalDateTime.now().minusDays(retentionDays - 4));
     processedMessageRepository.save(recentMessage);
 
     // When

@@ -95,20 +95,20 @@ class ProcessedMessageServiceTest {
 
   @Test
   void findPaged_sortsByField() {
-    // Given
+    // Given - Use fixed timestamps for reliable ordering
     ProcessedMessage msg1 =
         new ProcessedMessage("corr-1", "consumer-group-1", "OrderCreated", "Order", "A1");
-    msg1.setProcessedAt(LocalDateTime.now().minusDays(2));
+    msg1.setProcessedAt(LocalDateTime.of(2024, 1, 1, 10, 0));
     processedMessageRepository.save(msg1);
 
     ProcessedMessage msg2 =
         new ProcessedMessage("corr-2", "consumer-group-1", "OrderCreated", "Order", "A2");
-    msg2.setProcessedAt(LocalDateTime.now().minusDays(1));
+    msg2.setProcessedAt(LocalDateTime.of(2024, 1, 2, 10, 0));
     processedMessageRepository.save(msg2);
 
     ProcessedMessage msg3 =
         new ProcessedMessage("corr-3", "consumer-group-1", "OrderCreated", "Order", "A3");
-    msg3.setProcessedAt(LocalDateTime.now());
+    msg3.setProcessedAt(LocalDateTime.of(2024, 1, 3, 10, 0));
     processedMessageRepository.save(msg3);
 
     // When - Sort by processedAt DESC
