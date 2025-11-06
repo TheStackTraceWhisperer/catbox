@@ -20,6 +20,84 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Cache Docker images
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/docker-images
+          key: docker-images-${{ runner.os }}-${{ hashFiles('**/pom.xml') }}
+          restore-keys: |
+            docker-images-${{ runner.os }}-
+
+      - name: Load cached Docker images
+        run: |
+          echo "::group::Loading Docker images from cache"
+          START_TIME=$(date +%s)
+          
+          if [ -d ~/docker-images ] && [ "$(ls -A ~/docker-images 2>/dev/null)" ]; then
+            echo "✅ Cache HIT - Loading images from cache..."
+            for image in ~/docker-images/*.tar; do
+              if [ -f "$image" ]; then
+                echo "  Loading: $(basename $image)"
+                docker load -i "$image"
+              fi
+            done
+            
+            END_TIME=$(date +%s)
+            ELAPSED=$((END_TIME - START_TIME))
+            echo ""
+            echo "⏱️  Cache load time: ${ELAPSED}s"
+            echo "💡 Time saved: ~120-180s (typical pull time for these images)"
+          else
+            echo "❌ Cache MISS - Images will be pulled from registries"
+            echo "💡 This is expected on first build. Subsequent builds will be faster!"
+          fi
+          
+          echo "::endgroup::"
+
+      - name: Pull and save Testcontainers images
+        run: |
+          echo "::group::Pulling missing Docker images"
+          START_TIME=$(date +%s)
+          mkdir -p ~/docker-images
+          PULLED=0
+          
+          # Pull and save MS SQL Server image
+          if ! docker image inspect mcr.microsoft.com/mssql/server:2022-latest > /dev/null 2>&1; then
+            echo "📥 Pulling mcr.microsoft.com/mssql/server:2022-latest..."
+            docker pull mcr.microsoft.com/mssql/server:2022-latest
+            docker save mcr.microsoft.com/mssql/server:2022-latest -o ~/docker-images/mssql-2022.tar
+            PULLED=$((PULLED + 1))
+          else
+            echo "✅ mcr.microsoft.com/mssql/server:2022-latest already available (from cache)"
+          fi
+          
+          # Pull and save Kafka 7.9.1 image
+          if ! docker image inspect confluentinc/cp-kafka:7.9.1 > /dev/null 2>&1; then
+            echo "📥 Pulling confluentinc/cp-kafka:7.9.1..."
+            docker pull confluentinc/cp-kafka:7.9.1
+            docker save confluentinc/cp-kafka:7.9.1 -o ~/docker-images/kafka-7.9.1.tar
+            PULLED=$((PULLED + 1))
+          else
+            echo "✅ confluentinc/cp-kafka:7.9.1 already available (from cache)"
+          fi
+          
+          END_TIME=$(date +%s)
+          ELAPSED=$((END_TIME - START_TIME))
+          
+          echo ""
+          if [ $PULLED -eq 0 ]; then
+            echo "🎉 All images loaded from cache! No pulls needed."
+            echo "⏱️  Time to verify and save: ${ELAPSED}s"
+          else
+            echo "📊 Images pulled: $PULLED"
+            echo "⏱️  Pull and save time: ${ELAPSED}s"
+          fi
+          echo "::endgroup::"
+
       - name: Set up JDK 21
         uses: actions/setup-java@v4
         with:

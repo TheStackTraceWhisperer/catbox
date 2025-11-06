@@ -56,7 +56,7 @@ class OrderProcessorE2ETest {
 
   @Container
   static final KafkaContainer kafkaContainer =
-      new KafkaContainer(DockerImageName.parse("confluentinc/cp-kafka:7.5.0"));
+      new KafkaContainer(DockerImageName.parse("confluentinc/cp-kafka:7.9.1"));
 
   @DynamicPropertySource
   static void configureProperties(DynamicPropertyRegistry registry) {
