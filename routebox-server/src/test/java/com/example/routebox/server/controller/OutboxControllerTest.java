@@ -30,8 +30,6 @@ class OutboxControllerTest {
     SharedTestcontainers.ensureInitialized();
   }
 
-  
-
   @Autowired private MockMvc mockMvc;
 
   @Autowired private OutboxEventRepository outboxEventRepository;

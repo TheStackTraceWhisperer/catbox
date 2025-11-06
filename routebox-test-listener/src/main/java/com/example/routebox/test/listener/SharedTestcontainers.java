@@ -28,7 +28,7 @@ public class SharedTestcontainers {
     kafkaB =
         new KafkaContainer(DockerImageName.parse("confluentinc/cp-kafka:7.9.1")).withReuse(true);
 
-    // Start containers in parallel for faster boot
+    // Start containers sequentially
     mssql.start();
     kafkaA.start();
     kafkaB.start();

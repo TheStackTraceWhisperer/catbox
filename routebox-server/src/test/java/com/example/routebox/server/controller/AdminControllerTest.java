@@ -31,8 +31,6 @@ class AdminControllerTest {
     SharedTestcontainers.ensureInitialized();
   }
 
-  
-
   @Autowired private MockMvc mockMvc;
 
   @Autowired private OutboxEventRepository outboxEventRepository;

@@ -31,8 +31,6 @@ class OutboxMetricsServiceTest {
     SharedTestcontainers.ensureInitialized();
   }
 
-  
-
   @Autowired OutboxEventRepository outboxEventRepository;
 
   @Autowired OutboxArchiveEventRepository archiveEventRepository;
