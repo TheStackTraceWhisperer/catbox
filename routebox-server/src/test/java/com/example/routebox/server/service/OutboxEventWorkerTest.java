@@ -3,6 +3,7 @@ package com.example.routebox.server.service;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -58,11 +59,12 @@ class OutboxEventWorkerTest {
   @Autowired private BlockingQueue<OutboxEvent> eventQueue;
 
   @MockitoBean private OutboxEventPublisher publisher;
+  @MockitoBean private OutboxFailureHandler failureHandler;
 
   @BeforeEach
   void setUp() {
     eventQueue.clear();
-    Mockito.reset(publisher);
+    Mockito.reset(publisher, failureHandler);
   }
 
   @Test
@@ -162,4 +164,93 @@ class OutboxEventWorkerTest {
 
     assertThat(eventQueue).isEmpty();
   }
+
+  @Test
+  void worker_shouldCallFailureHandlerWhenPublisherFails() throws InterruptedException {
+    // Given - Publisher throws exception
+    OutboxEvent failingEvent = new OutboxEvent("Order", "order-fail", "OrderCreated", "{}");
+    failingEvent.setId(1L);
+
+    doThrow(new RuntimeException("Publisher error")).when(publisher).publishEvent(failingEvent);
+
+    // When
+    eventQueue.put(failingEvent);
+
+    // Then - Failure handler should be called
+    await()
+        .atMost(Duration.ofSeconds(5))
+        .pollInterval(Duration.ofMillis(100))
+        .untilAsserted(
+            () -> {
+              verify(failureHandler, times(1))
+                  .handleFailure(eq(failingEvent), any(RuntimeException.class));
+            });
+  }
+
+  @Test
+  void worker_shouldRequeueEventWhenFailureHandlerFails() throws InterruptedException {
+    // Given - Both publisher and failure handler throw exceptions
+    OutboxEvent failingEvent = new OutboxEvent("Order", "order-fail", "OrderCreated", "{}");
+    failingEvent.setId(1L);
+
+    doThrow(new RuntimeException("Publisher error")).when(publisher).publishEvent(failingEvent);
+    doThrow(new RuntimeException("Handler error"))
+        .doNothing() // Second time succeeds
+        .when(failureHandler)
+        .handleFailure(eq(failingEvent), any(RuntimeException.class));
+
+    // When
+    eventQueue.put(failingEvent);
+
+    // Then - Event should be requeued and processed again
+    await()
+        .atMost(Duration.ofSeconds(10))
+        .pollInterval(Duration.ofMillis(100))
+        .untilAsserted(
+            () -> {
+              // Failure handler should be called twice:
+              // 1st time: throws exception, event is requeued
+              // 2nd time: succeeds, event is handled
+              verify(failureHandler, times(2))
+                  .handleFailure(eq(failingEvent), any(RuntimeException.class));
+            });
+  }
+
+  @Test
+  void worker_shouldContinueAfterHandlingMultipleFailures() throws InterruptedException {
+    // Given - Multiple failing events
+    OutboxEvent failingEvent1 = new OutboxEvent("Order", "order-1", "OrderCreated", "{}");
+    failingEvent1.setId(1L);
+
+    OutboxEvent failingEvent2 = new OutboxEvent("Order", "order-2", "OrderCreated", "{}");
+    failingEvent2.setId(2L);
+
+    OutboxEvent successEvent = new OutboxEvent("Order", "order-3", "OrderCreated", "{}");
+    successEvent.setId(3L);
+
+    // Configure publisher to fail for first two events
+    doThrow(new RuntimeException("Error 1"))
+        .doThrow(new RuntimeException("Error 2"))
+        .doNothing()
+        .when(publisher)
+        .publishEvent(any(OutboxEvent.class));
+
+    // When
+    eventQueue.put(failingEvent1);
+    eventQueue.put(failingEvent2);
+    eventQueue.put(successEvent);
+
+    // Then - All events should be processed
+    await()
+        .atMost(Duration.ofSeconds(5))
+        .pollInterval(Duration.ofMillis(100))
+        .untilAsserted(
+            () -> {
+              verify(publisher, times(3)).publishEvent(any(OutboxEvent.class));
+              verify(failureHandler, times(2)).handleFailure(any(), any());
+            });
+
+    assertThat(eventQueue).isEmpty();
+  }
 }
+
