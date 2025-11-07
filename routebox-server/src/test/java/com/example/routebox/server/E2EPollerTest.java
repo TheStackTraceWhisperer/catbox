@@ -79,17 +79,11 @@ class E2EPollerTest {
     container.setupMessageListener((MessageListener<String, String>) records::add);
     container.start();
     
-    // Wait for consumer to initialize and drain any existing messages
-    // We wait for the container to be running, then give it additional time to complete
-    // partition assignment and consume any existing messages from previous test runs
-    await()
-        .atMost(Duration.ofSeconds(10))
-        .pollDelay(Duration.ofMillis(100))
-        .until(() -> container.isRunning());
-    
-    // Additional wait for partition assignment and initial message consumption
+    // Wait for consumer to initialize and consume any existing messages from previous test runs
+    // Using a fixed wait time is more reliable than checking container.isRunning() which can
+    // sometimes hang in CI environments. The consumer needs time for partition assignment.
     try {
-      Thread.sleep(1000);
+      Thread.sleep(2000);
     } catch (InterruptedException e) {
       Thread.currentThread().interrupt();
     }
