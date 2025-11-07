@@ -5,10 +5,12 @@ import static org.assertj.core.api.Assertions.assertThat;
 import com.example.routebox.common.entity.OutboxEvent;
 import com.example.routebox.common.repository.OutboxEventRepository;
 import com.example.routebox.server.RouteBoxServerApplication;
+import com.example.routebox.test.listener.SharedTestcontainers;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CountDownLatch;
 import org.junit.jupiter.api.BeforeEach;
@@ -16,7 +18,6 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.testcontainers.junit.jupiter.Testcontainers;
-import com.example.routebox.test.listener.SharedTestcontainers;
 
 /**
  * Tests the concurrency safety of the OutboxEventClaimer. Verifies that multiple threads/nodes
@@ -38,8 +39,9 @@ class OutboxEventClaimerConcurrencyTest {
 
   @BeforeEach
   void setUp() {
-    // Clean database
+    // Clean database - this test is NOT @Transactional so we need to ensure clean state
     outboxEventRepository.deleteAll();
+    outboxEventRepository.flush();
   }
 
   /**
@@ -48,13 +50,17 @@ class OutboxEventClaimerConcurrencyTest {
    */
   @Test
   void testConcurrentClaimersDoNotProcessSameEvents() throws Exception {
-    // Arrange: Create 100 pending events
+    // Arrange: Create 100 pending events with unique IDs
     List<OutboxEvent> events = new ArrayList<>();
     for (int i = 1; i <= 100; i++) {
+      String orderId = "order-" + UUID.randomUUID().toString();
       OutboxEvent event =
-          new OutboxEvent("Order", "order-" + i, "OrderCreated", "{\"orderId\":" + i + "}");
+          new OutboxEvent("Order", orderId, "OrderCreated", "{\"orderId\":\"" + orderId + "\"}");
       events.add(outboxEventRepository.save(event));
     }
+
+    // Ensure all events are committed to the database
+    outboxEventRepository.flush();
 
     // Act: Use two threads to claim events simultaneously
     CountDownLatch startLatch = new CountDownLatch(1);

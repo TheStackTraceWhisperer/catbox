@@ -11,6 +11,7 @@ import static org.mockito.Mockito.verify;
 import com.example.routebox.common.entity.OutboxEvent;
 import com.example.routebox.server.RouteBoxServerApplication;
 import com.example.routebox.server.config.OutboxProcessingConfig;
+import com.example.routebox.test.listener.SharedTestcontainers;
 import java.time.Duration;
 import java.util.concurrent.BlockingQueue;
 import org.junit.jupiter.api.BeforeEach;
@@ -18,9 +19,10 @@ import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.DynamicPropertyRegistry;
+import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.testcontainers.junit.jupiter.Testcontainers;
-import com.example.routebox.test.listener.SharedTestcontainers;
 
 /** Tests for OutboxEventWorker to verify worker thread behavior and error handling. */
 @SpringBootTest(classes = RouteBoxServerApplication.class)
@@ -31,7 +33,11 @@ class OutboxEventWorkerTest {
     SharedTestcontainers.ensureInitialized();
   }
 
-  
+  @DynamicPropertySource
+  static void configureWorkers(DynamicPropertyRegistry registry) {
+    // Set test-specific worker configuration
+    registry.add("outbox.processing.worker-concurrency", () -> 3);
+  }
 
   @Autowired private OutboxProcessingConfig processingConfig;
   @Autowired private BlockingQueue<OutboxEvent> eventQueue;

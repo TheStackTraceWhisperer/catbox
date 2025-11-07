@@ -66,13 +66,16 @@ class E2EPollerMultiClusterTest {
 
   @BeforeEach
   void setUp() {
+    // Use unique consumer group IDs to avoid cross-test contamination
+    String uniqueSuffix = UUID.randomUUID().toString().substring(0, 8);
+    
     // Set up consumer for OrderCreated on cluster-a
     recordsOrderCreatedA = new LinkedBlockingQueue<>();
     containerOrderCreatedA =
         createConsumer(
             SharedTestcontainers.kafkaA.getBootstrapServers(),
             "OrderCreated",
-            "group-a-order",
+            "group-a-order-" + uniqueSuffix,
             recordsOrderCreatedA);
     containerOrderCreatedA.start();
 
@@ -82,7 +85,7 @@ class E2EPollerMultiClusterTest {
         createConsumer(
             SharedTestcontainers.kafkaA.getBootstrapServers(),
             "InventoryAdjusted",
-            "group-a-inventory",
+            "group-a-inventory-" + uniqueSuffix,
             recordsInventoryAdjustedA);
     containerInventoryAdjustedA.start();
 
@@ -92,7 +95,7 @@ class E2EPollerMultiClusterTest {
         createConsumer(
             SharedTestcontainers.kafkaB.getBootstrapServers(),
             "OrderCreated",
-            "group-b-order",
+            "group-b-order-" + uniqueSuffix,
             recordsOrderCreatedB);
     containerOrderCreatedB.start();
 
@@ -102,9 +105,21 @@ class E2EPollerMultiClusterTest {
         createConsumer(
             SharedTestcontainers.kafkaB.getBootstrapServers(),
             "InventoryAdjusted",
-            "group-b-inventory",
+            "group-b-inventory-" + uniqueSuffix,
             recordsInventoryAdjustedB);
     containerInventoryAdjustedB.start();
+    
+    // Wait for consumers to initialize and drain any existing messages
+    try {
+      Thread.sleep(2000);
+      // Drain any pre-existing messages from previous tests
+      recordsOrderCreatedA.clear();
+      recordsInventoryAdjustedA.clear();
+      recordsOrderCreatedB.clear();
+      recordsInventoryAdjustedB.clear();
+    } catch (InterruptedException e) {
+      Thread.currentThread().interrupt();
+    }
   }
 
   @AfterEach

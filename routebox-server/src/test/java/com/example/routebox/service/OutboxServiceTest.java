@@ -96,15 +96,22 @@ class OutboxServiceTest {
 
   @Test
   void findPaged_filtersWithAggregateIdAndPending() {
-    outboxEventRepository.save(new OutboxEvent("Order", "A1", "OrderCreated", "{}"));
-    OutboxEvent sent = new OutboxEvent("Order", "A1", "OrderStatusChanged", "{}");
+    outboxEventRepository.save(
+        new OutboxEvent("Order", UUID.randomUUID().toString(), "OrderCreated", "{}"));
+    OutboxEvent sent =
+        new OutboxEvent("Order", UUID.randomUUID().toString(), "OrderStatusChanged", "{}");
     sent.setSentAt(java.time.LocalDateTime.now());
     outboxEventRepository.save(sent);
 
+    // Use a specific aggregateId to filter by
+    String testAggId = UUID.randomUUID().toString();
+    outboxEventRepository.save(new OutboxEvent("Order", testAggId, "OrderCreated", "{}"));
+
     Page<OutboxService.OutboxEventSummaryDto> page =
-        outboxService.findPaged(0, 10, null, null, "A1", true, "createdAt", Sort.Direction.DESC);
-    // Should only return pending events for A1
-    assertThat(page.getTotalElements()).isEqualTo(2); // A1 from setup + new A1
+        outboxService.findPaged(
+            0, 10, null, null, testAggId, true, "createdAt", Sort.Direction.DESC);
+    // Should only return pending events for the specific aggregateId
+    assertThat(page.getTotalElements()).isEqualTo(1);
   }
 
   @Test

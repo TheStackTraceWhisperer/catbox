@@ -58,12 +58,14 @@ class E2EPollerTest {
 
   @BeforeEach
   void setUp() {
-    // Set up Kafka consumer for OrderCreated topic
+    // Set up Kafka consumer for OrderCreated topic with unique group ID
+    String uniqueGroupId = "test-group-" + UUID.randomUUID().toString().substring(0, 8);
+    
     Map<String, Object> consumerProps = new HashMap<>();
     consumerProps.put(
         ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG,
         SharedTestcontainers.kafkaA.getBootstrapServers());
-    consumerProps.put(ConsumerConfig.GROUP_ID_CONFIG, "test-group");
+    consumerProps.put(ConsumerConfig.GROUP_ID_CONFIG, uniqueGroupId);
     consumerProps.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");
     consumerProps.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
     consumerProps.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
@@ -76,6 +78,14 @@ class E2EPollerTest {
     records = new LinkedBlockingQueue<>();
     container.setupMessageListener((MessageListener<String, String>) records::add);
     container.start();
+    
+    // Wait for consumer to initialize and drain any existing messages
+    try {
+      Thread.sleep(2000);
+      records.clear();
+    } catch (InterruptedException e) {
+      Thread.currentThread().interrupt();
+    }
   }
 
   @AfterEach

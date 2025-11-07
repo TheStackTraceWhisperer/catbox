@@ -11,6 +11,7 @@ import com.example.routebox.common.repository.OutboxEventRepository;
 import com.example.routebox.server.RouteBoxServerApplication;
 import com.example.routebox.server.config.DynamicKafkaTemplateFactory;
 import com.example.routebox.server.config.OutboxProcessingConfig;
+import com.example.routebox.test.listener.SharedTestcontainers;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
@@ -27,9 +28,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.kafka.support.SendResult;
+import org.springframework.test.context.DynamicPropertyRegistry;
+import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.testcontainers.junit.jupiter.Testcontainers;
-import com.example.routebox.test.listener.SharedTestcontainers;
 
 /**
  * Tests for backpressure mechanism in the outbox event processing system. Verifies that the
@@ -43,7 +45,12 @@ class OutboxEventBackpressureTest {
     SharedTestcontainers.ensureInitialized();
   }
 
-  
+  @DynamicPropertySource
+  static void configureBackpressure(DynamicPropertyRegistry registry) {
+    // Set test-specific backpressure configuration
+    registry.add("outbox.processing.worker-concurrency", () -> 5);
+    registry.add("outbox.processing.queue-capacity", () -> 10);
+  }
 
   @Autowired private OutboxEventRepository eventRepository;
   @Autowired private OutboxProcessingConfig processingConfig;
