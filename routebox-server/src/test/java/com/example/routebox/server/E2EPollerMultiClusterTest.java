@@ -110,13 +110,23 @@ class E2EPollerMultiClusterTest {
     containerInventoryAdjustedB.start();
     
     // Wait for all consumers to initialize and drain any existing messages
+    // We wait for all containers to be running, then give them additional time to complete
+    // partition assignment and consume any existing messages from previous test runs
     await()
         .atMost(Duration.ofSeconds(10))
-        .pollDelay(Duration.ofMillis(500))
+        .pollDelay(Duration.ofMillis(100))
         .until(() -> containerOrderCreatedA.isRunning() 
             && containerInventoryAdjustedA.isRunning()
             && containerOrderCreatedB.isRunning()
             && containerInventoryAdjustedB.isRunning());
+    
+    // Additional wait for partition assignment and initial message consumption
+    try {
+      Thread.sleep(1000);
+    } catch (InterruptedException e) {
+      Thread.currentThread().interrupt();
+    }
+    
     // Clear any messages received during initialization
     recordsOrderCreatedA.clear();
     recordsInventoryAdjustedA.clear();
