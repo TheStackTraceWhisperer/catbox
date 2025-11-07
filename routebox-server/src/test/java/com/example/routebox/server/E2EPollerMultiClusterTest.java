@@ -9,6 +9,7 @@ import com.example.routebox.test.listener.SharedTestcontainers;
 import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
@@ -142,19 +143,24 @@ class E2EPollerMultiClusterTest {
    */
   @Test
   void testPollerRoutesEventsToCorrectClusters() throws Exception {
-    // Arrange: Create OrderCreated event (should go to cluster-a)
+    // Arrange: Create OrderCreated event (should go to cluster-a) with unique ID
+    String orderId = "order-" + UUID.randomUUID().toString();
     OutboxEvent orderEvent =
         new OutboxEvent(
             "Order",
-            "order-999",
+            orderId,
             "OrderCreated",
-            "{\"orderId\":999,\"customerName\":\"Bob\",\"amount\":199.99}");
+            "{\"orderId\":\"" + orderId + "\",\"customerName\":\"Bob\",\"amount\":199.99}");
     OutboxEvent savedOrderEvent = outboxEventRepository.save(orderEvent);
 
-    // Arrange: Create InventoryAdjusted event (should go to cluster-b)
+    // Arrange: Create InventoryAdjusted event (should go to cluster-b) with unique ID
+    String itemId = "item-" + UUID.randomUUID().toString();
     OutboxEvent inventoryEvent =
         new OutboxEvent(
-            "Inventory", "item-555", "InventoryAdjusted", "{\"itemId\":555,\"quantity\":50}");
+            "Inventory",
+            itemId,
+            "InventoryAdjusted",
+            "{\"itemId\":\"" + itemId + "\",\"quantity\":50}");
     OutboxEvent savedInventoryEvent = outboxEventRepository.save(inventoryEvent);
 
     // Act: Wait for the poller to claim and publish both events
@@ -175,7 +181,7 @@ class E2EPollerMultiClusterTest {
     ConsumerRecord<String, String> receivedOrderA = recordsOrderCreatedA.poll(5, TimeUnit.SECONDS);
     assertThat(receivedOrderA).isNotNull();
     assertThat(receivedOrderA.topic()).isEqualTo("OrderCreated");
-    assertThat(receivedOrderA.key()).isEqualTo("order-999");
+    assertThat(receivedOrderA.key()).isEqualTo(orderId);
     assertThat(receivedOrderA.value()).contains("Bob");
 
     // Assert: InventoryAdjusted should arrive only on cluster-b
@@ -183,8 +189,8 @@ class E2EPollerMultiClusterTest {
         recordsInventoryAdjustedB.poll(5, TimeUnit.SECONDS);
     assertThat(receivedInventoryB).isNotNull();
     assertThat(receivedInventoryB.topic()).isEqualTo("InventoryAdjusted");
-    assertThat(receivedInventoryB.key()).isEqualTo("item-555");
-    assertThat(receivedInventoryB.value()).contains("555");
+    assertThat(receivedInventoryB.key()).isEqualTo(itemId);
+    assertThat(receivedInventoryB.value()).contains(itemId);
 
     // Assert: Verify cross-contamination did not occur
     // OrderCreated should NOT arrive on cluster-b

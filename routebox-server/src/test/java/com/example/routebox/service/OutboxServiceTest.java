@@ -6,18 +6,17 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import com.example.routebox.common.entity.OutboxEvent;
 import com.example.routebox.common.repository.OutboxEventRepository;
 import com.example.routebox.server.RouteBoxServerApplication;
+import com.example.routebox.test.listener.SharedTestcontainers;
 import java.util.List;
+import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Sort;
-import org.springframework.test.context.DynamicPropertyRegistry;
-import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.transaction.annotation.Transactional;
 import org.testcontainers.junit.jupiter.Testcontainers;
-import com.example.routebox.test.listener.SharedTestcontainers;
 
 @SpringBootTest(classes = RouteBoxServerApplication.class)
 @Transactional
@@ -35,9 +34,12 @@ class OutboxServiceTest {
   @BeforeEach
   void setup() {
     outboxEventRepository.deleteAll();
-    outboxEventRepository.save(new OutboxEvent("Order", "A1", "OrderCreated", "{}"));
-    outboxEventRepository.save(new OutboxEvent("Order", "A2", "OrderStatusChanged", "{}"));
-    outboxEventRepository.save(new OutboxEvent("Inventory", "I1", "InventoryAdjusted", "{}"));
+    outboxEventRepository.save(
+        new OutboxEvent("Order", UUID.randomUUID().toString(), "OrderCreated", "{}"));
+    outboxEventRepository.save(
+        new OutboxEvent("Order", UUID.randomUUID().toString(), "OrderStatusChanged", "{}"));
+    outboxEventRepository.save(
+        new OutboxEvent("Inventory", UUID.randomUUID().toString(), "InventoryAdjusted", "{}"));
   }
 
   @Test

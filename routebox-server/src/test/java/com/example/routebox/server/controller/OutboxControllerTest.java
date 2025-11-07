@@ -8,7 +8,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import com.example.routebox.common.entity.OutboxEvent;
 import com.example.routebox.common.repository.OutboxEventRepository;
 import com.example.routebox.server.RouteBoxServerApplication;
+import com.example.routebox.test.listener.SharedTestcontainers;
 import java.time.LocalDateTime;
+import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,7 +19,6 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
 import org.testcontainers.junit.jupiter.Testcontainers;
-import com.example.routebox.test.listener.SharedTestcontainers;
 
 /** Integration tests for OutboxController to verify REST API endpoints. */
 @SpringBootTest(classes = RouteBoxServerApplication.class)
@@ -42,8 +43,10 @@ class OutboxControllerTest {
   @Test
   void getAllOutboxEvents_ShouldReturnAllEvents() throws Exception {
     // Given
-    outboxEventRepository.save(new OutboxEvent("Order", "A1", "OrderCreated", "{}"));
-    outboxEventRepository.save(new OutboxEvent("Order", "A2", "OrderStatusChanged", "{}"));
+    outboxEventRepository.save(
+        new OutboxEvent("Order", UUID.randomUUID().toString(), "OrderCreated", "{}"));
+    outboxEventRepository.save(
+        new OutboxEvent("Order", UUID.randomUUID().toString(), "OrderStatusChanged", "{}"));
 
     // When & Then
     mockMvc
@@ -56,8 +59,10 @@ class OutboxControllerTest {
   @Test
   void getPendingOutboxEvents_ShouldReturnOnlyPending() throws Exception {
     // Given
-    outboxEventRepository.save(new OutboxEvent("Order", "A1", "OrderCreated", "{}"));
-    OutboxEvent sentEvent = new OutboxEvent("Order", "A2", "OrderStatusChanged", "{}");
+    outboxEventRepository.save(
+        new OutboxEvent("Order", UUID.randomUUID().toString(), "OrderCreated", "{}"));
+    OutboxEvent sentEvent =
+        new OutboxEvent("Order", UUID.randomUUID().toString(), "OrderStatusChanged", "{}");
     sentEvent.setSentAt(LocalDateTime.now());
     outboxEventRepository.save(sentEvent);
 
@@ -72,9 +77,12 @@ class OutboxControllerTest {
   @Test
   void searchOutbox_WithFilters_ShouldReturnFilteredResults() throws Exception {
     // Given
-    outboxEventRepository.save(new OutboxEvent("Order", "A1", "OrderCreated", "{}"));
-    outboxEventRepository.save(new OutboxEvent("Order", "A2", "OrderStatusChanged", "{}"));
-    outboxEventRepository.save(new OutboxEvent("Inventory", "I1", "InventoryAdjusted", "{}"));
+    outboxEventRepository.save(
+        new OutboxEvent("Order", UUID.randomUUID().toString(), "OrderCreated", "{}"));
+    outboxEventRepository.save(
+        new OutboxEvent("Order", UUID.randomUUID().toString(), "OrderStatusChanged", "{}"));
+    outboxEventRepository.save(
+        new OutboxEvent("Inventory", UUID.randomUUID().toString(), "InventoryAdjusted", "{}"));
 
     // When & Then
     mockMvc

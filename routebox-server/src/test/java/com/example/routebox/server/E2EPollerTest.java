@@ -9,6 +9,7 @@ import com.example.routebox.test.listener.SharedTestcontainers;
 import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
@@ -90,13 +91,14 @@ class E2EPollerTest {
    */
   @Test
   void testPollerClaimsAndPublishesEvent() throws Exception {
-    // Arrange: Create a test outbox event
+    // Arrange: Create a test outbox event with unique ID
+    String orderId = UUID.randomUUID().toString();
     OutboxEvent event =
         new OutboxEvent(
             "Order",
-            "order-12345",
+            orderId,
             "OrderCreated",
-            "{\"orderId\":12345,\"customerName\":\"John Doe\",\"amount\":99.99}");
+            "{\"orderId\":\"" + orderId + "\",\"customerName\":\"John Doe\",\"amount\":99.99}");
     OutboxEvent savedEvent = outboxEventRepository.save(event);
     assertThat(savedEvent.getId()).isNotNull();
     assertThat(savedEvent.getSentAt()).isNull();
@@ -121,8 +123,8 @@ class E2EPollerTest {
     ConsumerRecord<String, String> received = records.poll(5, TimeUnit.SECONDS);
     assertThat(received).isNotNull();
     assertThat(received.topic()).isEqualTo("OrderCreated");
-    assertThat(received.key()).isEqualTo("order-12345");
+    assertThat(received.key()).isEqualTo(orderId);
     assertThat(received.value()).contains("John Doe");
-    assertThat(received.value()).contains("12345");
+    assertThat(received.value()).contains(orderId);
   }
 }
