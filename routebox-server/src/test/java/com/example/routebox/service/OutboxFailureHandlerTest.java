@@ -25,13 +25,12 @@ import com.example.routebox.test.listener.SharedTestcontainers;
  */
 @SpringBootTest(classes = RouteBoxServerApplication.class)
 @Testcontainers
+@Transactional
 class OutboxFailureHandlerTest {
 
   static {
     SharedTestcontainers.ensureInitialized();
   }
-
-  
 
   @Autowired OutboxEventRepository outboxEventRepository;
 

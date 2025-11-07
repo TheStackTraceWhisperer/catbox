@@ -33,8 +33,6 @@ class CorrelationIdTest {
     SharedTestcontainers.ensureInitialized();
   }
 
-  
-
   @Autowired OutboxEventRepository outboxEventRepository;
 
   @Autowired OutboxEventPublisher publisher;

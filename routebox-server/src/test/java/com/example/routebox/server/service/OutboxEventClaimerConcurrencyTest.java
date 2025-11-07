@@ -31,15 +31,13 @@ class OutboxEventClaimerConcurrencyTest {
     SharedTestcontainers.ensureInitialized();
   }
 
-  
-
   @Autowired private OutboxEventClaimer claimer;
 
   @Autowired private OutboxEventRepository outboxEventRepository;
 
   @BeforeEach
   void setUp() {
-    // Clean database to start fresh
+    // Clean outbox event data from previous test runs in the same JVM session
     outboxEventRepository.deleteAll();
     outboxEventRepository.flush();
   }
@@ -51,14 +49,12 @@ class OutboxEventClaimerConcurrencyTest {
   @Test
   void testConcurrentClaimersDoNotProcessSameEvents() throws Exception {
     // Arrange: Create 100 pending events with unique IDs
-    List<OutboxEvent> createdEvents = new ArrayList<>();
     Set<Long> createdEventIds = new HashSet<>();
     for (int i = 1; i <= 100; i++) {
       String orderId = "order-" + UUID.randomUUID().toString();
       OutboxEvent event =
           new OutboxEvent("Order", orderId, "OrderCreated", "{\"orderId\":\"" + orderId + "\"}");
       OutboxEvent saved = outboxEventRepository.save(event);
-      createdEvents.add(saved);
       createdEventIds.add(saved.getId());
     }
 

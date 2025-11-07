@@ -22,11 +22,13 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.transaction.annotation.Transactional;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
 /** Tests for OutboxEventWorker to verify worker thread behavior and error handling. */
 @SpringBootTest(classes = RouteBoxServerApplication.class)
 @Testcontainers
+@Transactional
 class OutboxEventWorkerTest {
 
   static {

@@ -31,8 +31,6 @@ class OrderServiceFailureTest {
     SharedTestcontainers.ensureInitialized();
   }
 
-  
-
   @Autowired private OrderService orderService;
 
   @Autowired private OrderRepository orderRepository;

@@ -35,10 +35,11 @@ class TestIsolationTest {
             .that()
             .areAnnotatedWith(SpringBootTest.class)
             .and()
-            .areNotAnnotatedWith(org.junit.jupiter.api.parallel.Isolated.class) // Allow manual
-            // isolation
+            .areNotAnnotatedWith(org.junit.jupiter.api.parallel.Isolated.class) // Allow manual isolation
             .and()
-            .resideOutsideOfPackage("..kafka..") // Example: Exclude tests that don't use DB
+            .resideOutsideOfPackage("..kafka..") // Exclude tests that don't use DB
+            .and()
+            .haveSimpleNameNotContaining("E2E") // Exclude E2E tests that verify async behavior
             .should()
             .beAnnotatedWith(Transactional.class)
             .because(

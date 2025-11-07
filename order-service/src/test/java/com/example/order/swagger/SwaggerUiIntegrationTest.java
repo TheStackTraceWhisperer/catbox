@@ -22,8 +22,6 @@ class SwaggerUiIntegrationTest {
     SharedTestcontainers.ensureInitialized();
   }
 
-  
-
   @Autowired private MockMvc mockMvc;
 
   @Test

@@ -80,12 +80,12 @@ class E2EPollerTest {
     container.start();
     
     // Wait for consumer to initialize and drain any existing messages
-    try {
-      Thread.sleep(2000);
-      records.clear();
-    } catch (InterruptedException e) {
-      Thread.currentThread().interrupt();
-    }
+    await()
+        .atMost(Duration.ofSeconds(10))
+        .pollDelay(Duration.ofMillis(500))
+        .until(() -> container.isRunning());
+    // Clear any messages received during initialization
+    records.clear();
   }
 
   @AfterEach

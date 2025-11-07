@@ -38,8 +38,6 @@ class OutboxEventPublisherTest {
     SharedTestcontainers.ensureInitialized();
   }
 
-  
-
   @Autowired OutboxEventRepository outboxEventRepository;
 
   @Autowired OutboxDeadLetterEventRepository deadLetterRepository;

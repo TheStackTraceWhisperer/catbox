@@ -25,8 +25,6 @@ class OutboxEventClaimTest {
     SharedTestcontainers.ensureInitialized();
   }
 
-  
-
   @Autowired OutboxEventRepository outboxEventRepository;
 
   @BeforeEach

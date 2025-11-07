@@ -109,17 +109,19 @@ class E2EPollerMultiClusterTest {
             recordsInventoryAdjustedB);
     containerInventoryAdjustedB.start();
     
-    // Wait for consumers to initialize and drain any existing messages
-    try {
-      Thread.sleep(2000);
-      // Drain any pre-existing messages from previous tests
-      recordsOrderCreatedA.clear();
-      recordsInventoryAdjustedA.clear();
-      recordsOrderCreatedB.clear();
-      recordsInventoryAdjustedB.clear();
-    } catch (InterruptedException e) {
-      Thread.currentThread().interrupt();
-    }
+    // Wait for all consumers to initialize and drain any existing messages
+    await()
+        .atMost(Duration.ofSeconds(10))
+        .pollDelay(Duration.ofMillis(500))
+        .until(() -> containerOrderCreatedA.isRunning() 
+            && containerInventoryAdjustedA.isRunning()
+            && containerOrderCreatedB.isRunning()
+            && containerInventoryAdjustedB.isRunning());
+    // Clear any messages received during initialization
+    recordsOrderCreatedA.clear();
+    recordsInventoryAdjustedA.clear();
+    recordsOrderCreatedB.clear();
+    recordsInventoryAdjustedB.clear();
   }
 
   @AfterEach

@@ -26,8 +26,6 @@ class ProcessedMessageArchivalServiceTest {
     SharedTestcontainers.ensureInitialized();
   }
 
-  
-
   @Autowired ProcessedMessageRepository processedMessageRepository;
 
   @Autowired ProcessedMessageArchiveRepository processedMessageArchiveRepository;

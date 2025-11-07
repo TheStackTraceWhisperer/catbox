@@ -26,8 +26,6 @@ class OutboxArchivalServiceTest {
     SharedTestcontainers.ensureInitialized();
   }
 
-  
-
   @Autowired OutboxEventRepository outboxEventRepository;
 
   @Autowired OutboxArchiveEventRepository archiveEventRepository;

@@ -18,8 +18,6 @@ class OutboxProcessingConfigTest {
     SharedTestcontainers.ensureInitialized();
   }
 
-  
-
   @Autowired OutboxProcessingConfig config;
 
   @Test

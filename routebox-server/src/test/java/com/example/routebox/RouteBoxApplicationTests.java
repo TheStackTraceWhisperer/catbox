@@ -13,8 +13,6 @@ class CatboxApplicationTests {
     SharedTestcontainers.ensureInitialized();
   }
 
-  
-
   @Test
   void contextLoads() {
     // This test verifies that the application context loads successfully
