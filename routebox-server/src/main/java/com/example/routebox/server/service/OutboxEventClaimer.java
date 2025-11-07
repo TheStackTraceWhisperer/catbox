@@ -29,8 +29,7 @@ public class OutboxEventClaimer {
   public List<OutboxEvent> claimEvents() {
     LocalDateTime now = LocalDateTime.now();
     PageRequest pageable = PageRequest.of(0, processingConfig.getBatchSize());
-    List<OutboxEvent> events =
-        outboxEventRepository.findPendingEventsForClaim(now, pageable);
+    List<OutboxEvent> events = outboxEventRepository.findPendingEventsForClaim(now, pageable);
 
     // Set claim lease using Duration
     LocalDateTime claimUntil = now.plus(processingConfig.getClaimTimeout());

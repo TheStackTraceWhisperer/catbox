@@ -253,4 +253,3 @@ class OutboxEventWorkerTest {
     assertThat(eventQueue).isEmpty();
   }
 }
-

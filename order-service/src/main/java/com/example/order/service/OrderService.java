@@ -23,7 +23,8 @@ public class OrderService {
   private final Tracer tracer;
 
   // Time-based UUID generator (UUIDv7) for correlation IDs
-  private static final TimeBasedEpochGenerator UUID_GENERATOR = Generators.timeBasedEpochGenerator();
+  private static final TimeBasedEpochGenerator UUID_GENERATOR =
+      Generators.timeBasedEpochGenerator();
 
   // Payload record definitions for outbox events
   private record OrderCreatedPayload(

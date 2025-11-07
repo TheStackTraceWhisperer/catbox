@@ -49,7 +49,8 @@ import org.testcontainers.utility.DockerImageName;
 class OrderProcessorE2ETest {
 
   // Time-based UUID generator (UUIDv7) for correlation IDs in tests
-  private static final TimeBasedEpochGenerator UUID_GENERATOR = Generators.timeBasedEpochGenerator();
+  private static final TimeBasedEpochGenerator UUID_GENERATOR =
+      Generators.timeBasedEpochGenerator();
 
   @Container
   static final MSSQLServerContainer<?> mssqlContainer =
@@ -317,7 +318,8 @@ class OrderProcessorE2ETest {
         .untilAsserted(
             () -> {
               assertThat(processingService.getProcessedOrderCreatedCount())
-                  .as("Consumer should not be blocked by poison pill - subsequent valid messages should be processed")
+                  .as(
+                      "Consumer should not be blocked by poison pill - subsequent valid messages should be processed")
                   .isGreaterThan(initialCount);
             });
   }
