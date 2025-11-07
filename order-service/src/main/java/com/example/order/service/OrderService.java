@@ -5,11 +5,12 @@ import com.example.order.entity.Order;
 import com.example.order.exception.OrderNotFoundException;
 import com.example.order.repository.OrderRepository;
 import com.example.routebox.client.OutboxClient;
+import com.fasterxml.uuid.Generators;
+import com.fasterxml.uuid.impl.TimeBasedEpochGenerator;
 import io.micrometer.observation.annotation.Observed;
 import io.micrometer.tracing.Tracer;
 import java.math.BigDecimal;
 import java.util.List;
-import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -20,6 +21,9 @@ public class OrderService {
   private final OrderRepository orderRepository;
   private final OutboxClient outboxClient;
   private final Tracer tracer;
+
+  // Time-based UUID generator (UUIDv7) for correlation IDs
+  private static final TimeBasedEpochGenerator UUID_GENERATOR = Generators.timeBasedEpochGenerator();
 
   // Payload record definitions for outbox events
   private record OrderCreatedPayload(
@@ -106,7 +110,7 @@ public class OrderService {
       // Use trace ID as correlation ID for distributed tracing
       return tracer.currentSpan().context().traceId();
     }
-    // Fallback: create a new UUID if no trace context exists
-    return UUID.randomUUID().toString();
+    // Fallback: create a new time-based UUID (UUIDv7) if no trace context exists
+    return UUID_GENERATOR.generate().toString();
   }
 }

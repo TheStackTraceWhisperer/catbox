@@ -59,6 +59,12 @@
             <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
         </dependency>
 
+        <!-- Time-based UUID Generator (UUIDv7 support) -->
+        <dependency>
+            <groupId>com.fasterxml.uuid</groupId>
+            <artifactId>java-uuid-generator</artifactId>
+        </dependency>
+
         <!-- Test -->
         <dependency>
             <groupId>org.testcontainers</groupId>

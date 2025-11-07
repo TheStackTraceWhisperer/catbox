@@ -42,6 +42,13 @@
             <scope>runtime</scope>
         </dependency>
 
+        <!-- Time-based UUID Generator (UUIDv7 support) -->
+        <dependency>
+            <groupId>com.fasterxml.uuid</groupId>
+            <artifactId>java-uuid-generator</artifactId>
+            <scope>test</scope>
+        </dependency>
+
         <!-- Test dependencies -->
         <dependency>
             <groupId>org.springframework.boot</groupId>

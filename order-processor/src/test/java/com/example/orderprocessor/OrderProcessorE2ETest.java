@@ -7,10 +7,11 @@ import com.example.orderprocessor.model.OrderCreatedPayload;
 import com.example.orderprocessor.service.OrderEventProcessingService;
 import com.example.routebox.client.OutboxFilter;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.uuid.Generators;
+import com.fasterxml.uuid.impl.TimeBasedEpochGenerator;
 import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.common.serialization.StringSerializer;
@@ -46,6 +47,9 @@ import org.testcontainers.utility.DockerImageName;
 @SpringBootTest
 @Testcontainers
 class OrderProcessorE2ETest {
+
+  // Time-based UUID generator (UUIDv7) for correlation IDs in tests
+  private static final TimeBasedEpochGenerator UUID_GENERATOR = Generators.timeBasedEpochGenerator();
 
   @Container
   static final MSSQLServerContainer<?> mssqlContainer =
@@ -101,7 +105,7 @@ class OrderProcessorE2ETest {
   @Test
   void testHappyPath_SingleMessage_ProcessedSuccessfully() throws Exception {
     // Given: A unique OrderCreated event
-    String correlationId = UUID.randomUUID().toString();
+    String correlationId = UUID_GENERATOR.generate().toString();
     OrderCreatedPayload payload =
         new OrderCreatedPayload(1L, "Alice", "Widget", new BigDecimal("99.99"), "PENDING");
     String message = objectMapper.writeValueAsString(payload);
@@ -129,7 +133,7 @@ class OrderProcessorE2ETest {
   @Test
   void testDeduplication_DuplicateMessages_ProcessedOnlyOnce() throws Exception {
     // Given: A unique OrderCreated event
-    String correlationId = UUID.randomUUID().toString();
+    String correlationId = UUID_GENERATOR.generate().toString();
     OrderCreatedPayload payload =
         new OrderCreatedPayload(2L, "Bob", "Gadget", new BigDecimal("149.99"), "PENDING");
     String message = objectMapper.writeValueAsString(payload);
@@ -174,7 +178,7 @@ class OrderProcessorE2ETest {
 
     // When: Send 5 different messages
     for (int i = 0; i < messageCount; i++) {
-      String correlationId = UUID.randomUUID().toString();
+      String correlationId = UUID_GENERATOR.generate().toString();
       OrderCreatedPayload payload =
           new OrderCreatedPayload(
               (long) (100 + i),
@@ -201,8 +205,8 @@ class OrderProcessorE2ETest {
   @Test
   void testMixedScenario_UniqueAndDuplicateMessages() throws Exception {
     // Given: Mix of unique and duplicate messages
-    String correlationId1 = UUID.randomUUID().toString();
-    String correlationId2 = UUID.randomUUID().toString();
+    String correlationId1 = UUID_GENERATOR.generate().toString();
+    String correlationId2 = UUID_GENERATOR.generate().toString();
 
     OrderCreatedPayload payload1 =
         new OrderCreatedPayload(201L, "Charlie", "Item-A", new BigDecimal("25.00"), "PENDING");
@@ -269,7 +273,7 @@ class OrderProcessorE2ETest {
   @Test
   void testPoisonPill_InvalidJson_RoutedToDLT() throws Exception {
     // Given: An invalid JSON message (poison pill)
-    String correlationId = UUID.randomUUID().toString();
+    String correlationId = UUID_GENERATOR.generate().toString();
     String invalidMessage = "{ invalid json }";
 
     int initialCount = processingService.getProcessedOrderCreatedCount();
@@ -300,7 +304,7 @@ class OrderProcessorE2ETest {
     // and doesn't block the consumer.
 
     // Verify that subsequent valid messages can still be processed
-    String validCorrelationId = UUID.randomUUID().toString();
+    String validCorrelationId = UUID_GENERATOR.generate().toString();
     OrderCreatedPayload validPayload =
         new OrderCreatedPayload(
             999L, "ValidCustomer", "ValidProduct", new BigDecimal("100.00"), "PENDING");
