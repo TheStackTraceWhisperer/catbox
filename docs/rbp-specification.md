@@ -364,15 +364,15 @@ WHERE rbp IS NOT NULL AND sent_at IS NOT NULL;
 #### Writing Large Payloads
 
 ```java
-public interface OutboxClient {
+public class OutboxClient {
     // Existing methods remain unchanged
-    void write(String aggregateType, String aggregateId, String eventType, Object payload);
+    public void write(String aggregateType, String aggregateId, String eventType, Object payload);
     
     // New method for explicit RBP handling
-    void writeRbp(String aggregateType, String aggregateId, String eventType, 
+    public void writeRbp(String aggregateType, String aggregateId, String eventType, 
                   Object payload);
     
-    void writeRbp(String aggregateType, String aggregateId, String eventType,
+    public void writeRbp(String aggregateType, String aggregateId, String eventType,
                   String correlationId, Object payload);
 }
 ```
@@ -380,11 +380,10 @@ public interface OutboxClient {
 **Automatic Detection Variant:**
 ```java
 @Service
-public class DefaultOutboxClient implements OutboxClient {
+public class OutboxClient {
     private final RbpStorageService rbpStorage;
     private final int rbpThresholdBytes; // Configurable, e.g., 100KB
     
-    @Override
     public void write(String aggregateType, String aggregateId, 
                      String eventType, Object payload) {
         String jsonPayload = objectMapper.writeValueAsString(payload);
@@ -729,7 +728,7 @@ public class RbpMetricsService {
 - [ ] Unit tests for storage service
 
 ### Phase 2: Client Integration (Sprint 3-4)
-- [ ] Enhance DefaultOutboxClient with RBP detection and handling
+- [ ] Enhance OutboxClient with RBP detection and handling
 - [ ] Implement RbpClient for payload retrieval
 - [ ] Add RbpNotFoundException and error handling
 - [ ] Integration tests for write and read paths

@@ -8,7 +8,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 
-/** Auto-configuration for Catbox client components. */
+/** Auto-configuration for RouteBox client components. */
 @Configuration
 @ComponentScan
 public class RouteBoxClientAutoConfiguration {
