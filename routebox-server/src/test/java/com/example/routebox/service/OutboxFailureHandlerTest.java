@@ -22,10 +22,13 @@ import com.example.routebox.test.listener.SharedTestcontainers;
 /**
  * Tests for the OutboxFailureHandler service that manages permanent failures and dead-letter
  * events.
+ * 
+ * Note: This test is NOT @Transactional because the service methods use Propagation.REQUIRES_NEW,
+ * which would conflict with a test-level transaction and cause deadlocks. The @BeforeEach method
+ * explicitly cleans up data instead.
  */
 @SpringBootTest(classes = RouteBoxServerApplication.class)
 @Testcontainers
-@Transactional
 class OutboxFailureHandlerTest {
 
   static {
@@ -99,7 +102,7 @@ class OutboxFailureHandlerTest {
   }
 
   @Test
-  @Transactional
+  @Transactional // Required because resetFailureCount uses Propagation.MANDATORY
   void resetFailureCount_clearsFailureData() {
     // Given
     OutboxEvent event =
@@ -119,7 +122,7 @@ class OutboxFailureHandlerTest {
   }
 
   @Test
-  @Transactional
+  @Transactional // Required because resetFailureCount uses Propagation.MANDATORY
   void resetFailureCount_doesNothingWhenCountIsZero() {
     // Given
     OutboxEvent event =

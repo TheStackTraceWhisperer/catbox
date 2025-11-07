@@ -40,11 +40,15 @@ class TestIsolationTest {
             .resideOutsideOfPackage("..kafka..") // Exclude tests that don't use DB
             .and()
             .haveSimpleNameNotContaining("E2E") // Exclude E2E tests that verify async behavior
+            .and()
+            .haveSimpleNameNotContaining("FailureHandler") // Exclude tests for REQUIRES_NEW methods
             .should()
             .beAnnotatedWith(Transactional.class)
             .because(
                 "All @SpringBootTest classes using the shared database must be @Transactional "
-                    + "to ensure data rollback and prevent test cross-contamination.");
+                    + "to ensure data rollback and prevent test cross-contamination. "
+                    + "Exception: Tests for services using Propagation.REQUIRES_NEW must NOT be @Transactional "
+                    + "to avoid transaction conflicts and deadlocks.");
 
     // Allow rule to pass if no classes match (e.g., in a module with no tests)
     rule.allowEmptyShould(true);
