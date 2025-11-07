@@ -10,6 +10,7 @@ import com.example.order.dto.UpdateStatusRequest;
 import com.example.order.entity.Order;
 import com.example.order.repository.OrderRepository;
 import com.example.routebox.client.RouteBoxClientAutoConfiguration;
+import com.example.routebox.test.listener.SharedTestcontainers;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.math.BigDecimal;
 import org.junit.jupiter.api.BeforeEach;
@@ -18,12 +19,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
-import org.springframework.test.context.DynamicPropertyRegistry;
-import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
-import org.testcontainers.containers.MSSQLServerContainer;
-import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
 /** Integration tests for OrderController to verify REST API endpoints. */
@@ -33,25 +30,8 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 @Testcontainers
 class OrderControllerTest {
 
-  @Container
-  static MSSQLServerContainer<?> mssql =
-      new MSSQLServerContainer<>("mcr.microsoft.com/mssql/server:2022-latest")
-          .acceptLicense()
-          .withReuse(true);
-
-  @DynamicPropertySource
-  static void sqlProps(DynamicPropertyRegistry registry) {
-    registry.add(
-        "spring.datasource.url",
-        () -> mssql.getJdbcUrl() + ";encrypt=true;trustServerCertificate=true");
-    registry.add("spring.datasource.username", mssql::getUsername);
-    registry.add("spring.datasource.password", mssql::getPassword);
-    registry.add(
-        "spring.datasource.driver-class-name",
-        () -> "com.microsoft.sqlserver.jdbc.SQLServerDriver");
-    registry.add(
-        "spring.jpa.properties.hibernate.dialect", () -> "org.hibernate.dialect.SQLServerDialect");
-    registry.add("spring.jpa.hibernate.ddl-auto", () -> "create-drop");
+  static {
+    SharedTestcontainers.ensureInitialized();
   }
 
   @Autowired private MockMvc mockMvc;

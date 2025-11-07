@@ -10,17 +10,15 @@ import com.example.routebox.common.entity.ProcessedMessage;
 import com.example.routebox.common.repository.OutboxEventRepository;
 import com.example.routebox.common.repository.ProcessedMessageRepository;
 import com.example.routebox.server.RouteBoxServerApplication;
+import com.example.routebox.test.listener.SharedTestcontainers;
+import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.DynamicPropertyRegistry;
-import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
-import org.testcontainers.containers.MSSQLServerContainer;
-import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
 /** Integration tests for AdminController to verify admin page rendering. */
@@ -30,25 +28,8 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 @Testcontainers
 class AdminControllerTest {
 
-  @Container
-  static MSSQLServerContainer<?> mssql =
-      new MSSQLServerContainer<>("mcr.microsoft.com/mssql/server:2022-latest")
-          .acceptLicense()
-          .withReuse(true);
-
-  @DynamicPropertySource
-  static void sqlProps(DynamicPropertyRegistry registry) {
-    registry.add(
-        "spring.datasource.url",
-        () -> mssql.getJdbcUrl() + ";encrypt=true;trustServerCertificate=true");
-    registry.add("spring.datasource.username", mssql::getUsername);
-    registry.add("spring.datasource.password", mssql::getPassword);
-    registry.add(
-        "spring.datasource.driver-class-name",
-        () -> "com.microsoft.sqlserver.jdbc.SQLServerDriver");
-    registry.add(
-        "spring.jpa.properties.hibernate.dialect", () -> "org.hibernate.dialect.SQLServerDialect");
-    registry.add("spring.jpa.hibernate.ddl-auto", () -> "create-drop");
+  static {
+    SharedTestcontainers.ensureInitialized();
   }
 
   @Autowired private MockMvc mockMvc;
@@ -66,8 +47,10 @@ class AdminControllerTest {
   @Test
   void adminPage_ShouldReturnAdminView() throws Exception {
     // Given
-    outboxEventRepository.save(new OutboxEvent("Order", "A1", "OrderCreated", "{}"));
-    outboxEventRepository.save(new OutboxEvent("Order", "A2", "OrderStatusChanged", "{}"));
+    outboxEventRepository.save(
+        new OutboxEvent("Order", UUID.randomUUID().toString(), "OrderCreated", "{}"));
+    outboxEventRepository.save(
+        new OutboxEvent("Order", UUID.randomUUID().toString(), "OrderStatusChanged", "{}"));
 
     // When & Then
     mockMvc
@@ -84,7 +67,8 @@ class AdminControllerTest {
   void adminPage_WithPagination_ShouldReturnPagedResults() throws Exception {
     // Given
     for (int i = 0; i < 25; i++) {
-      outboxEventRepository.save(new OutboxEvent("Order", "A" + i, "OrderCreated", "{}"));
+      outboxEventRepository.save(
+          new OutboxEvent("Order", UUID.randomUUID().toString(), "OrderCreated", "{}"));
     }
 
     // When & Then
@@ -98,9 +82,12 @@ class AdminControllerTest {
   @Test
   void adminPage_WithFilters_ShouldReturnFilteredResults() throws Exception {
     // Given
-    outboxEventRepository.save(new OutboxEvent("Order", "A1", "OrderCreated", "{}"));
-    outboxEventRepository.save(new OutboxEvent("Order", "A2", "OrderStatusChanged", "{}"));
-    outboxEventRepository.save(new OutboxEvent("Inventory", "I1", "InventoryAdjusted", "{}"));
+    outboxEventRepository.save(
+        new OutboxEvent("Order", UUID.randomUUID().toString(), "OrderCreated", "{}"));
+    outboxEventRepository.save(
+        new OutboxEvent("Order", UUID.randomUUID().toString(), "OrderStatusChanged", "{}"));
+    outboxEventRepository.save(
+        new OutboxEvent("Inventory", UUID.randomUUID().toString(), "InventoryAdjusted", "{}"));
 
     // When & Then
     mockMvc
@@ -113,8 +100,10 @@ class AdminControllerTest {
   @Test
   void adminPage_WithSorting_ShouldReturnSortedResults() throws Exception {
     // Given
-    outboxEventRepository.save(new OutboxEvent("Order", "A1", "OrderCreated", "{}"));
-    outboxEventRepository.save(new OutboxEvent("Order", "A2", "OrderStatusChanged", "{}"));
+    outboxEventRepository.save(
+        new OutboxEvent("Order", UUID.randomUUID().toString(), "OrderCreated", "{}"));
+    outboxEventRepository.save(
+        new OutboxEvent("Order", UUID.randomUUID().toString(), "OrderStatusChanged", "{}"));
 
     // When & Then
     mockMvc
@@ -128,7 +117,8 @@ class AdminControllerTest {
   @Test
   void adminPage_WithPendingOnlyFilter_ShouldReturnOnlyPending() throws Exception {
     // Given
-    outboxEventRepository.save(new OutboxEvent("Order", "A1", "OrderCreated", "{}"));
+    outboxEventRepository.save(
+        new OutboxEvent("Order", UUID.randomUUID().toString(), "OrderCreated", "{}"));
 
     // When & Then
     mockMvc
@@ -157,14 +147,16 @@ class AdminControllerTest {
   @Test
   void markUnprocessed_ShouldDeleteProcessedMessage() throws Exception {
     // Given
+    String corrId = "corr-" + UUID.randomUUID().toString();
+    String aggId = UUID.randomUUID().toString();
     processedMessageRepository.save(
-        new ProcessedMessage("corr-1", "consumer-group-1", "OrderCreated", "Order", "A1"));
+        new ProcessedMessage(corrId, "consumer-group-1", "OrderCreated", "Order", aggId));
 
     // When & Then
     mockMvc
         .perform(
             post("/admin/processed-messages/mark-unprocessed")
-                .param("correlationId", "corr-1")
+                .param("correlationId", corrId)
                 .param("consumerGroup", "consumer-group-1"))
         .andExpect(status().isOk())
         .andExpect(content().string("Message marked as unprocessed"));

@@ -8,18 +8,16 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import com.example.routebox.common.entity.OutboxEvent;
 import com.example.routebox.common.repository.OutboxEventRepository;
 import com.example.routebox.server.RouteBoxServerApplication;
+import com.example.routebox.test.listener.SharedTestcontainers;
 import java.time.LocalDateTime;
+import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.DynamicPropertyRegistry;
-import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
-import org.testcontainers.containers.MSSQLServerContainer;
-import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
 /** Integration tests for OutboxController to verify REST API endpoints. */
@@ -29,25 +27,8 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 @Testcontainers
 class OutboxControllerTest {
 
-  @Container
-  static MSSQLServerContainer<?> mssql =
-      new MSSQLServerContainer<>("mcr.microsoft.com/mssql/server:2022-latest")
-          .acceptLicense()
-          .withReuse(true);
-
-  @DynamicPropertySource
-  static void sqlProps(DynamicPropertyRegistry registry) {
-    registry.add(
-        "spring.datasource.url",
-        () -> mssql.getJdbcUrl() + ";encrypt=true;trustServerCertificate=true");
-    registry.add("spring.datasource.username", mssql::getUsername);
-    registry.add("spring.datasource.password", mssql::getPassword);
-    registry.add(
-        "spring.datasource.driver-class-name",
-        () -> "com.microsoft.sqlserver.jdbc.SQLServerDriver");
-    registry.add(
-        "spring.jpa.properties.hibernate.dialect", () -> "org.hibernate.dialect.SQLServerDialect");
-    registry.add("spring.jpa.hibernate.ddl-auto", () -> "create-drop");
+  static {
+    SharedTestcontainers.ensureInitialized();
   }
 
   @Autowired private MockMvc mockMvc;
@@ -62,8 +43,10 @@ class OutboxControllerTest {
   @Test
   void getAllOutboxEvents_ShouldReturnAllEvents() throws Exception {
     // Given
-    outboxEventRepository.save(new OutboxEvent("Order", "A1", "OrderCreated", "{}"));
-    outboxEventRepository.save(new OutboxEvent("Order", "A2", "OrderStatusChanged", "{}"));
+    outboxEventRepository.save(
+        new OutboxEvent("Order", UUID.randomUUID().toString(), "OrderCreated", "{}"));
+    outboxEventRepository.save(
+        new OutboxEvent("Order", UUID.randomUUID().toString(), "OrderStatusChanged", "{}"));
 
     // When & Then
     mockMvc
@@ -76,8 +59,10 @@ class OutboxControllerTest {
   @Test
   void getPendingOutboxEvents_ShouldReturnOnlyPending() throws Exception {
     // Given
-    outboxEventRepository.save(new OutboxEvent("Order", "A1", "OrderCreated", "{}"));
-    OutboxEvent sentEvent = new OutboxEvent("Order", "A2", "OrderStatusChanged", "{}");
+    outboxEventRepository.save(
+        new OutboxEvent("Order", UUID.randomUUID().toString(), "OrderCreated", "{}"));
+    OutboxEvent sentEvent =
+        new OutboxEvent("Order", UUID.randomUUID().toString(), "OrderStatusChanged", "{}");
     sentEvent.setSentAt(LocalDateTime.now());
     outboxEventRepository.save(sentEvent);
 
@@ -92,9 +77,12 @@ class OutboxControllerTest {
   @Test
   void searchOutbox_WithFilters_ShouldReturnFilteredResults() throws Exception {
     // Given
-    outboxEventRepository.save(new OutboxEvent("Order", "A1", "OrderCreated", "{}"));
-    outboxEventRepository.save(new OutboxEvent("Order", "A2", "OrderStatusChanged", "{}"));
-    outboxEventRepository.save(new OutboxEvent("Inventory", "I1", "InventoryAdjusted", "{}"));
+    outboxEventRepository.save(
+        new OutboxEvent("Order", UUID.randomUUID().toString(), "OrderCreated", "{}"));
+    outboxEventRepository.save(
+        new OutboxEvent("Order", UUID.randomUUID().toString(), "OrderStatusChanged", "{}"));
+    outboxEventRepository.save(
+        new OutboxEvent("Inventory", UUID.randomUUID().toString(), "InventoryAdjusted", "{}"));
 
     // When & Then
     mockMvc

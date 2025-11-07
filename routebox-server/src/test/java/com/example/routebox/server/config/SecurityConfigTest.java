@@ -3,14 +3,11 @@ package com.example.routebox.server.config;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.example.routebox.server.RouteBoxServerApplication;
+import com.example.routebox.test.listener.SharedTestcontainers;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.test.context.DynamicPropertyRegistry;
-import org.springframework.test.context.DynamicPropertySource;
-import org.testcontainers.containers.MSSQLServerContainer;
-import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
 /**
@@ -21,18 +18,8 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 @Testcontainers
 class SecurityConfigTest {
 
-  @Container
-  static MSSQLServerContainer<?> sqlServer =
-      new MSSQLServerContainer<>("mcr.microsoft.com/mssql/server:2022-latest")
-          .acceptLicense()
-          .withReuse(true);
-
-  @DynamicPropertySource
-  static void configureProperties(DynamicPropertyRegistry registry) {
-    registry.add("spring.datasource.url", sqlServer::getJdbcUrl);
-    registry.add("spring.datasource.username", sqlServer::getUsername);
-    registry.add("spring.datasource.password", sqlServer::getPassword);
-    registry.add("spring.jpa.hibernate.ddl-auto", () -> "create-drop");
+  static {
+    SharedTestcontainers.ensureInitialized();
   }
 
   @Autowired private SecurityFilterChain securityFilterChain;

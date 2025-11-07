@@ -9,20 +9,18 @@ import com.example.routebox.server.entity.OutboxArchiveEvent;
 import com.example.routebox.server.entity.OutboxDeadLetterEvent;
 import com.example.routebox.server.repository.OutboxArchiveEventRepository;
 import com.example.routebox.server.repository.OutboxDeadLetterEventRepository;
+import com.example.routebox.test.listener.SharedTestcontainers;
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.Gauge;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Timer;
 import java.time.LocalDateTime;
+import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.DynamicPropertyRegistry;
-import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.transaction.annotation.Transactional;
-import org.testcontainers.containers.MSSQLServerContainer;
-import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
 @SpringBootTest(classes = RouteBoxServerApplication.class)
@@ -30,25 +28,8 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 @Testcontainers
 class OutboxMetricsServiceTest {
 
-  @Container
-  static MSSQLServerContainer<?> mssql =
-      new MSSQLServerContainer<>("mcr.microsoft.com/mssql/server:2022-latest")
-          .acceptLicense()
-          .withReuse(true);
-
-  @DynamicPropertySource
-  static void sqlProps(DynamicPropertyRegistry registry) {
-    registry.add(
-        "spring.datasource.url",
-        () -> mssql.getJdbcUrl() + ";encrypt=true;trustServerCertificate=true");
-    registry.add("spring.datasource.username", mssql::getUsername);
-    registry.add("spring.datasource.password", mssql::getPassword);
-    registry.add(
-        "spring.datasource.driver-class-name",
-        () -> "com.microsoft.sqlserver.jdbc.SQLServerDriver");
-    registry.add(
-        "spring.jpa.properties.hibernate.dialect", () -> "org.hibernate.dialect.SQLServerDialect");
-    registry.add("spring.jpa.hibernate.ddl-auto", () -> "create-drop");
+  static {
+    SharedTestcontainers.ensureInitialized();
   }
 
   @Autowired OutboxEventRepository outboxEventRepository;
@@ -102,10 +83,13 @@ class OutboxMetricsServiceTest {
   @Test
   void updatePendingEventsMetrics_countsCorrectly() {
     // Create pending events
-    outboxEventRepository.save(new OutboxEvent("Order", "A1", "OrderCreated", "{}"));
-    outboxEventRepository.save(new OutboxEvent("Order", "A2", "OrderStatusChanged", "{}"));
+    outboxEventRepository.save(
+        new OutboxEvent("Order", UUID.randomUUID().toString(), "OrderCreated", "{}"));
+    outboxEventRepository.save(
+        new OutboxEvent("Order", UUID.randomUUID().toString(), "OrderStatusChanged", "{}"));
     OutboxEvent sent =
-        outboxEventRepository.save(new OutboxEvent("Order", "A3", "OrderCreated", "{}"));
+        outboxEventRepository.save(
+            new OutboxEvent("Order", UUID.randomUUID().toString(), "OrderCreated", "{}"));
     sent.setSentAt(LocalDateTime.now());
     outboxEventRepository.save(sent);
 
@@ -122,7 +106,8 @@ class OutboxMetricsServiceTest {
     // Create events with different timestamps by manipulating createdAt directly
     // (This works because we're testing the metric calculation, not the PrePersist behavior)
     OutboxEvent oldEvent =
-        outboxEventRepository.save(new OutboxEvent("Order", "A1", "OrderCreated", "{}"));
+        outboxEventRepository.save(
+            new OutboxEvent("Order", UUID.randomUUID().toString(), "OrderCreated", "{}"));
 
     // Manually update the createdAt to simulate an old event
     outboxEventRepository.flush();
@@ -136,7 +121,8 @@ class OutboxMetricsServiceTest {
             });
 
     // Create a newer event
-    outboxEventRepository.save(new OutboxEvent("Order", "A2", "OrderStatusChanged", "{}"));
+    outboxEventRepository.save(
+        new OutboxEvent("Order", UUID.randomUUID().toString(), "OrderStatusChanged", "{}"));
 
     // Update metrics
     metricsService.updatePendingEventsMetrics();
@@ -198,7 +184,8 @@ class OutboxMetricsServiceTest {
   @Test
   void updateArchivalMetrics_countsCorrectly() {
     // Create and save events first to get IDs
-    OutboxEvent event1 = new OutboxEvent("Order", "A1", "OrderCreated", "{}");
+    OutboxEvent event1 =
+        new OutboxEvent("Order", UUID.randomUUID().toString(), "OrderCreated", "{}");
     event1.setCreatedAt(LocalDateTime.now());
     event1.setSentAt(LocalDateTime.now());
     event1 = outboxEventRepository.save(event1);
@@ -206,7 +193,8 @@ class OutboxMetricsServiceTest {
     OutboxArchiveEvent archived1 = new OutboxArchiveEvent(event1);
     archiveEventRepository.save(archived1);
 
-    OutboxEvent event2 = new OutboxEvent("Order", "A2", "OrderCreated", "{}");
+    OutboxEvent event2 =
+        new OutboxEvent("Order", UUID.randomUUID().toString(), "OrderCreated", "{}");
     event2.setCreatedAt(LocalDateTime.now());
     event2.setSentAt(LocalDateTime.now());
     event2 = outboxEventRepository.save(event2);
@@ -225,21 +213,24 @@ class OutboxMetricsServiceTest {
   @Test
   void updateArchivalMetrics_countsDeadLetterCorrectly() {
     // Create and save events first to get IDs
-    OutboxEvent event1 = new OutboxEvent("Order", "A1", "OrderCreated", "{}");
+    OutboxEvent event1 =
+        new OutboxEvent("Order", UUID.randomUUID().toString(), "OrderCreated", "{}");
     event1.setCreatedAt(LocalDateTime.now());
     event1 = outboxEventRepository.save(event1);
 
     OutboxDeadLetterEvent deadLetter1 = new OutboxDeadLetterEvent(event1, "Error 1");
     deadLetterEventRepository.save(deadLetter1);
 
-    OutboxEvent event2 = new OutboxEvent("Order", "A2", "OrderCreated", "{}");
+    OutboxEvent event2 =
+        new OutboxEvent("Order", UUID.randomUUID().toString(), "OrderCreated", "{}");
     event2.setCreatedAt(LocalDateTime.now());
     event2 = outboxEventRepository.save(event2);
 
     OutboxDeadLetterEvent deadLetter2 = new OutboxDeadLetterEvent(event2, "Error 2");
     deadLetterEventRepository.save(deadLetter2);
 
-    OutboxEvent event3 = new OutboxEvent("Order", "A3", "OrderCreated", "{}");
+    OutboxEvent event3 =
+        new OutboxEvent("Order", UUID.randomUUID().toString(), "OrderCreated", "{}");
     event3.setCreatedAt(LocalDateTime.now());
     event3 = outboxEventRepository.save(event3);
 

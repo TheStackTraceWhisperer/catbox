@@ -15,42 +15,24 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.DynamicPropertyRegistry;
-import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.transaction.annotation.Transactional;
-import org.testcontainers.containers.MSSQLServerContainer;
-import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
+import com.example.routebox.test.listener.SharedTestcontainers;
 
 /**
  * Tests for the OutboxFailureHandler service that manages permanent failures and dead-letter
  * events.
+ * 
+ * Note: This test is NOT @Transactional because the service methods use Propagation.REQUIRES_NEW,
+ * which would conflict with a test-level transaction and cause deadlocks. The @BeforeEach method
+ * explicitly cleans up data instead.
  */
 @SpringBootTest(classes = RouteBoxServerApplication.class)
 @Testcontainers
 class OutboxFailureHandlerTest {
 
-  @Container
-  static MSSQLServerContainer<?> mssql =
-      new MSSQLServerContainer<>("mcr.microsoft.com/mssql/server:2022-latest")
-          .acceptLicense()
-          .withReuse(true);
-
-  @DynamicPropertySource
-  static void sqlProps(DynamicPropertyRegistry registry) {
-    registry.add(
-        "spring.datasource.url",
-        () -> mssql.getJdbcUrl() + ";encrypt=true;trustServerCertificate=true");
-    registry.add("spring.datasource.username", mssql::getUsername);
-    registry.add("spring.datasource.password", mssql::getPassword);
-    registry.add(
-        "spring.datasource.driver-class-name",
-        () -> "com.microsoft.sqlserver.jdbc.SQLServerDriver");
-    registry.add(
-        "spring.jpa.properties.hibernate.dialect", () -> "org.hibernate.dialect.SQLServerDialect");
-    registry.add("spring.jpa.hibernate.ddl-auto", () -> "create-drop");
-    // Set a low max retries for testing
-    registry.add("outbox.processing.max-permanent-retries", () -> "3");
+  static {
+    SharedTestcontainers.ensureInitialized();
   }
 
   @Autowired OutboxEventRepository outboxEventRepository;
@@ -120,7 +102,7 @@ class OutboxFailureHandlerTest {
   }
 
   @Test
-  @Transactional
+  @Transactional // Required because resetFailureCount uses Propagation.MANDATORY
   void resetFailureCount_clearsFailureData() {
     // Given
     OutboxEvent event =
@@ -140,7 +122,7 @@ class OutboxFailureHandlerTest {
   }
 
   @Test
-  @Transactional
+  @Transactional // Required because resetFailureCount uses Propagation.MANDATORY
   void resetFailureCount_doesNothingWhenCountIsZero() {
     // Given
     OutboxEvent event =

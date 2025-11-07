@@ -57,3 +57,4 @@ compose.override.yml
 
 # Generated test reports
 docs/test-durations.md
+*.bak

@@ -5,9 +5,11 @@ import static org.awaitility.Awaitility.await;
 
 import com.example.routebox.common.entity.OutboxEvent;
 import com.example.routebox.common.repository.OutboxEventRepository;
+import com.example.routebox.test.listener.SharedTestcontainers;
 import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
@@ -25,11 +27,7 @@ import org.springframework.kafka.listener.KafkaMessageListenerContainer;
 import org.springframework.kafka.listener.MessageListener;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
-import org.testcontainers.containers.KafkaContainer;
-import org.testcontainers.containers.MSSQLServerContainer;
-import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
-import org.testcontainers.utility.DockerImageName;
 
 /**
  * End-to-End test for dynamic Kafka routing across multiple clusters. Tests that events are routed
@@ -39,53 +37,12 @@ import org.testcontainers.utility.DockerImageName;
 @Testcontainers
 class E2EPollerMultiClusterTest {
 
-  @Container
-  static MSSQLServerContainer<?> mssql =
-      new MSSQLServerContainer<>("mcr.microsoft.com/mssql/server:2022-latest")
-          .acceptLicense()
-          .withReuse(true);
-
-  @Container
-  static KafkaContainer kafkaA =
-      new KafkaContainer(DockerImageName.parse("confluentinc/cp-kafka:7.9.1")).withReuse(true);
-
-  @Container
-  static KafkaContainer kafkaB =
-      new KafkaContainer(DockerImageName.parse("confluentinc/cp-kafka:7.9.1")).withReuse(true);
+  static {
+    SharedTestcontainers.ensureInitialized();
+  }
 
   @DynamicPropertySource
   static void configureProperties(DynamicPropertyRegistry registry) {
-    // Database configuration
-    registry.add(
-        "spring.datasource.url",
-        () -> mssql.getJdbcUrl() + ";encrypt=true;trustServerCertificate=true");
-    registry.add("spring.datasource.username", mssql::getUsername);
-    registry.add("spring.datasource.password", mssql::getPassword);
-    registry.add(
-        "spring.datasource.driver-class-name",
-        () -> "com.microsoft.sqlserver.jdbc.SQLServerDriver");
-    registry.add(
-        "spring.jpa.properties.hibernate.dialect", () -> "org.hibernate.dialect.SQLServerDialect");
-    registry.add("spring.jpa.hibernate.ddl-auto", () -> "create-drop");
-
-    // Kafka cluster A configuration
-    registry.add("kafka.clusters.cluster-a.bootstrap-servers", kafkaA::getBootstrapServers);
-    registry.add(
-        "kafka.clusters.cluster-a.producer.key-serializer",
-        () -> "org.apache.kafka.common.serialization.StringSerializer");
-    registry.add(
-        "kafka.clusters.cluster-a.producer.value-serializer",
-        () -> "org.apache.kafka.common.serialization.StringSerializer");
-
-    // Kafka cluster B configuration
-    registry.add("kafka.clusters.cluster-b.bootstrap-servers", kafkaB::getBootstrapServers);
-    registry.add(
-        "kafka.clusters.cluster-b.producer.key-serializer",
-        () -> "org.apache.kafka.common.serialization.StringSerializer");
-    registry.add(
-        "kafka.clusters.cluster-b.producer.value-serializer",
-        () -> "org.apache.kafka.common.serialization.StringSerializer");
-
     // Routing configuration - route different event types to different clusters
     registry.add("outbox.routing.rules.OrderCreated", () -> "cluster-a");
     registry.add("outbox.routing.rules.InventoryAdjusted", () -> "cluster-b");
@@ -109,20 +66,26 @@ class E2EPollerMultiClusterTest {
 
   @BeforeEach
   void setUp() {
+    // Use unique consumer group IDs to avoid cross-test contamination
+    String uniqueSuffix = UUID.randomUUID().toString().substring(0, 8);
+    
     // Set up consumer for OrderCreated on cluster-a
     recordsOrderCreatedA = new LinkedBlockingQueue<>();
     containerOrderCreatedA =
         createConsumer(
-            kafkaA.getBootstrapServers(), "OrderCreated", "group-a-order", recordsOrderCreatedA);
+            SharedTestcontainers.kafkaA.getBootstrapServers(),
+            "OrderCreated",
+            "group-a-order-" + uniqueSuffix,
+            recordsOrderCreatedA);
     containerOrderCreatedA.start();
 
     // Set up consumer for InventoryAdjusted on cluster-a (should receive nothing)
     recordsInventoryAdjustedA = new LinkedBlockingQueue<>();
     containerInventoryAdjustedA =
         createConsumer(
-            kafkaA.getBootstrapServers(),
+            SharedTestcontainers.kafkaA.getBootstrapServers(),
             "InventoryAdjusted",
-            "group-a-inventory",
+            "group-a-inventory-" + uniqueSuffix,
             recordsInventoryAdjustedA);
     containerInventoryAdjustedA.start();
 
@@ -130,18 +93,36 @@ class E2EPollerMultiClusterTest {
     recordsOrderCreatedB = new LinkedBlockingQueue<>();
     containerOrderCreatedB =
         createConsumer(
-            kafkaB.getBootstrapServers(), "OrderCreated", "group-b-order", recordsOrderCreatedB);
+            SharedTestcontainers.kafkaB.getBootstrapServers(),
+            "OrderCreated",
+            "group-b-order-" + uniqueSuffix,
+            recordsOrderCreatedB);
     containerOrderCreatedB.start();
 
     // Set up consumer for InventoryAdjusted on cluster-b
     recordsInventoryAdjustedB = new LinkedBlockingQueue<>();
     containerInventoryAdjustedB =
         createConsumer(
-            kafkaB.getBootstrapServers(),
+            SharedTestcontainers.kafkaB.getBootstrapServers(),
             "InventoryAdjusted",
-            "group-b-inventory",
+            "group-b-inventory-" + uniqueSuffix,
             recordsInventoryAdjustedB);
     containerInventoryAdjustedB.start();
+    
+    // Wait for all consumers to initialize and consume any existing messages from previous test runs
+    // Using a longer wait time for multi-cluster test due to 4 concurrent consumers
+    // which need more time for partition assignment in CI environments.
+    try {
+      Thread.sleep(3000);
+    } catch (InterruptedException e) {
+      Thread.currentThread().interrupt();
+    }
+    
+    // Clear any messages received during initialization
+    recordsOrderCreatedA.clear();
+    recordsInventoryAdjustedA.clear();
+    recordsOrderCreatedB.clear();
+    recordsInventoryAdjustedB.clear();
   }
 
   @AfterEach
@@ -180,19 +161,24 @@ class E2EPollerMultiClusterTest {
    */
   @Test
   void testPollerRoutesEventsToCorrectClusters() throws Exception {
-    // Arrange: Create OrderCreated event (should go to cluster-a)
+    // Arrange: Create OrderCreated event (should go to cluster-a) with unique ID
+    String orderId = "order-" + UUID.randomUUID().toString();
     OutboxEvent orderEvent =
         new OutboxEvent(
             "Order",
-            "order-999",
+            orderId,
             "OrderCreated",
-            "{\"orderId\":999,\"customerName\":\"Bob\",\"amount\":199.99}");
+            "{\"orderId\":\"" + orderId + "\",\"customerName\":\"Bob\",\"amount\":199.99}");
     OutboxEvent savedOrderEvent = outboxEventRepository.save(orderEvent);
 
-    // Arrange: Create InventoryAdjusted event (should go to cluster-b)
+    // Arrange: Create InventoryAdjusted event (should go to cluster-b) with unique ID
+    String itemId = "item-" + UUID.randomUUID().toString();
     OutboxEvent inventoryEvent =
         new OutboxEvent(
-            "Inventory", "item-555", "InventoryAdjusted", "{\"itemId\":555,\"quantity\":50}");
+            "Inventory",
+            itemId,
+            "InventoryAdjusted",
+            "{\"itemId\":\"" + itemId + "\",\"quantity\":50}");
     OutboxEvent savedInventoryEvent = outboxEventRepository.save(inventoryEvent);
 
     // Act: Wait for the poller to claim and publish both events
@@ -213,7 +199,7 @@ class E2EPollerMultiClusterTest {
     ConsumerRecord<String, String> receivedOrderA = recordsOrderCreatedA.poll(5, TimeUnit.SECONDS);
     assertThat(receivedOrderA).isNotNull();
     assertThat(receivedOrderA.topic()).isEqualTo("OrderCreated");
-    assertThat(receivedOrderA.key()).isEqualTo("order-999");
+    assertThat(receivedOrderA.key()).isEqualTo(orderId);
     assertThat(receivedOrderA.value()).contains("Bob");
 
     // Assert: InventoryAdjusted should arrive only on cluster-b
@@ -221,8 +207,8 @@ class E2EPollerMultiClusterTest {
         recordsInventoryAdjustedB.poll(5, TimeUnit.SECONDS);
     assertThat(receivedInventoryB).isNotNull();
     assertThat(receivedInventoryB.topic()).isEqualTo("InventoryAdjusted");
-    assertThat(receivedInventoryB.key()).isEqualTo("item-555");
-    assertThat(receivedInventoryB.value()).contains("555");
+    assertThat(receivedInventoryB.key()).isEqualTo(itemId);
+    assertThat(receivedInventoryB.value()).contains(itemId);
 
     // Assert: Verify cross-contamination did not occur
     // OrderCreated should NOT arrive on cluster-b
