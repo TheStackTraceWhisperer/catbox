@@ -84,7 +84,7 @@ class OutboxFailureHandlerTest {
     for (int i = 0; i < maxRetries; i++) {
       failureHandler.recordPermanentFailure(eventId, "Error attempt " + (i + 1));
 
-      // Clear the persistence context after each failure to see fresh data
+      // Clear persistence context to see fresh data for the assertion below
       entityManager.clear();
 
       if (i < maxRetries - 1) {
@@ -92,9 +92,6 @@ class OutboxFailureHandlerTest {
         assertThat(outboxEventRepository.findById(eventId)).isPresent();
       }
     }
-
-    // Clear the persistence context to force fresh reads from database after REQUIRES_NEW transactions
-    entityManager.clear();
 
     // Then - Event should be moved to dead letter queue
     Optional<OutboxEvent> deletedEvent = outboxEventRepository.findById(eventId);
