@@ -5,11 +5,14 @@ This directory contains all Docker infrastructure files and configurations for t
 ## Contents
 
 - **compose.yaml** - Docker Compose configuration for all infrastructure services
+- **compose-minimal.yaml** - Minimal configuration with only Azure SQL Edge and Kafka (no monitoring/security)
 - **monitoring/** - Prometheus, Grafana, and Loki configurations for observability
 - **kafka-security/** - Kafka SSL/TLS certificates and SASL authentication configurations
 - **keycloak/** - Keycloak realm configuration for OAuth2/OIDC authentication
 
 ## Quick Start
+
+### Full Infrastructure
 
 To start all infrastructure services:
 
@@ -17,6 +20,25 @@ To start all infrastructure services:
 cd infrastructure
 docker compose up -d
 ```
+
+### Minimal Infrastructure
+
+For a lightweight setup with only database and messaging (no monitoring/security):
+
+```bash
+cd infrastructure
+docker compose -f compose-minimal.yaml up -d
+```
+
+The minimal configuration includes:
+- Azure SQL Edge (port 1433)
+- Kafka (port 9092, PLAINTEXT only)
+
+Use the full `compose.yaml` when you need:
+- Monitoring and observability (Prometheus, Grafana, Loki)
+- Multi-cluster Kafka scenarios
+- Authentication/authorization (Keycloak)
+- Alerting capabilities
 
 To check service health:
 

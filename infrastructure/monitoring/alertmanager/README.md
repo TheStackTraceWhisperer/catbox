@@ -1,6 +1,6 @@
 # Alertmanager Configuration
 
-This directory contains the Prometheus Alertmanager configuration for the Catbox project.
+This directory contains the Prometheus Alertmanager configuration for the RouteBox project.
 
 ## Files
 
@@ -23,7 +23,7 @@ The project includes 12 pre-configured alert rules across 3 groups:
 
 3. **StalledOutboxProcessing** (Critical)
    - Triggers when oldest event > 5 minutes old
-   - May indicate catbox-server is down or stuck
+   - May indicate routebox-server is down or stuck
 
 4. **NoEventProcessing** (Critical)
    - Triggers when pending events exist but no publishes for 10 minutes
@@ -47,7 +47,7 @@ The project includes 12 pre-configured alert rules across 3 groups:
 
 ### Application Health Alerts (2 rules)
 
-9. **CatboxServerDown** (Critical)
+9. **RouteBoxServerDown** (Critical)
    - Triggers when metrics unavailable for 2 minutes
    - Application may be down
 
@@ -72,8 +72,8 @@ The project includes 12 pre-configured alert rules across 3 groups:
 All alerts are routed to email notifications via Mailhog (for testing):
 
 - **SMTP Server**: mailhog:1025
-- **From**: alertmanager@catbox.local
-- **To**: catbox-alerts@example.com
+- **From**: alertmanager@routebox.local
+- **To**: routebox-alerts@example.com
 
 ### Alert Grouping
 

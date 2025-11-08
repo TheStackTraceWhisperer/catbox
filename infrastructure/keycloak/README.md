@@ -1,10 +1,12 @@
 # Keycloak Configuration
 
-This directory contains the Keycloak realm configuration for the Catbox application.
+This directory contains the Keycloak realm configuration for the RouteBox application.
 
 ## Configuration Files
 
 - `catbox-realm.json`: Realm import file with pre-configured catbox realm, user, and client
+
+> **Note:** The realm configuration file retains the name "catbox-realm.json" for backward compatibility with existing deployments. The realm name and configuration contents reference "catbox" but this is used by the RouteBox application.
 
 ## Development vs. Production
 
