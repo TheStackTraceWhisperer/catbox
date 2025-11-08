@@ -81,7 +81,7 @@ public class DatabaseOutboxFilter implements OutboxFilter {
   }
 
   @Override
-  @Transactional(propagation = Propagation.REQUIRES_NEW)
+  @Transactional(propagation = Propagation.REQUIRED)
   public void markProcessed(final String correlationId, final String consumerGroup) {
     if (correlationId == null || correlationId.isEmpty()) {
       log.warn("Attempted to mark null or empty correlationId " + "as processed");
