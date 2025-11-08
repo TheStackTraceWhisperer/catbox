@@ -25,6 +25,7 @@ import org.springframework.kafka.core.DefaultKafkaConsumerFactory;
 import org.springframework.kafka.listener.ContainerProperties;
 import org.springframework.kafka.listener.KafkaMessageListenerContainer;
 import org.springframework.kafka.listener.MessageListener;
+import org.springframework.kafka.test.utils.ContainerTestUtils;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.testcontainers.junit.jupiter.Testcontainers;
@@ -79,11 +80,14 @@ class E2EPollerTest {
     container.setupMessageListener((MessageListener<String, String>) records::add);
     container.start();
     
-    // Wait for consumer to initialize and consume any existing messages from previous test runs
-    // Using a fixed wait time is more reliable than checking container.isRunning() which can
-    // sometimes hang in CI environments. The consumer needs time for partition assignment.
+    // Wait for consumer to be assigned partitions before proceeding
+    // This is more reliable than Thread.sleep() as it waits for actual partition assignment
+    ContainerTestUtils.waitForAssignment(container, 1);
+    
+    // Give consumer a moment to consume any existing messages from previous test runs
+    // After partition assignment, the consumer will immediately start consuming
     try {
-      Thread.sleep(2000);
+      Thread.sleep(500);
     } catch (InterruptedException e) {
       Thread.currentThread().interrupt();
     }
