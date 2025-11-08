@@ -182,8 +182,9 @@ class E2EPollerMultiClusterTest {
     OutboxEvent savedInventoryEvent = outboxEventRepository.save(inventoryEvent);
 
     // Act: Wait for the poller to claim and publish both events
+    // Multi-cluster tests need more time due to multiple Kafka consumer setups
     await()
-        .atMost(Duration.ofSeconds(10))
+        .atMost(Duration.ofSeconds(20))
         .pollInterval(Duration.ofMillis(100))
         .untilAsserted(
             () -> {
