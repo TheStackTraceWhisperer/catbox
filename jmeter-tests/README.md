@@ -2,6 +2,33 @@
 
 This directory contains comprehensive JMeter test plans for stress testing the RouteBox application, including the Order Service and Outbox pattern implementation.
 
+## Quick Reference
+
+**Prerequisites:** Docker + Running Services (Order Service on 8080, RouteBox Server on 8081)
+
+**Start Infrastructure:**
+```bash
+cd infrastructure && docker compose up -d
+```
+
+**Run Tests:**
+```bash
+cd jmeter-tests
+./scripts/run-test.sh order    # Order Service (50 threads, 5 min)
+./scripts/run-test.sh outbox   # Outbox Service (30 threads, 5 min)
+./scripts/run-test.sh admin    # Admin UI (20 threads, 5 min)
+./scripts/run-test.sh stress   # Stress test (100 threads, 10 min)
+```
+
+**Custom Parameters:**
+```bash
+./scripts/run-test.sh <test> -t <threads> -r <ramp-up> -d <duration>
+```
+
+**Results:** `jmeter-tests/results/<test>_report_<timestamp>/index.html`
+
+---
+
 ## Directory Structure
 
 ```

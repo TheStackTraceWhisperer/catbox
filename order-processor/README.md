@@ -89,7 +89,7 @@ The `OrderEventProcessingService` simulates realistic scenarios:
 ```yaml
 spring:
   datasource:
-    url: jdbc:sqlserver://localhost:1433;databaseName=catbox
+    url: jdbc:sqlserver://localhost:1433;databaseName=routebox
     username: sa
     password: ${DB_PASSWORD}
   
@@ -131,7 +131,7 @@ docker compose up -d
 DB_PASSWORD="YourStrong!Passw0rd"
 docker exec routebox-azuresql /opt/mssql-tools18/bin/sqlcmd \
   -S localhost -U sa -P "${DB_PASSWORD}" \
-  -Q "CREATE DATABASE catbox" -C -No
+  -Q "CREATE DATABASE routebox" -C -No
 ```
 
 ### Run the Order Processor

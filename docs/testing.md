@@ -377,7 +377,7 @@ curl -X POST http://localhost:8080/api/orders \
   -d '{"customerName": "Alice", "productName": "Widget", "amount": 99.99}'
 
 # 5. Verify in Kafka
-docker exec catbox-kafka kafka-console-consumer.sh \
+docker exec kafka kafka-console-consumer.sh \
   --bootstrap-server localhost:9092 \
   --topic outbox-events \
   --from-beginning

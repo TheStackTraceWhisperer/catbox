@@ -1,6 +1,6 @@
 # Docker Setup
 
-This document describes the Docker Compose infrastructure setup for the Catbox project.
+This document describes the Docker Compose infrastructure setup for the RouteBox project.
 
 ## Overview
 
@@ -245,7 +245,7 @@ When running with docker-compose, use the `azuresql` profile for both services:
 mvn spring-boot:run -pl order-service -Dspring-boot.run.profiles=azuresql
 ```
 
-**Catbox Server:**
+**RouteBox Server:**
 ```bash
 mvn spring-boot:run -pl routebox-server -Dspring-boot.run.profiles=azuresql
 ```

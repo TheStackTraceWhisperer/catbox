@@ -35,7 +35,7 @@ The Grafana visualization platform:
 **File:** `alertmanager-dashboard.png`
 
 The Alertmanager alert routing and notification interface:
-- **Active alerts**: Shows firing alerts (CatboxServerDown, OrderServiceDown)
+- **Active alerts**: Shows firing alerts (RouteBoxServerDown, OrderServiceDown)
 - **Alert grouping**: Organized by receiver (email-notifications)
 - **Silence management**: Create and manage alert silences
 - **Access**: http://localhost:9094
