@@ -25,6 +25,7 @@ import org.springframework.kafka.core.DefaultKafkaConsumerFactory;
 import org.springframework.kafka.listener.ContainerProperties;
 import org.springframework.kafka.listener.KafkaMessageListenerContainer;
 import org.springframework.kafka.listener.MessageListener;
+import org.springframework.kafka.test.utils.ContainerTestUtils;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.testcontainers.junit.jupiter.Testcontainers;
@@ -109,11 +110,17 @@ class E2EPollerMultiClusterTest {
             recordsInventoryAdjustedB);
     containerInventoryAdjustedB.start();
     
-    // Wait for all consumers to initialize and consume any existing messages from previous test runs
-    // Using a longer wait time for multi-cluster test due to 4 concurrent consumers
-    // which need more time for partition assignment in CI environments.
+    // Wait for all consumers to be assigned partitions before proceeding
+    // This is more reliable than Thread.sleep() as it waits for actual partition assignment
+    ContainerTestUtils.waitForAssignment(containerOrderCreatedA, 1);
+    ContainerTestUtils.waitForAssignment(containerInventoryAdjustedA, 1);
+    ContainerTestUtils.waitForAssignment(containerOrderCreatedB, 1);
+    ContainerTestUtils.waitForAssignment(containerInventoryAdjustedB, 1);
+    
+    // Give consumers a moment to consume any existing messages from previous test runs
+    // After partition assignment, consumers will immediately start consuming
     try {
-      Thread.sleep(5000); // Increased from 3000ms to 5000ms for CI stability
+      Thread.sleep(1000);
     } catch (InterruptedException e) {
       Thread.currentThread().interrupt();
     }
@@ -182,9 +189,8 @@ class E2EPollerMultiClusterTest {
     OutboxEvent savedInventoryEvent = outboxEventRepository.save(inventoryEvent);
 
     // Act: Wait for the poller to claim and publish both events
-    // Multi-cluster tests need more time due to multiple Kafka consumer setups
     await()
-        .atMost(Duration.ofSeconds(20))
+        .atMost(Duration.ofSeconds(15))
         .pollInterval(Duration.ofMillis(100))
         .untilAsserted(
             () -> {
