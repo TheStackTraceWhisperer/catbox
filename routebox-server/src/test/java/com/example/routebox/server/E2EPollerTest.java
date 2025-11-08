@@ -38,14 +38,18 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 @Testcontainers
 class E2EPollerTest {
 
+  // Use a unique event type for this test run to avoid cross-test contamination
+  private static final String EVENT_TYPE = "OrderCreated-" + TimeBasedUuidGenerator.generate().toString().substring(0, 8);
+
   static {
     SharedTestcontainers.ensureInitialized();
   }
 
   @DynamicPropertySource
   static void configureProperties(DynamicPropertyRegistry registry) {
-    // Routing configuration
-    registry.add("outbox.routing.rules.OrderCreated", () -> "cluster-a");
+    // Routing configuration - route unique event type to cluster-a
+    // The topic name will be derived from the event type
+    registry.add("outbox.routing.rules." + EVENT_TYPE, () -> "cluster-a");
 
     // Speed up polling for tests
     registry.add("outbox.processing.poll-fixed-delay", () -> "500ms");
@@ -59,7 +63,7 @@ class E2EPollerTest {
 
   @BeforeEach
   void setUp() {
-    // Set up Kafka consumer for OrderCreated topic with unique group ID
+    // Set up Kafka consumer for unique event type topic with unique group ID
     String uniqueGroupId = "test-group-" + TimeBasedUuidGenerator.generate().toString().substring(0, 8);
     
     Map<String, Object> consumerProps = new HashMap<>();
@@ -73,7 +77,8 @@ class E2EPollerTest {
 
     DefaultKafkaConsumerFactory<String, String> consumerFactory =
         new DefaultKafkaConsumerFactory<>(consumerProps);
-    ContainerProperties containerProps = new ContainerProperties("OrderCreated");
+    // Topic name is the same as event type
+    ContainerProperties containerProps = new ContainerProperties(EVENT_TYPE);
     container = new KafkaMessageListenerContainer<>(consumerFactory, containerProps);
 
     records = new LinkedBlockingQueue<>();
@@ -81,19 +86,7 @@ class E2EPollerTest {
     container.start();
     
     // Wait for consumer to be assigned partitions before proceeding
-    // This is more reliable than Thread.sleep() as it waits for actual partition assignment
     ContainerTestUtils.waitForAssignment(container, 1);
-    
-    // Give consumer a moment to consume any existing messages from previous test runs
-    // After partition assignment, the consumer will immediately start consuming
-    try {
-      Thread.sleep(500);
-    } catch (InterruptedException e) {
-      Thread.currentThread().interrupt();
-    }
-    
-    // Clear any messages received during initialization
-    records.clear();
   }
 
   @AfterEach
@@ -109,13 +102,13 @@ class E2EPollerTest {
    */
   @Test
   void testPollerClaimsAndPublishesEvent() throws Exception {
-    // Arrange: Create a test outbox event with unique ID
+    // Arrange: Create a test outbox event with unique ID and unique event type
     String orderId = TimeBasedUuidGenerator.generate().toString();
     OutboxEvent event =
         new OutboxEvent(
             "Order",
             orderId,
-            "OrderCreated",
+            EVENT_TYPE,  // Use unique event type to avoid cross-test contamination
             "{\"orderId\":\"" + orderId + "\",\"customerName\":\"John Doe\",\"amount\":99.99}");
     OutboxEvent savedEvent = outboxEventRepository.save(event);
     assertThat(savedEvent.getId()).isNotNull();
@@ -140,7 +133,7 @@ class E2EPollerTest {
     // Assert (Kafka): Verify the message was published to Kafka
     ConsumerRecord<String, String> received = records.poll(5, TimeUnit.SECONDS);
     assertThat(received).isNotNull();
-    assertThat(received.topic()).isEqualTo("OrderCreated");
+    assertThat(received.topic()).isEqualTo(EVENT_TYPE);  // Topic name equals event type
     assertThat(received.key()).isEqualTo(orderId);
     assertThat(received.value()).contains("John Doe");
     assertThat(received.value()).contains(orderId);

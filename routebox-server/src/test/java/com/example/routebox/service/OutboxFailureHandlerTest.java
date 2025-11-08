@@ -9,6 +9,7 @@ import com.example.routebox.server.RouteBoxServerApplication;
 import com.example.routebox.server.config.OutboxProcessingConfig;
 import com.example.routebox.server.entity.OutboxDeadLetterEvent;
 import com.example.routebox.server.repository.OutboxDeadLetterEventRepository;
+import jakarta.persistence.EntityManager;
 import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
@@ -43,6 +44,8 @@ class OutboxFailureHandlerTest {
 
   @Autowired OutboxProcessingConfig processingConfig;
 
+  @Autowired EntityManager entityManager;
+
   @BeforeEach
   void setup() {
     deadLetterRepository.deleteAll();
@@ -58,6 +61,9 @@ class OutboxFailureHandlerTest {
 
     // When
     failureHandler.recordPermanentFailure(event.getId(), "Test error");
+
+    // Clear the persistence context to force fresh reads from database after REQUIRES_NEW transactions
+    entityManager.clear();
 
     // Then
     OutboxEvent updated = outboxEventRepository.findById(event.getId()).orElseThrow();
@@ -78,11 +84,17 @@ class OutboxFailureHandlerTest {
     for (int i = 0; i < maxRetries; i++) {
       failureHandler.recordPermanentFailure(eventId, "Error attempt " + (i + 1));
 
+      // Clear persistence context to see fresh data for the assertion below
+      entityManager.clear();
+
       if (i < maxRetries - 1) {
         // Event should still exist before last failure
         assertThat(outboxEventRepository.findById(eventId)).isPresent();
       }
     }
+
+    // Clear persistence context again to see that event was deleted and moved to dead letter
+    entityManager.clear();
 
     // Then - Event should be moved to dead letter queue
     Optional<OutboxEvent> deletedEvent = outboxEventRepository.findById(eventId);
@@ -151,6 +163,9 @@ class OutboxFailureHandlerTest {
     failureHandler.recordPermanentFailure(event2.getId(), "Error 2");
     failureHandler.recordPermanentFailure(event1.getId(), "Error 1 again");
 
+    // Clear the persistence context to force fresh reads from database after REQUIRES_NEW transactions
+    entityManager.clear();
+
     // Then
     OutboxEvent updated1 = outboxEventRepository.findById(event1.getId()).orElseThrow();
     assertThat(updated1.getPermanentFailureCount()).isEqualTo(2);
@@ -180,6 +195,9 @@ class OutboxFailureHandlerTest {
 
     // When
     failureHandler.releaseClaimForTransientFailure(event.getId());
+
+    // Clear the persistence context to force fresh reads from database after REQUIRES_NEW transactions
+    entityManager.clear();
 
     // Then
     OutboxEvent updated = outboxEventRepository.findById(event.getId()).orElseThrow();
