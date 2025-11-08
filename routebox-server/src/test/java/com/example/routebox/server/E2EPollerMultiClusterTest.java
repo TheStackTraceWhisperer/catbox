@@ -73,50 +73,48 @@ class E2EPollerMultiClusterTest {
 
   @BeforeEach
   void setUp() {
-    // Use unique consumer group IDs to avoid cross-test contamination
+    // Use unique consumer group IDs
     String uniqueSuffix = TimeBasedUuidGenerator.generate().toString().substring(0, 8);
     
-    // Set up consumer for unique OrderCreated topic on cluster-a
+    // Set up consumers for unique event type topics on each cluster
+    // Topic names equal event types
     recordsOrderCreatedA = new LinkedBlockingQueue<>();
     containerOrderCreatedA =
         createConsumer(
             SharedTestcontainers.kafkaA.getBootstrapServers(),
-            ORDER_TOPIC,
+            ORDER_EVENT_TYPE,
             "group-a-order-" + uniqueSuffix,
             recordsOrderCreatedA);
     containerOrderCreatedA.start();
 
-    // Set up consumer for unique InventoryAdjusted topic on cluster-a (should receive nothing)
     recordsInventoryAdjustedA = new LinkedBlockingQueue<>();
     containerInventoryAdjustedA =
         createConsumer(
             SharedTestcontainers.kafkaA.getBootstrapServers(),
-            INVENTORY_TOPIC,
+            INVENTORY_EVENT_TYPE,
             "group-a-inventory-" + uniqueSuffix,
             recordsInventoryAdjustedA);
     containerInventoryAdjustedA.start();
 
-    // Set up consumer for unique OrderCreated topic on cluster-b (should receive nothing)
     recordsOrderCreatedB = new LinkedBlockingQueue<>();
     containerOrderCreatedB =
         createConsumer(
             SharedTestcontainers.kafkaB.getBootstrapServers(),
-            ORDER_TOPIC,
+            ORDER_EVENT_TYPE,
             "group-b-order-" + uniqueSuffix,
             recordsOrderCreatedB);
     containerOrderCreatedB.start();
 
-    // Set up consumer for unique InventoryAdjusted topic on cluster-b
     recordsInventoryAdjustedB = new LinkedBlockingQueue<>();
     containerInventoryAdjustedB =
         createConsumer(
             SharedTestcontainers.kafkaB.getBootstrapServers(),
-            INVENTORY_TOPIC,
+            INVENTORY_EVENT_TYPE,
             "group-b-inventory-" + uniqueSuffix,
             recordsInventoryAdjustedB);
     containerInventoryAdjustedB.start();
     
-    // Wait for all consumers to be assigned partitions before proceeding
+    // Wait for all consumers to be assigned partitions
     ContainerTestUtils.waitForAssignment(containerOrderCreatedA, 1);
     ContainerTestUtils.waitForAssignment(containerInventoryAdjustedA, 1);
     ContainerTestUtils.waitForAssignment(containerOrderCreatedB, 1);
@@ -159,23 +157,23 @@ class E2EPollerMultiClusterTest {
    */
   @Test
   void testPollerRoutesEventsToCorrectClusters() throws Exception {
-    // Arrange: Create OrderCreated event (should go to cluster-a) with unique ID
+    // Arrange: Create OrderCreated event with unique event type (should go to cluster-a)
     String orderId = "order-" + TimeBasedUuidGenerator.generate().toString();
     OutboxEvent orderEvent =
         new OutboxEvent(
             "Order",
             orderId,
-            "OrderCreated",
+            ORDER_EVENT_TYPE,  // Use unique event type
             "{\"orderId\":\"" + orderId + "\",\"customerName\":\"Bob\",\"amount\":199.99}");
     OutboxEvent savedOrderEvent = outboxEventRepository.save(orderEvent);
 
-    // Arrange: Create InventoryAdjusted event (should go to cluster-b) with unique ID
+    // Arrange: Create InventoryAdjusted event with unique event type (should go to cluster-b)
     String itemId = "item-" + TimeBasedUuidGenerator.generate().toString();
     OutboxEvent inventoryEvent =
         new OutboxEvent(
             "Inventory",
             itemId,
-            "InventoryAdjusted",
+            INVENTORY_EVENT_TYPE,  // Use unique event type
             "{\"itemId\":\"" + itemId + "\",\"quantity\":50}");
     OutboxEvent savedInventoryEvent = outboxEventRepository.save(inventoryEvent);
 
@@ -196,7 +194,7 @@ class E2EPollerMultiClusterTest {
     // Assert: OrderCreated should arrive only on cluster-a
     ConsumerRecord<String, String> receivedOrderA = recordsOrderCreatedA.poll(5, TimeUnit.SECONDS);
     assertThat(receivedOrderA).isNotNull();
-    assertThat(receivedOrderA.topic()).isEqualTo(ORDER_TOPIC);
+    assertThat(receivedOrderA.topic()).isEqualTo(ORDER_EVENT_TYPE);  // Topic equals event type
     assertThat(receivedOrderA.key()).isEqualTo(orderId);
     assertThat(receivedOrderA.value()).contains("Bob");
 
@@ -204,7 +202,7 @@ class E2EPollerMultiClusterTest {
     ConsumerRecord<String, String> receivedInventoryB =
         recordsInventoryAdjustedB.poll(5, TimeUnit.SECONDS);
     assertThat(receivedInventoryB).isNotNull();
-    assertThat(receivedInventoryB.topic()).isEqualTo(INVENTORY_TOPIC);
+    assertThat(receivedInventoryB.topic()).isEqualTo(INVENTORY_EVENT_TYPE);  // Topic equals event type
     assertThat(receivedInventoryB.key()).isEqualTo(itemId);
     assertThat(receivedInventoryB.value()).contains(itemId);
 
