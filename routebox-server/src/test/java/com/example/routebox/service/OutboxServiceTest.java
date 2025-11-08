@@ -5,10 +5,10 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.example.routebox.common.entity.OutboxEvent;
 import com.example.routebox.common.repository.OutboxEventRepository;
+import com.example.routebox.common.util.TimeBasedUuidGenerator;
 import com.example.routebox.server.RouteBoxServerApplication;
 import com.example.routebox.test.listener.SharedTestcontainers;
 import java.util.List;
-import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -35,11 +35,11 @@ class OutboxServiceTest {
   void setup() {
     outboxEventRepository.deleteAll();
     outboxEventRepository.save(
-        new OutboxEvent("Order", UUID.randomUUID().toString(), "OrderCreated", "{}"));
+        new OutboxEvent("Order", TimeBasedUuidGenerator.generate().toString(), "OrderCreated", "{}"));
     outboxEventRepository.save(
-        new OutboxEvent("Order", UUID.randomUUID().toString(), "OrderStatusChanged", "{}"));
+        new OutboxEvent("Order", TimeBasedUuidGenerator.generate().toString(), "OrderStatusChanged", "{}"));
     outboxEventRepository.save(
-        new OutboxEvent("Inventory", UUID.randomUUID().toString(), "InventoryAdjusted", "{}"));
+        new OutboxEvent("Inventory", TimeBasedUuidGenerator.generate().toString(), "InventoryAdjusted", "{}"));
   }
 
   @Test
@@ -97,14 +97,14 @@ class OutboxServiceTest {
   @Test
   void findPaged_filtersWithAggregateIdAndPending() {
     outboxEventRepository.save(
-        new OutboxEvent("Order", UUID.randomUUID().toString(), "OrderCreated", "{}"));
+        new OutboxEvent("Order", TimeBasedUuidGenerator.generate().toString(), "OrderCreated", "{}"));
     OutboxEvent sent =
-        new OutboxEvent("Order", UUID.randomUUID().toString(), "OrderStatusChanged", "{}");
+        new OutboxEvent("Order", TimeBasedUuidGenerator.generate().toString(), "OrderStatusChanged", "{}");
     sent.setSentAt(java.time.LocalDateTime.now());
     outboxEventRepository.save(sent);
 
     // Use a specific aggregateId to filter by
-    String testAggId = UUID.randomUUID().toString();
+    String testAggId = TimeBasedUuidGenerator.generate().toString();
     outboxEventRepository.save(new OutboxEvent("Order", testAggId, "OrderCreated", "{}"));
 
     Page<OutboxService.OutboxEventSummaryDto> page =

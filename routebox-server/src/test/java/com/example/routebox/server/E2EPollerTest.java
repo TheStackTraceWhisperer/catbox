@@ -5,11 +5,11 @@ import static org.awaitility.Awaitility.await;
 
 import com.example.routebox.common.entity.OutboxEvent;
 import com.example.routebox.common.repository.OutboxEventRepository;
+import com.example.routebox.common.util.TimeBasedUuidGenerator;
 import com.example.routebox.test.listener.SharedTestcontainers;
 import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.UUID;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
@@ -59,7 +59,7 @@ class E2EPollerTest {
   @BeforeEach
   void setUp() {
     // Set up Kafka consumer for OrderCreated topic with unique group ID
-    String uniqueGroupId = "test-group-" + UUID.randomUUID().toString().substring(0, 8);
+    String uniqueGroupId = "test-group-" + TimeBasedUuidGenerator.generate().toString().substring(0, 8);
     
     Map<String, Object> consumerProps = new HashMap<>();
     consumerProps.put(
@@ -106,7 +106,7 @@ class E2EPollerTest {
   @Test
   void testPollerClaimsAndPublishesEvent() throws Exception {
     // Arrange: Create a test outbox event with unique ID
-    String orderId = UUID.randomUUID().toString();
+    String orderId = TimeBasedUuidGenerator.generate().toString();
     OutboxEvent event =
         new OutboxEvent(
             "Order",

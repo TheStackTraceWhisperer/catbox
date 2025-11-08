@@ -5,11 +5,11 @@ import static org.awaitility.Awaitility.await;
 
 import com.example.routebox.common.entity.OutboxEvent;
 import com.example.routebox.common.repository.OutboxEventRepository;
+import com.example.routebox.common.util.TimeBasedUuidGenerator;
 import com.example.routebox.test.listener.SharedTestcontainers;
 import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.UUID;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
@@ -67,7 +67,7 @@ class E2EPollerMultiClusterTest {
   @BeforeEach
   void setUp() {
     // Use unique consumer group IDs to avoid cross-test contamination
-    String uniqueSuffix = UUID.randomUUID().toString().substring(0, 8);
+    String uniqueSuffix = TimeBasedUuidGenerator.generate().toString().substring(0, 8);
     
     // Set up consumer for OrderCreated on cluster-a
     recordsOrderCreatedA = new LinkedBlockingQueue<>();
@@ -162,7 +162,7 @@ class E2EPollerMultiClusterTest {
   @Test
   void testPollerRoutesEventsToCorrectClusters() throws Exception {
     // Arrange: Create OrderCreated event (should go to cluster-a) with unique ID
-    String orderId = "order-" + UUID.randomUUID().toString();
+    String orderId = "order-" + TimeBasedUuidGenerator.generate().toString();
     OutboxEvent orderEvent =
         new OutboxEvent(
             "Order",
@@ -172,7 +172,7 @@ class E2EPollerMultiClusterTest {
     OutboxEvent savedOrderEvent = outboxEventRepository.save(orderEvent);
 
     // Arrange: Create InventoryAdjusted event (should go to cluster-b) with unique ID
-    String itemId = "item-" + UUID.randomUUID().toString();
+    String itemId = "item-" + TimeBasedUuidGenerator.generate().toString();
     OutboxEvent inventoryEvent =
         new OutboxEvent(
             "Inventory",

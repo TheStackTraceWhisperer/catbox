@@ -5,11 +5,11 @@ import com.example.order.entity.Order;
 import com.example.order.exception.OrderNotFoundException;
 import com.example.order.repository.OrderRepository;
 import com.example.routebox.client.OutboxClient;
+import com.example.routebox.common.util.TimeBasedUuidGenerator;
 import io.micrometer.observation.annotation.Observed;
 import io.micrometer.tracing.Tracer;
 import java.math.BigDecimal;
 import java.util.List;
-import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -106,7 +106,7 @@ public class OrderService {
       // Use trace ID as correlation ID for distributed tracing
       return tracer.currentSpan().context().traceId();
     }
-    // Fallback: create a new UUID if no trace context exists
-    return UUID.randomUUID().toString();
+    // Fallback: create a new time-based UUID if no trace context exists
+    return TimeBasedUuidGenerator.generate().toString();
   }
 }

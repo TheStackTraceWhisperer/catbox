@@ -9,9 +9,9 @@ import com.example.routebox.common.entity.OutboxEvent;
 import com.example.routebox.common.entity.ProcessedMessage;
 import com.example.routebox.common.repository.OutboxEventRepository;
 import com.example.routebox.common.repository.ProcessedMessageRepository;
+import com.example.routebox.common.util.TimeBasedUuidGenerator;
 import com.example.routebox.server.RouteBoxServerApplication;
 import com.example.routebox.test.listener.SharedTestcontainers;
-import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -48,9 +48,9 @@ class AdminControllerTest {
   void adminPage_ShouldReturnAdminView() throws Exception {
     // Given
     outboxEventRepository.save(
-        new OutboxEvent("Order", UUID.randomUUID().toString(), "OrderCreated", "{}"));
+        new OutboxEvent("Order", TimeBasedUuidGenerator.generate().toString(), "OrderCreated", "{}"));
     outboxEventRepository.save(
-        new OutboxEvent("Order", UUID.randomUUID().toString(), "OrderStatusChanged", "{}"));
+        new OutboxEvent("Order", TimeBasedUuidGenerator.generate().toString(), "OrderStatusChanged", "{}"));
 
     // When & Then
     mockMvc
@@ -68,7 +68,7 @@ class AdminControllerTest {
     // Given
     for (int i = 0; i < 25; i++) {
       outboxEventRepository.save(
-          new OutboxEvent("Order", UUID.randomUUID().toString(), "OrderCreated", "{}"));
+          new OutboxEvent("Order", TimeBasedUuidGenerator.generate().toString(), "OrderCreated", "{}"));
     }
 
     // When & Then
@@ -83,11 +83,11 @@ class AdminControllerTest {
   void adminPage_WithFilters_ShouldReturnFilteredResults() throws Exception {
     // Given
     outboxEventRepository.save(
-        new OutboxEvent("Order", UUID.randomUUID().toString(), "OrderCreated", "{}"));
+        new OutboxEvent("Order", TimeBasedUuidGenerator.generate().toString(), "OrderCreated", "{}"));
     outboxEventRepository.save(
-        new OutboxEvent("Order", UUID.randomUUID().toString(), "OrderStatusChanged", "{}"));
+        new OutboxEvent("Order", TimeBasedUuidGenerator.generate().toString(), "OrderStatusChanged", "{}"));
     outboxEventRepository.save(
-        new OutboxEvent("Inventory", UUID.randomUUID().toString(), "InventoryAdjusted", "{}"));
+        new OutboxEvent("Inventory", TimeBasedUuidGenerator.generate().toString(), "InventoryAdjusted", "{}"));
 
     // When & Then
     mockMvc
@@ -101,9 +101,9 @@ class AdminControllerTest {
   void adminPage_WithSorting_ShouldReturnSortedResults() throws Exception {
     // Given
     outboxEventRepository.save(
-        new OutboxEvent("Order", UUID.randomUUID().toString(), "OrderCreated", "{}"));
+        new OutboxEvent("Order", TimeBasedUuidGenerator.generate().toString(), "OrderCreated", "{}"));
     outboxEventRepository.save(
-        new OutboxEvent("Order", UUID.randomUUID().toString(), "OrderStatusChanged", "{}"));
+        new OutboxEvent("Order", TimeBasedUuidGenerator.generate().toString(), "OrderStatusChanged", "{}"));
 
     // When & Then
     mockMvc
@@ -118,7 +118,7 @@ class AdminControllerTest {
   void adminPage_WithPendingOnlyFilter_ShouldReturnOnlyPending() throws Exception {
     // Given
     outboxEventRepository.save(
-        new OutboxEvent("Order", UUID.randomUUID().toString(), "OrderCreated", "{}"));
+        new OutboxEvent("Order", TimeBasedUuidGenerator.generate().toString(), "OrderCreated", "{}"));
 
     // When & Then
     mockMvc
@@ -147,8 +147,8 @@ class AdminControllerTest {
   @Test
   void markUnprocessed_ShouldDeleteProcessedMessage() throws Exception {
     // Given
-    String corrId = "corr-" + UUID.randomUUID().toString();
-    String aggId = UUID.randomUUID().toString();
+    String corrId = "corr-" + TimeBasedUuidGenerator.generate().toString();
+    String aggId = TimeBasedUuidGenerator.generate().toString();
     processedMessageRepository.save(
         new ProcessedMessage(corrId, "consumer-group-1", "OrderCreated", "Order", aggId));
 
