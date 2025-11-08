@@ -4,13 +4,13 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.example.routebox.common.entity.OutboxEvent;
 import com.example.routebox.common.repository.OutboxEventRepository;
+import com.example.routebox.common.util.TimeBasedUuidGenerator;
 import com.example.routebox.server.RouteBoxServerApplication;
 import com.example.routebox.test.listener.SharedTestcontainers;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CountDownLatch;
 import org.junit.jupiter.api.BeforeEach;
@@ -51,7 +51,7 @@ class OutboxEventClaimerConcurrencyTest {
     // Arrange: Create 100 pending events with unique IDs
     Set<Long> createdEventIds = new HashSet<>();
     for (int i = 1; i <= 100; i++) {
-      String orderId = "order-" + UUID.randomUUID().toString();
+      String orderId = "order-" + TimeBasedUuidGenerator.generate().toString();
       OutboxEvent event =
           new OutboxEvent("Order", orderId, "OrderCreated", "{\"orderId\":\"" + orderId + "\"}");
       OutboxEvent saved = outboxEventRepository.save(event);
