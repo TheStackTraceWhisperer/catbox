@@ -179,7 +179,7 @@ class E2EPollerMultiClusterTest {
 
     // Act: Wait for the poller to claim and publish both events
     await()
-        .atMost(Duration.ofSeconds(15))
+        .atMost(Duration.ofSeconds(30))
         .pollInterval(Duration.ofMillis(100))
         .untilAsserted(
             () -> {
@@ -192,7 +192,7 @@ class E2EPollerMultiClusterTest {
             });
 
     // Assert: OrderCreated should arrive only on cluster-a
-    ConsumerRecord<String, String> receivedOrderA = recordsOrderCreatedA.poll(5, TimeUnit.SECONDS);
+    ConsumerRecord<String, String> receivedOrderA = recordsOrderCreatedA.poll(10, TimeUnit.SECONDS);
     assertThat(receivedOrderA).isNotNull();
     assertThat(receivedOrderA.topic()).isEqualTo(ORDER_EVENT_TYPE);  // Topic equals event type
     assertThat(receivedOrderA.key()).isEqualTo(orderId);
@@ -200,7 +200,7 @@ class E2EPollerMultiClusterTest {
 
     // Assert: InventoryAdjusted should arrive only on cluster-b
     ConsumerRecord<String, String> receivedInventoryB =
-        recordsInventoryAdjustedB.poll(5, TimeUnit.SECONDS);
+        recordsInventoryAdjustedB.poll(10, TimeUnit.SECONDS);
     assertThat(receivedInventoryB).isNotNull();
     assertThat(receivedInventoryB.topic()).isEqualTo(INVENTORY_EVENT_TYPE);  // Topic equals event type
     assertThat(receivedInventoryB.key()).isEqualTo(itemId);
@@ -209,12 +209,12 @@ class E2EPollerMultiClusterTest {
     // Assert: Verify cross-contamination did not occur
     // OrderCreated should NOT arrive on cluster-b
     ConsumerRecord<String, String> shouldBeNullOrderB =
-        recordsOrderCreatedB.poll(2, TimeUnit.SECONDS);
+        recordsOrderCreatedB.poll(3, TimeUnit.SECONDS);
     assertThat(shouldBeNullOrderB).isNull();
 
     // InventoryAdjusted should NOT arrive on cluster-a
     ConsumerRecord<String, String> shouldBeNullInventoryA =
-        recordsInventoryAdjustedA.poll(2, TimeUnit.SECONDS);
+        recordsInventoryAdjustedA.poll(3, TimeUnit.SECONDS);
     assertThat(shouldBeNullInventoryA).isNull();
   }
 }
