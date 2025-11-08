@@ -93,6 +93,9 @@ class OutboxFailureHandlerTest {
       }
     }
 
+    // Clear persistence context again to see that event was deleted and moved to dead letter
+    entityManager.clear();
+
     // Then - Event should be moved to dead letter queue
     Optional<OutboxEvent> deletedEvent = outboxEventRepository.findById(eventId);
     assertThat(deletedEvent).isEmpty();
