@@ -113,7 +113,7 @@ class E2EPollerMultiClusterTest {
     // Using a longer wait time for multi-cluster test due to 4 concurrent consumers
     // which need more time for partition assignment in CI environments.
     try {
-      Thread.sleep(3000);
+      Thread.sleep(5000); // Increased from 3000ms to 5000ms for CI stability
     } catch (InterruptedException e) {
       Thread.currentThread().interrupt();
     }
