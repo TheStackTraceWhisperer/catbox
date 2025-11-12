@@ -16,9 +16,12 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.DynamicPropertyRegistry;
+import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.transaction.annotation.Transactional;
+import org.testcontainers.containers.MSSQLServerContainer;
+import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
-import com.example.routebox.test.listener.SharedTestcontainers;
 
 /**
  * Tests for the OutboxFailureHandler service that manages permanent failures and dead-letter
@@ -31,12 +34,26 @@ import com.example.routebox.test.listener.SharedTestcontainers;
 @SpringBootTest(classes = RouteBoxServerApplication.class)
 @Testcontainers
 class OutboxFailureHandlerTest {
+  @Container
+  static final MSSQLServerContainer<?> mssql =
+      new MSSQLServerContainer<>("mcr.microsoft.com/mssql/server:2022-latest").acceptLicense();
 
-  static {
-    SharedTestcontainers.ensureInitialized();
+  @DynamicPropertySource
+  static void configureProperties(DynamicPropertyRegistry registry) {
+    registry.add(
+        "spring.datasource.url",
+        () -> mssql.getJdbcUrl() + ";encrypt=true;trustServerCertificate=true");
+    registry.add("spring.datasource.username", mssql::getUsername);
+    registry.add("spring.datasource.password", mssql::getPassword);
+    registry.add(
+        "spring.datasource.driver-class-name",
+        () -> "com.microsoft.sqlserver.jdbc.SQLServerDriver");
+    registry.add(
+        "spring.jpa.properties.hibernate.dialect", () -> "org.hibernate.dialect.SQLServerDialect");
+    registry.add("spring.jpa.hibernate.ddl-auto", () -> "update");
+    registry.add("spring.threads.virtual.enabled", () -> "true");
   }
-
-  @Autowired OutboxEventRepository outboxEventRepository;
+@Autowired OutboxEventRepository outboxEventRepository;
 
   @Autowired OutboxDeadLetterEventRepository deadLetterRepository;
 

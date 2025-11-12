@@ -10,7 +10,6 @@ import com.example.routebox.server.entity.OutboxArchiveEvent;
 import com.example.routebox.server.entity.OutboxDeadLetterEvent;
 import com.example.routebox.server.repository.OutboxArchiveEventRepository;
 import com.example.routebox.server.repository.OutboxDeadLetterEventRepository;
-import com.example.routebox.test.listener.SharedTestcontainers;
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.Gauge;
 import io.micrometer.core.instrument.MeterRegistry;
@@ -20,19 +19,37 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.DynamicPropertyRegistry;
+import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.transaction.annotation.Transactional;
+import org.testcontainers.containers.MSSQLServerContainer;
+import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
 @SpringBootTest(classes = RouteBoxServerApplication.class)
 @Transactional
 @Testcontainers
 class OutboxMetricsServiceTest {
+  @Container
+  static final MSSQLServerContainer<?> mssql =
+      new MSSQLServerContainer<>("mcr.microsoft.com/mssql/server:2022-latest").acceptLicense();
 
-  static {
-    SharedTestcontainers.ensureInitialized();
+  @DynamicPropertySource
+  static void configureProperties(DynamicPropertyRegistry registry) {
+    registry.add(
+        "spring.datasource.url",
+        () -> mssql.getJdbcUrl() + ";encrypt=true;trustServerCertificate=true");
+    registry.add("spring.datasource.username", mssql::getUsername);
+    registry.add("spring.datasource.password", mssql::getPassword);
+    registry.add(
+        "spring.datasource.driver-class-name",
+        () -> "com.microsoft.sqlserver.jdbc.SQLServerDriver");
+    registry.add(
+        "spring.jpa.properties.hibernate.dialect", () -> "org.hibernate.dialect.SQLServerDialect");
+    registry.add("spring.jpa.hibernate.ddl-auto", () -> "update");
+    registry.add("spring.threads.virtual.enabled", () -> "true");
   }
-
-  @Autowired OutboxEventRepository outboxEventRepository;
+@Autowired OutboxEventRepository outboxEventRepository;
 
   @Autowired OutboxArchiveEventRepository archiveEventRepository;
 
