@@ -54,6 +54,9 @@ class OutboxEventPublisherTest {
         "spring.jpa.properties.hibernate.dialect", () -> "org.hibernate.dialect.SQLServerDialect");
     registry.add("spring.jpa.hibernate.ddl-auto", () -> "update");
     registry.add("spring.threads.virtual.enabled", () -> "true");
+    
+    // Routing configuration for test events
+    registry.add("outbox.routing.rules.OrderCreated", () -> "cluster-a");
   }
 @Autowired OutboxEventRepository outboxEventRepository;
 
