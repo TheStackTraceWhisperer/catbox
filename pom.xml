@@ -32,12 +32,7 @@
     <modules>
         <module>routebox-common</module>
         <module>routebox-client</module>
-        <module>routebox-test-listener</module>
         <module>routebox-server</module>
-        <module>order-service</module>
-        <module>order-processor</module>
-        <module>coverage-report</module>
-        <module>routebox-archunit</module>
     </modules>
 
     <!-- Dependency Management: All modules inherit these versions -->
@@ -53,12 +48,6 @@
                 <groupId>com.example</groupId>
                 <artifactId>routebox-client</artifactId>
                 <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.example</groupId>
-                <artifactId>routebox-test-listener</artifactId>
-                <version>${project.version}</version>
-                <scope>test</scope>
             </dependency>
 
             <!-- Database -->

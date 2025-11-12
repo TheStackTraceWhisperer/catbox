@@ -23,22 +23,42 @@ import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.DynamicPropertyRegistry;
+import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.kafka.support.SendResult;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.testcontainers.containers.MSSQLServerContainer;
+import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
-import com.example.routebox.test.listener.SharedTestcontainers;
 
 /** Tests for OutboxEventPublisher focusing on permanent vs transient failure classification. */
 @SpringBootTest(classes = RouteBoxServerApplication.class)
 @Testcontainers
 class OutboxEventPublisherTest {
+  @Container
+  static final MSSQLServerContainer<?> mssql =
+      new MSSQLServerContainer<>("mcr.microsoft.com/mssql/server:2022-latest").acceptLicense();
 
-  static {
-    SharedTestcontainers.ensureInitialized();
+  @DynamicPropertySource
+  static void configureProperties(DynamicPropertyRegistry registry) {
+    registry.add(
+        "spring.datasource.url",
+        () -> mssql.getJdbcUrl() + ";encrypt=true;trustServerCertificate=true");
+    registry.add("spring.datasource.username", mssql::getUsername);
+    registry.add("spring.datasource.password", mssql::getPassword);
+    registry.add(
+        "spring.datasource.driver-class-name",
+        () -> "com.microsoft.sqlserver.jdbc.SQLServerDriver");
+    registry.add(
+        "spring.jpa.properties.hibernate.dialect", () -> "org.hibernate.dialect.SQLServerDialect");
+    registry.add("spring.jpa.hibernate.ddl-auto", () -> "update");
+    registry.add("spring.threads.virtual.enabled", () -> "true");
+    
+    // Routing configuration for test events
+    registry.add("outbox.routing.rules.OrderCreated", () -> "cluster-a");
   }
-
-  @Autowired OutboxEventRepository outboxEventRepository;
+@Autowired OutboxEventRepository outboxEventRepository;
 
   @Autowired OutboxDeadLetterEventRepository deadLetterRepository;
 

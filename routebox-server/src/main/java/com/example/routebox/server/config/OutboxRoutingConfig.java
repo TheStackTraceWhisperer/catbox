@@ -104,6 +104,12 @@ public class OutboxRoutingConfig {
       rule.setStrategy(ClusterPublishingStrategy.valueOf(strategyStr));
     }
 
+    // Parse topic name (optional)
+    Object topicObj = ruleMap.get("topic");
+    if (topicObj instanceof String) {
+      rule.setTopic((String) topicObj);
+    }
+
     return rule;
   }
 }

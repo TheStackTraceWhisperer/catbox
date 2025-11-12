@@ -105,17 +105,19 @@ public class OutboxEventPublisher {
           "No Kafka route found for eventType: " + event.getEventType());
     }
 
-    String topic = event.getEventType();
+    // 2. Determine the topic name - use configured topic or default to event type
+    String topic = rule.getTopic() != null ? rule.getTopic() : event.getEventType();
     String key = event.getAggregateId(); // Guarantees ordering per aggregate
     String payload = event.getPayload();
 
-    // 2. Publish to all required clusters
+    // 3. Get cluster and strategy information
     List<String> requiredClusters = rule.getClusters();
     List<String> optionalClusters = rule.getOptional();
     ClusterPublishingStrategy strategy = rule.getStrategy();
 
     log.debug(
-        "Publishing to {} required cluster(s) and {} optional cluster(s) with strategy: {}",
+        "Publishing to topic '{}' on {} required cluster(s) and {} optional cluster(s) with strategy: {}",
+        topic,
         requiredClusters.size(),
         optionalClusters.size(),
         strategy);
@@ -125,7 +127,7 @@ public class OutboxEventPublisher {
     Map<String, Exception> requiredFailures = new HashMap<>();
     Map<String, SendResult<String, String>> successfulResults = new HashMap<>();
 
-    // 3. Publish to required clusters
+    // 4. Publish to required clusters
     for (String clusterKey : requiredClusters) {
       try {
         SendResult<String, String> result =
@@ -139,7 +141,7 @@ public class OutboxEventPublisher {
       }
     }
 
-    // 4. Publish to optional clusters (failures are ignored)
+    // 5. Publish to optional clusters (failures are ignored)
     // Note: We don't capture SendResult for optional clusters as they don't affect
     // success determination and metadata is captured from required clusters only
     for (String clusterKey : optionalClusters) {
@@ -153,7 +155,7 @@ public class OutboxEventPublisher {
       }
     }
 
-    // 5. Evaluate success based on strategy
+    // 6. Evaluate success based on strategy
     boolean isSuccess =
         evaluatePublishingSuccess(
             strategy, requiredClusters.size(), requiredSuccessCount, requiredFailures);
@@ -170,11 +172,18 @@ public class OutboxEventPublisher {
       throw new Exception(errorMsg, firstFailure);
     }
 
-    // 6. If successful, record the receipt from the *first* successful publish
+    // 7. If successful, record the receipt from the *first* successful publish
     if (isSuccess && !successfulResults.isEmpty()) {
-      SendResult<String, String> firstResult = successfulResults.values().iterator().next();
+      // Get the first successful cluster and its result
+      Map.Entry<String, SendResult<String, String>> firstSuccess =
+          successfulResults.entrySet().iterator().next();
+      String firstClusterId = firstSuccess.getKey();
+      SendResult<String, String> firstResult = firstSuccess.getValue();
       var recordMetadata = firstResult.getRecordMetadata();
 
+      // Save cluster ID and topic name
+      event.setKafkaClusterId(firstClusterId);
+      event.setKafkaTopicName(topic);
       event.setKafkaPartition(recordMetadata.partition());
       event.setKafkaOffset(recordMetadata.offset());
       event.setKafkaTimestamp(

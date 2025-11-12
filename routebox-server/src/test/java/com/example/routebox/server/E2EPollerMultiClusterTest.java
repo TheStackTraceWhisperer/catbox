@@ -6,7 +6,6 @@ import static org.awaitility.Awaitility.await;
 import com.example.routebox.common.entity.OutboxEvent;
 import com.example.routebox.common.repository.OutboxEventRepository;
 import com.example.routebox.common.util.TimeBasedUuidGenerator;
-import com.example.routebox.test.listener.SharedTestcontainers;
 import jakarta.persistence.EntityManager;
 import java.time.Duration;
 import java.util.HashMap;
@@ -30,7 +29,11 @@ import org.springframework.kafka.listener.MessageListener;
 import org.springframework.kafka.test.utils.ContainerTestUtils;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
+import org.testcontainers.containers.KafkaContainer;
+import org.testcontainers.containers.MSSQLServerContainer;
+import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
+import org.testcontainers.utility.DockerImageName;
 
 /**
  * End-to-End test for dynamic Kafka routing across multiple clusters. Tests that events are routed
@@ -50,12 +53,55 @@ class E2EPollerMultiClusterTest {
   private static final String ORDER_EVENT_TYPE = "OrderCreated-" + TimeBasedUuidGenerator.generate().toString().substring(0, 8);
   private static final String INVENTORY_EVENT_TYPE = "InventoryAdjusted-" + TimeBasedUuidGenerator.generate().toString().substring(0, 8);
 
-  static {
-    SharedTestcontainers.ensureInitialized();
-  }
+  @Container
+  static final MSSQLServerContainer<?> mssql =
+      new MSSQLServerContainer<>("mcr.microsoft.com/mssql/server:2022-latest").acceptLicense();
+
+  @Container
+  static final KafkaContainer kafkaA =
+      new KafkaContainer(DockerImageName.parse("confluentinc/cp-kafka:7.9.1"));
+
+  @Container
+  static final KafkaContainer kafkaB =
+      new KafkaContainer(DockerImageName.parse("confluentinc/cp-kafka:7.9.1"));
 
   @DynamicPropertySource
   static void configureProperties(DynamicPropertyRegistry registry) {
+    // Database configuration
+    registry.add(
+        "spring.datasource.url",
+        () -> mssql.getJdbcUrl() + ";encrypt=true;trustServerCertificate=true");
+    registry.add("spring.datasource.username", mssql::getUsername);
+    registry.add("spring.datasource.password", mssql::getPassword);
+    registry.add(
+        "spring.datasource.driver-class-name",
+        () -> "com.microsoft.sqlserver.jdbc.SQLServerDriver");
+    registry.add(
+        "spring.jpa.properties.hibernate.dialect", () -> "org.hibernate.dialect.SQLServerDialect");
+    registry.add("spring.jpa.hibernate.ddl-auto", () -> "update");
+    registry.add("spring.threads.virtual.enabled", () -> "true");
+
+    // Kafka configuration
+    registry.add("kafka.clusters.cluster-a.bootstrap-servers", kafkaA::getBootstrapServers);
+    registry.add(
+        "kafka.clusters.cluster-a.producer.key-serializer",
+        () -> "org.apache.kafka.common.serialization.StringSerializer");
+    registry.add(
+        "kafka.clusters.cluster-a.producer.value-serializer",
+        () -> "org.apache.kafka.common.serialization.StringSerializer");
+    registry.add("kafka.clusters.cluster-a.producer.properties.linger.ms", () -> "10");
+    registry.add("kafka.clusters.cluster-a.producer.properties.acks", () -> "all");
+
+    registry.add("kafka.clusters.cluster-b.bootstrap-servers", kafkaB::getBootstrapServers);
+    registry.add(
+        "kafka.clusters.cluster-b.producer.key-serializer",
+        () -> "org.apache.kafka.common.serialization.StringSerializer");
+    registry.add(
+        "kafka.clusters.cluster-b.producer.value-serializer",
+        () -> "org.apache.kafka.common.serialization.StringSerializer");
+    registry.add("kafka.clusters.cluster-b.producer.properties.linger.ms", () -> "10");
+    registry.add("kafka.clusters.cluster-b.producer.properties.acks", () -> "all");
+
     // Routing configuration - route different unique event types to different clusters
     // Topic names will be derived from event types
     registry.add("outbox.routing.rules." + ORDER_EVENT_TYPE, () -> "cluster-a");
@@ -64,6 +110,12 @@ class E2EPollerMultiClusterTest {
     // Speed up polling for tests
     registry.add("outbox.processing.poll-fixed-delay", () -> "500ms");
     registry.add("outbox.processing.poll-initial-delay", () -> "1s");
+    registry.add("outbox.processing.claim-timeout", () -> "5m");
+    registry.add("outbox.processing.batch-size", () -> "100");
+    registry.add("outbox.kafka.factory.idle-eviction-time-minutes", () -> "30");
+
+    // Server configuration
+    registry.add("server.port", () -> "8081");
   }
 
   @Autowired private OutboxEventRepository outboxEventRepository;
@@ -88,7 +140,7 @@ class E2EPollerMultiClusterTest {
     recordsOrderCreatedA = new LinkedBlockingQueue<>();
     containerOrderCreatedA =
         createConsumer(
-            SharedTestcontainers.kafkaA.getBootstrapServers(),
+            kafkaA.getBootstrapServers(),
             ORDER_EVENT_TYPE,
             "group-a-order-" + uniqueSuffix,
             recordsOrderCreatedA);
@@ -97,7 +149,7 @@ class E2EPollerMultiClusterTest {
     recordsInventoryAdjustedA = new LinkedBlockingQueue<>();
     containerInventoryAdjustedA =
         createConsumer(
-            SharedTestcontainers.kafkaA.getBootstrapServers(),
+            kafkaA.getBootstrapServers(),
             INVENTORY_EVENT_TYPE,
             "group-a-inventory-" + uniqueSuffix,
             recordsInventoryAdjustedA);
@@ -106,7 +158,7 @@ class E2EPollerMultiClusterTest {
     recordsOrderCreatedB = new LinkedBlockingQueue<>();
     containerOrderCreatedB =
         createConsumer(
-            SharedTestcontainers.kafkaB.getBootstrapServers(),
+            kafkaB.getBootstrapServers(),
             ORDER_EVENT_TYPE,
             "group-b-order-" + uniqueSuffix,
             recordsOrderCreatedB);
@@ -115,7 +167,7 @@ class E2EPollerMultiClusterTest {
     recordsInventoryAdjustedB = new LinkedBlockingQueue<>();
     containerInventoryAdjustedB =
         createConsumer(
-            SharedTestcontainers.kafkaB.getBootstrapServers(),
+            kafkaB.getBootstrapServers(),
             INVENTORY_EVENT_TYPE,
             "group-b-inventory-" + uniqueSuffix,
             recordsInventoryAdjustedB);

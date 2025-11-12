@@ -6,7 +6,6 @@ import static org.awaitility.Awaitility.await;
 import com.example.routebox.common.entity.OutboxEvent;
 import com.example.routebox.common.repository.OutboxEventRepository;
 import com.example.routebox.common.util.TimeBasedUuidGenerator;
-import com.example.routebox.test.listener.SharedTestcontainers;
 import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
@@ -28,7 +27,11 @@ import org.springframework.kafka.listener.MessageListener;
 import org.springframework.kafka.test.utils.ContainerTestUtils;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
+import org.testcontainers.containers.KafkaContainer;
+import org.testcontainers.containers.MSSQLServerContainer;
+import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
+import org.testcontainers.utility.DockerImageName;
 
 /**
  * End-to-End test for the OutboxEventPoller, OutboxEventClaimer, and OutboxEventPublisher. Tests
@@ -41,12 +44,41 @@ class E2EPollerTest {
   // Use a unique event type for this test run to avoid cross-test contamination
   private static final String EVENT_TYPE = "OrderCreated-" + TimeBasedUuidGenerator.generate().toString().substring(0, 8);
 
-  static {
-    SharedTestcontainers.ensureInitialized();
-  }
+  @Container
+  static final MSSQLServerContainer<?> mssql =
+      new MSSQLServerContainer<>("mcr.microsoft.com/mssql/server:2022-latest").acceptLicense();
+
+  @Container
+  static final KafkaContainer kafkaA =
+      new KafkaContainer(DockerImageName.parse("confluentinc/cp-kafka:7.9.1"));
 
   @DynamicPropertySource
   static void configureProperties(DynamicPropertyRegistry registry) {
+    // Database configuration
+    registry.add(
+        "spring.datasource.url",
+        () -> mssql.getJdbcUrl() + ";encrypt=true;trustServerCertificate=true");
+    registry.add("spring.datasource.username", mssql::getUsername);
+    registry.add("spring.datasource.password", mssql::getPassword);
+    registry.add(
+        "spring.datasource.driver-class-name",
+        () -> "com.microsoft.sqlserver.jdbc.SQLServerDriver");
+    registry.add(
+        "spring.jpa.properties.hibernate.dialect", () -> "org.hibernate.dialect.SQLServerDialect");
+    registry.add("spring.jpa.hibernate.ddl-auto", () -> "update");
+    registry.add("spring.threads.virtual.enabled", () -> "true");
+
+    // Kafka configuration
+    registry.add("kafka.clusters.cluster-a.bootstrap-servers", kafkaA::getBootstrapServers);
+    registry.add(
+        "kafka.clusters.cluster-a.producer.key-serializer",
+        () -> "org.apache.kafka.common.serialization.StringSerializer");
+    registry.add(
+        "kafka.clusters.cluster-a.producer.value-serializer",
+        () -> "org.apache.kafka.common.serialization.StringSerializer");
+    registry.add("kafka.clusters.cluster-a.producer.properties.linger.ms", () -> "10");
+    registry.add("kafka.clusters.cluster-a.producer.properties.acks", () -> "all");
+
     // Routing configuration - route unique event type to cluster-a
     // The topic name will be derived from the event type
     registry.add("outbox.routing.rules." + EVENT_TYPE, () -> "cluster-a");
@@ -54,6 +86,12 @@ class E2EPollerTest {
     // Speed up polling for tests
     registry.add("outbox.processing.poll-fixed-delay", () -> "500ms");
     registry.add("outbox.processing.poll-initial-delay", () -> "1s");
+    registry.add("outbox.processing.claim-timeout", () -> "5m");
+    registry.add("outbox.processing.batch-size", () -> "100");
+    registry.add("outbox.kafka.factory.idle-eviction-time-minutes", () -> "30");
+
+    // Server configuration
+    registry.add("server.port", () -> "8081");
   }
 
   @Autowired private OutboxEventRepository outboxEventRepository;
@@ -69,7 +107,7 @@ class E2EPollerTest {
     Map<String, Object> consumerProps = new HashMap<>();
     consumerProps.put(
         ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG,
-        SharedTestcontainers.kafkaA.getBootstrapServers());
+        kafkaA.getBootstrapServers());
     consumerProps.put(ConsumerConfig.GROUP_ID_CONFIG, uniqueGroupId);
     consumerProps.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");
     consumerProps.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
