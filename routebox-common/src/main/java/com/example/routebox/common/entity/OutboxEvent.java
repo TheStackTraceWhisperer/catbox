@@ -44,6 +44,10 @@ public class OutboxEvent {
   @Column(columnDefinition = "TEXT")
   private String lastError;
 
+  @Column private String kafkaClusterId;
+
+  @Column private String kafkaTopicName;
+
   @Column private Integer kafkaPartition;
 
   @Column private Long kafkaOffset;

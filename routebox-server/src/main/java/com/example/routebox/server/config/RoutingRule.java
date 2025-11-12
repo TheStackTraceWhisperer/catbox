@@ -35,6 +35,12 @@ public class RoutingRule {
   private ClusterPublishingStrategy strategy = ClusterPublishingStrategy.ALL_MUST_SUCCEED;
 
   /**
+   * Topic name to use for publishing. If null, defaults to the event type for backward
+   * compatibility.
+   */
+  private String topic;
+
+  /**
    * Creates a simple routing rule with a single cluster. This is for backward compatibility with
    * the old String-based routing.
    */
