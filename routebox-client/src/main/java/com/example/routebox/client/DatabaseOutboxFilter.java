@@ -40,19 +40,19 @@ public class DatabaseOutboxFilter implements OutboxFilter {
   @Transactional(propagation = Propagation.REQUIRES_NEW)
   public boolean deduped(final String correlationId, final String consumerGroup) {
     if (correlationId == null || correlationId.isEmpty()) {
-      log.warn("Received null or empty correlationId, " + "treating as not processed");
+      log.warn("Received null or empty correlationId, treating as not processed");
       return false;
     }
 
     if (consumerGroup == null || consumerGroup.isEmpty()) {
-      log.warn("Received null or empty consumerGroup, " + "treating as not processed");
+      log.warn("Received null or empty consumerGroup, treating as not processed");
       return false;
     }
 
     // Check if already processed
     if (repository.existsByCorrelationIdAndConsumerGroup(correlationId, consumerGroup)) {
       log.debug(
-          "Duplicate detected for correlationId: {} " + "in consumerGroup: {}",
+          "Duplicate detected for correlationId: {} in consumerGroup: {}",
           correlationId,
           consumerGroup);
       recordFilterDeduped();
@@ -64,7 +64,7 @@ public class DatabaseOutboxFilter implements OutboxFilter {
       ProcessedMessage message = new ProcessedMessage(correlationId, consumerGroup);
       repository.save(message);
       log.trace(
-          "First time processing correlationId: {} " + "in consumerGroup: {}",
+          "First time processing correlationId: {} in consumerGroup: {}",
           correlationId,
           consumerGroup);
       recordFilterUnique();
@@ -72,7 +72,7 @@ public class DatabaseOutboxFilter implements OutboxFilter {
     } catch (DataIntegrityViolationException e) {
       // Race condition: another instance processed it concurrently
       log.debug(
-          "Concurrent duplicate detected for correlationId: {} " + "in consumerGroup: {}",
+          "Concurrent duplicate detected for correlationId: {} in consumerGroup: {}",
           correlationId,
           consumerGroup);
       recordFilterConcurrentDuplicate();
@@ -84,7 +84,7 @@ public class DatabaseOutboxFilter implements OutboxFilter {
   @Transactional(propagation = Propagation.REQUIRED)
   public void markProcessed(final String correlationId, final String consumerGroup) {
     if (correlationId == null || correlationId.isEmpty()) {
-      log.warn("Attempted to mark null or empty correlationId " + "as processed");
+      log.warn("Attempted to mark null or empty correlationId as processed");
       return;
     }
 
@@ -97,12 +97,12 @@ public class DatabaseOutboxFilter implements OutboxFilter {
       ProcessedMessage message = new ProcessedMessage(correlationId, consumerGroup);
       repository.save(message);
       log.trace(
-          "Marked correlationId: {} as processed " + "in consumerGroup: {}",
+          "Marked correlationId: {} as processed in consumerGroup: {}",
           correlationId,
           consumerGroup);
     } catch (DataIntegrityViolationException e) {
       log.debug(
-          "CorrelationId: {} already marked as processed " + "in consumerGroup: {}",
+          "CorrelationId: {} already marked as processed in consumerGroup: {}",
           correlationId,
           consumerGroup);
     }
@@ -127,7 +127,7 @@ public class DatabaseOutboxFilter implements OutboxFilter {
   @Transactional(propagation = Propagation.REQUIRES_NEW)
   public void markUnprocessed(final String correlationId, final String consumerGroup) {
     if (correlationId == null || correlationId.isEmpty()) {
-      log.warn("Attempted to mark null or empty correlationId " + "as unprocessed");
+      log.warn("Attempted to mark null or empty correlationId as unprocessed");
       return;
     }
 
@@ -138,7 +138,7 @@ public class DatabaseOutboxFilter implements OutboxFilter {
 
     repository.deleteByCorrelationIdAndConsumerGroup(correlationId, consumerGroup);
     log.info(
-        "Marked correlationId: {} as unprocessed " + "in consumerGroup: {}",
+        "Marked correlationId: {} as unprocessed in consumerGroup: {}",
         correlationId,
         consumerGroup);
     recordFilterMarkUnprocessed();

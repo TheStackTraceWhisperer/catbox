@@ -42,10 +42,8 @@ public class OutboxFailureHandler {
             .orElseThrow(() -> new IllegalArgumentException("Event not found: " + eventId));
 
     // Increment failure count
-    Integer currentCount = event.getPermanentFailureCount();
-    if (currentCount == null) {
-      currentCount = 0;
-    }
+    int currentCount =
+        event.getPermanentFailureCount() != null ? event.getPermanentFailureCount() : 0;
     currentCount++;
     event.setPermanentFailureCount(currentCount);
     event.setLastError(errorMessage);

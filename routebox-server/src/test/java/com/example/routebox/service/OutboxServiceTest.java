@@ -54,11 +54,14 @@ class OutboxServiceTest {
   void setup() {
     outboxEventRepository.deleteAll();
     outboxEventRepository.save(
-        new OutboxEvent("Order", TimeBasedUuidGenerator.generate().toString(), "OrderCreated", "{}"));
+        new OutboxEvent(
+            "Order", TimeBasedUuidGenerator.generate().toString(), "OrderCreated", "{}"));
     outboxEventRepository.save(
-        new OutboxEvent("Order", TimeBasedUuidGenerator.generate().toString(), "OrderStatusChanged", "{}"));
+        new OutboxEvent(
+            "Order", TimeBasedUuidGenerator.generate().toString(), "OrderStatusChanged", "{}"));
     outboxEventRepository.save(
-        new OutboxEvent("Inventory", TimeBasedUuidGenerator.generate().toString(), "InventoryAdjusted", "{}"));
+        new OutboxEvent(
+            "Inventory", TimeBasedUuidGenerator.generate().toString(), "InventoryAdjusted", "{}"));
   }
 
   @Test
@@ -116,9 +119,11 @@ class OutboxServiceTest {
   @Test
   void findPaged_filtersWithAggregateIdAndPending() {
     outboxEventRepository.save(
-        new OutboxEvent("Order", TimeBasedUuidGenerator.generate().toString(), "OrderCreated", "{}"));
+        new OutboxEvent(
+            "Order", TimeBasedUuidGenerator.generate().toString(), "OrderCreated", "{}"));
     OutboxEvent sent =
-        new OutboxEvent("Order", TimeBasedUuidGenerator.generate().toString(), "OrderStatusChanged", "{}");
+        new OutboxEvent(
+            "Order", TimeBasedUuidGenerator.generate().toString(), "OrderStatusChanged", "{}");
     sent.setSentAt(java.time.LocalDateTime.now());
     outboxEventRepository.save(sent);
 

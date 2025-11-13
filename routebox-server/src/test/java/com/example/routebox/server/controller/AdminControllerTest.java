@@ -49,7 +49,8 @@ class AdminControllerTest {
     registry.add("spring.jpa.hibernate.ddl-auto", () -> "update");
     registry.add("spring.threads.virtual.enabled", () -> "true");
   }
-@Autowired private MockMvc mockMvc;
+
+  @Autowired private MockMvc mockMvc;
 
   @Autowired private OutboxEventRepository outboxEventRepository;
 
@@ -65,9 +66,11 @@ class AdminControllerTest {
   void adminPage_ShouldReturnAdminView() throws Exception {
     // Given
     outboxEventRepository.save(
-        new OutboxEvent("Order", TimeBasedUuidGenerator.generate().toString(), "OrderCreated", "{}"));
+        new OutboxEvent(
+            "Order", TimeBasedUuidGenerator.generate().toString(), "OrderCreated", "{}"));
     outboxEventRepository.save(
-        new OutboxEvent("Order", TimeBasedUuidGenerator.generate().toString(), "OrderStatusChanged", "{}"));
+        new OutboxEvent(
+            "Order", TimeBasedUuidGenerator.generate().toString(), "OrderStatusChanged", "{}"));
 
     // When & Then
     mockMvc
@@ -85,7 +88,8 @@ class AdminControllerTest {
     // Given
     for (int i = 0; i < 25; i++) {
       outboxEventRepository.save(
-          new OutboxEvent("Order", TimeBasedUuidGenerator.generate().toString(), "OrderCreated", "{}"));
+          new OutboxEvent(
+              "Order", TimeBasedUuidGenerator.generate().toString(), "OrderCreated", "{}"));
     }
 
     // When & Then
@@ -100,11 +104,14 @@ class AdminControllerTest {
   void adminPage_WithFilters_ShouldReturnFilteredResults() throws Exception {
     // Given
     outboxEventRepository.save(
-        new OutboxEvent("Order", TimeBasedUuidGenerator.generate().toString(), "OrderCreated", "{}"));
+        new OutboxEvent(
+            "Order", TimeBasedUuidGenerator.generate().toString(), "OrderCreated", "{}"));
     outboxEventRepository.save(
-        new OutboxEvent("Order", TimeBasedUuidGenerator.generate().toString(), "OrderStatusChanged", "{}"));
+        new OutboxEvent(
+            "Order", TimeBasedUuidGenerator.generate().toString(), "OrderStatusChanged", "{}"));
     outboxEventRepository.save(
-        new OutboxEvent("Inventory", TimeBasedUuidGenerator.generate().toString(), "InventoryAdjusted", "{}"));
+        new OutboxEvent(
+            "Inventory", TimeBasedUuidGenerator.generate().toString(), "InventoryAdjusted", "{}"));
 
     // When & Then
     mockMvc
@@ -118,9 +125,11 @@ class AdminControllerTest {
   void adminPage_WithSorting_ShouldReturnSortedResults() throws Exception {
     // Given
     outboxEventRepository.save(
-        new OutboxEvent("Order", TimeBasedUuidGenerator.generate().toString(), "OrderCreated", "{}"));
+        new OutboxEvent(
+            "Order", TimeBasedUuidGenerator.generate().toString(), "OrderCreated", "{}"));
     outboxEventRepository.save(
-        new OutboxEvent("Order", TimeBasedUuidGenerator.generate().toString(), "OrderStatusChanged", "{}"));
+        new OutboxEvent(
+            "Order", TimeBasedUuidGenerator.generate().toString(), "OrderStatusChanged", "{}"));
 
     // When & Then
     mockMvc
@@ -135,7 +144,8 @@ class AdminControllerTest {
   void adminPage_WithPendingOnlyFilter_ShouldReturnOnlyPending() throws Exception {
     // Given
     outboxEventRepository.save(
-        new OutboxEvent("Order", TimeBasedUuidGenerator.generate().toString(), "OrderCreated", "{}"));
+        new OutboxEvent(
+            "Order", TimeBasedUuidGenerator.generate().toString(), "OrderCreated", "{}"));
 
     // When & Then
     mockMvc

@@ -54,6 +54,9 @@ public class OutboxProcessingConfig {
   /** Maximum capacity of the in-memory event queue for backpressure. */
   private int queueCapacity = 200; // default
 
+  /** Delay in milliseconds before re-queuing a failed event when failure handler fails. */
+  private long failureHandlerRetryDelayMs = 1000; // default 1 second
+
   // A Set for efficient O(1) lookups
   private final Set<String> permanentExceptionSet = new HashSet<>();
 

@@ -12,9 +12,8 @@ import java.util.UUID;
  * provides better locality of reference compared to random UUIDs (v4).
  *
  * <p>This implementation uses Jackson's java-uuid-generator library because Java 21 does not
- * include native UUID v7 support. Native support was added in Java 22 via {@code UUID.v7()}.
- * Once the project upgrades to Java 22+, this utility can be replaced with the native
- * implementation.
+ * include native UUID v7 support. Native support was added in Java 22 via {@code UUID.v7()}. Once
+ * the project upgrades to Java 22+, this utility can be replaced with the native implementation.
  *
  * <p>This implementation delegates to Jackson's {@link Generators#timeBasedEpochGenerator()} which
  * generates UUID v7 compliant identifiers.

@@ -57,7 +57,9 @@ public class OutboxEvent {
   @PrePersist
   protected void onCreate() {
     createdAt = LocalDateTime.now();
-    permanentFailureCount = 0;
+    if (permanentFailureCount == null) {
+      permanentFailureCount = 0;
+    }
   }
 
   public OutboxEvent(String aggregateType, String aggregateId, String eventType, String payload) {
@@ -65,7 +67,6 @@ public class OutboxEvent {
     this.aggregateId = aggregateId;
     this.eventType = eventType;
     this.payload = payload;
-    this.permanentFailureCount = 0;
   }
 
   public OutboxEvent(
@@ -79,7 +80,6 @@ public class OutboxEvent {
     this.eventType = eventType;
     this.correlationId = correlationId;
     this.payload = payload;
-    this.permanentFailureCount = 0;
   }
 
   // Helper method to increment permanent failure count

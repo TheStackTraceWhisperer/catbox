@@ -48,7 +48,8 @@ class OutboxEventClaimerConcurrencyTest {
     registry.add("spring.jpa.hibernate.ddl-auto", () -> "update");
     registry.add("spring.threads.virtual.enabled", () -> "true");
   }
-@Autowired private OutboxEventClaimer claimer;
+
+  @Autowired private OutboxEventClaimer claimer;
 
   @Autowired private OutboxEventRepository outboxEventRepository;
 

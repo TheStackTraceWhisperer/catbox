@@ -11,9 +11,7 @@ import com.example.routebox.server.RouteBoxServerApplication;
 import com.example.routebox.server.config.DynamicKafkaTemplateFactory;
 import com.example.routebox.server.config.OutboxProcessingConfig;
 import com.example.routebox.server.config.OutboxRoutingConfig;
-import com.example.routebox.server.entity.OutboxDeadLetterEvent;
 import com.example.routebox.server.repository.OutboxDeadLetterEventRepository;
-import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.clients.producer.RecordMetadata;
@@ -23,10 +21,10 @@ import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.DynamicPropertyRegistry;
-import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.kafka.support.SendResult;
+import org.springframework.test.context.DynamicPropertyRegistry;
+import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.testcontainers.containers.MSSQLServerContainer;
 import org.testcontainers.junit.jupiter.Container;
@@ -54,11 +52,12 @@ class OutboxEventPublisherTest {
         "spring.jpa.properties.hibernate.dialect", () -> "org.hibernate.dialect.SQLServerDialect");
     registry.add("spring.jpa.hibernate.ddl-auto", () -> "update");
     registry.add("spring.threads.virtual.enabled", () -> "true");
-    
+
     // Routing configuration for test events
     registry.add("outbox.routing.rules.OrderCreated", () -> "cluster-a");
   }
-@Autowired OutboxEventRepository outboxEventRepository;
+
+  @Autowired OutboxEventRepository outboxEventRepository;
 
   @Autowired OutboxDeadLetterEventRepository deadLetterRepository;
 

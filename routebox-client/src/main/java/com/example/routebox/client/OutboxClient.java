@@ -45,8 +45,7 @@ public class OutboxClient {
   }
 
   /**
-   * Serializes the given payload and writes it to the outbox with a specific
-   * correlation ID.
+   * Serializes the given payload and writes it to the outbox with a specific correlation ID.
    *
    * @param aggregateType The "type" of the entity (e.g., "Order")
    * @param aggregateId The ID of the entity (e.g., "123")
@@ -66,8 +65,7 @@ public class OutboxClient {
 
       // 2. Create and save the event
       OutboxEvent event =
-          new OutboxEvent(
-              aggregateType, aggregateId, eventType, correlationId, jsonPayload);
+          new OutboxEvent(aggregateType, aggregateId, eventType, correlationId, jsonPayload);
       outboxEventRepository.save(event);
 
       // 3. Record successful write
@@ -76,8 +74,7 @@ public class OutboxClient {
       // Record failure
       recordOutboxWriteFailure();
       // Fatal serialization error - propagate as unchecked exception
-      throw new RuntimeException(
-          "Failed to serialize outbox event payload for: " + eventType, e);
+      throw new RuntimeException("Failed to serialize outbox event payload for: " + eventType, e);
     }
   }
 

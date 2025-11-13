@@ -48,7 +48,8 @@ class OutboxControllerTest {
     registry.add("spring.jpa.hibernate.ddl-auto", () -> "update");
     registry.add("spring.threads.virtual.enabled", () -> "true");
   }
-@Autowired private MockMvc mockMvc;
+
+  @Autowired private MockMvc mockMvc;
 
   @Autowired private OutboxEventRepository outboxEventRepository;
 
@@ -61,9 +62,11 @@ class OutboxControllerTest {
   void getAllOutboxEvents_ShouldReturnAllEvents() throws Exception {
     // Given
     outboxEventRepository.save(
-        new OutboxEvent("Order", TimeBasedUuidGenerator.generate().toString(), "OrderCreated", "{}"));
+        new OutboxEvent(
+            "Order", TimeBasedUuidGenerator.generate().toString(), "OrderCreated", "{}"));
     outboxEventRepository.save(
-        new OutboxEvent("Order", TimeBasedUuidGenerator.generate().toString(), "OrderStatusChanged", "{}"));
+        new OutboxEvent(
+            "Order", TimeBasedUuidGenerator.generate().toString(), "OrderStatusChanged", "{}"));
 
     // When & Then
     mockMvc
@@ -77,9 +80,11 @@ class OutboxControllerTest {
   void getPendingOutboxEvents_ShouldReturnOnlyPending() throws Exception {
     // Given
     outboxEventRepository.save(
-        new OutboxEvent("Order", TimeBasedUuidGenerator.generate().toString(), "OrderCreated", "{}"));
+        new OutboxEvent(
+            "Order", TimeBasedUuidGenerator.generate().toString(), "OrderCreated", "{}"));
     OutboxEvent sentEvent =
-        new OutboxEvent("Order", TimeBasedUuidGenerator.generate().toString(), "OrderStatusChanged", "{}");
+        new OutboxEvent(
+            "Order", TimeBasedUuidGenerator.generate().toString(), "OrderStatusChanged", "{}");
     sentEvent.setSentAt(LocalDateTime.now());
     outboxEventRepository.save(sentEvent);
 
@@ -95,11 +100,14 @@ class OutboxControllerTest {
   void searchOutbox_WithFilters_ShouldReturnFilteredResults() throws Exception {
     // Given
     outboxEventRepository.save(
-        new OutboxEvent("Order", TimeBasedUuidGenerator.generate().toString(), "OrderCreated", "{}"));
+        new OutboxEvent(
+            "Order", TimeBasedUuidGenerator.generate().toString(), "OrderCreated", "{}"));
     outboxEventRepository.save(
-        new OutboxEvent("Order", TimeBasedUuidGenerator.generate().toString(), "OrderStatusChanged", "{}"));
+        new OutboxEvent(
+            "Order", TimeBasedUuidGenerator.generate().toString(), "OrderStatusChanged", "{}"));
     outboxEventRepository.save(
-        new OutboxEvent("Inventory", TimeBasedUuidGenerator.generate().toString(), "InventoryAdjusted", "{}"));
+        new OutboxEvent(
+            "Inventory", TimeBasedUuidGenerator.generate().toString(), "InventoryAdjusted", "{}"));
 
     // When & Then
     mockMvc

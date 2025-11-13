@@ -50,7 +50,8 @@ class OutboxEventPublisherMultiClusterTest {
     registry.add("spring.jpa.hibernate.ddl-auto", () -> "update");
     registry.add("spring.threads.virtual.enabled", () -> "true");
   }
-@DynamicPropertySource
+
+  @DynamicPropertySource
   static void configureRouting(DynamicPropertyRegistry registry) {
     // Configure multi-cluster routing
     // Test event with all-must-succeed strategy

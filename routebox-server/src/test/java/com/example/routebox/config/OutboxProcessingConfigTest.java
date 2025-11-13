@@ -35,7 +35,8 @@ class OutboxProcessingConfigTest {
     registry.add("spring.jpa.hibernate.ddl-auto", () -> "update");
     registry.add("spring.threads.virtual.enabled", () -> "true");
   }
-@Autowired OutboxProcessingConfig config;
+
+  @Autowired OutboxProcessingConfig config;
 
   @Test
   void config_loadsDefaultPermanentFailureExceptions() {
