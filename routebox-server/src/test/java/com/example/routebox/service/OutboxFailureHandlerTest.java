@@ -26,10 +26,10 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 /**
  * Tests for the OutboxFailureHandler service that manages permanent failures and dead-letter
  * events.
- * 
- * Note: This test is NOT @Transactional because the service methods use Propagation.REQUIRES_NEW,
- * which would conflict with a test-level transaction and cause deadlocks. The @BeforeEach method
- * explicitly cleans up data instead.
+ *
+ * <p>Note: This test is NOT @Transactional because the service methods use
+ * Propagation.REQUIRES_NEW, which would conflict with a test-level transaction and cause deadlocks.
+ * The @BeforeEach method explicitly cleans up data instead.
  */
 @SpringBootTest(classes = RouteBoxServerApplication.class)
 @Testcontainers
@@ -53,7 +53,8 @@ class OutboxFailureHandlerTest {
     registry.add("spring.jpa.hibernate.ddl-auto", () -> "update");
     registry.add("spring.threads.virtual.enabled", () -> "true");
   }
-@Autowired OutboxEventRepository outboxEventRepository;
+
+  @Autowired OutboxEventRepository outboxEventRepository;
 
   @Autowired OutboxDeadLetterEventRepository deadLetterRepository;
 
@@ -79,7 +80,8 @@ class OutboxFailureHandlerTest {
     // When
     failureHandler.recordPermanentFailure(event.getId(), "Test error");
 
-    // Clear the persistence context to force fresh reads from database after REQUIRES_NEW transactions
+    // Clear the persistence context to force fresh reads from database after REQUIRES_NEW
+    // transactions
     entityManager.clear();
 
     // Then
@@ -180,7 +182,8 @@ class OutboxFailureHandlerTest {
     failureHandler.recordPermanentFailure(event2.getId(), "Error 2");
     failureHandler.recordPermanentFailure(event1.getId(), "Error 1 again");
 
-    // Clear the persistence context to force fresh reads from database after REQUIRES_NEW transactions
+    // Clear the persistence context to force fresh reads from database after REQUIRES_NEW
+    // transactions
     entityManager.clear();
 
     // Then
@@ -213,7 +216,8 @@ class OutboxFailureHandlerTest {
     // When
     failureHandler.releaseClaimForTransientFailure(event.getId());
 
-    // Clear the persistence context to force fresh reads from database after REQUIRES_NEW transactions
+    // Clear the persistence context to force fresh reads from database after REQUIRES_NEW
+    // transactions
     entityManager.clear();
 
     // Then

@@ -39,7 +39,8 @@ class SwaggerUiIntegrationTest {
     registry.add("spring.jpa.hibernate.ddl-auto", () -> "update");
     registry.add("spring.threads.virtual.enabled", () -> "true");
   }
-@Autowired private MockMvc mockMvc;
+
+  @Autowired private MockMvc mockMvc;
 
   @Test
   void swaggerUiPageShouldBeAccessible() throws Exception {

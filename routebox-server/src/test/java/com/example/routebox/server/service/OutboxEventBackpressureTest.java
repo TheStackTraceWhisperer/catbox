@@ -60,7 +60,8 @@ class OutboxEventBackpressureTest {
     registry.add("spring.jpa.hibernate.ddl-auto", () -> "update");
     registry.add("spring.threads.virtual.enabled", () -> "true");
   }
-@DynamicPropertySource
+
+  @DynamicPropertySource
   static void configureBackpressure(DynamicPropertyRegistry registry) {
     // Set test-specific backpressure configuration
     registry.add("outbox.processing.worker-concurrency", () -> 5);
@@ -79,7 +80,7 @@ class OutboxEventBackpressureTest {
   @BeforeEach
   void setUp() {
     eventRepository.deleteAll();
-    
+
     // Clear the queue - workers might be consuming
     while (!eventQueue.isEmpty()) {
       eventQueue.poll();
@@ -180,7 +181,7 @@ class OutboxEventBackpressureTest {
     // but with 5 workers and 1000ms delay, most should still be queued
     OutboxEvent extraEvent = new OutboxEvent("Order", "order-extra", "OrderCreated", "{}");
     extraEvent.setId(999L);
-    
+
     // Queue should have events (may not be completely full due to workers)
     int sizeBeforeAttempt = eventQueue.size();
     boolean added = eventQueue.offer(extraEvent, 50, TimeUnit.MILLISECONDS);

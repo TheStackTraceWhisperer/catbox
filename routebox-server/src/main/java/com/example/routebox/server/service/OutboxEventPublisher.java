@@ -14,7 +14,6 @@ import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -215,7 +214,11 @@ public class OutboxEventPublisher {
       throw e;
     } catch (ExecutionException e) {
       // Unwrap and throw the real, actionable Kafka exception
-      throw (Exception) e.getCause();
+      Throwable cause = e.getCause();
+      if (cause instanceof Exception) {
+        throw (Exception) cause;
+      }
+      throw e;
     }
   }
 

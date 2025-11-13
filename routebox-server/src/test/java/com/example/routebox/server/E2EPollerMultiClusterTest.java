@@ -6,7 +6,6 @@ import static org.awaitility.Awaitility.await;
 import com.example.routebox.common.entity.OutboxEvent;
 import com.example.routebox.common.repository.OutboxEventRepository;
 import com.example.routebox.common.util.TimeBasedUuidGenerator;
-import jakarta.persistence.EntityManager;
 import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
@@ -39,10 +38,10 @@ import org.testcontainers.utility.DockerImageName;
  * End-to-End test for dynamic Kafka routing across multiple clusters. Tests that events are routed
  * to the correct Kafka cluster based on routing rules.
  *
- * <p>NOTE: This test is currently disabled due to intermittent failures in CI environments.
- * The test times out waiting for events to be marked as sent, which appears to be related to
- * resource constraints in CI rather than actual functionality issues. The test passes locally
- * and intermittently in CI. It needs further investigation and stabilization before re-enabling.
+ * <p>NOTE: This test is currently disabled due to intermittent failures in CI environments. The
+ * test times out waiting for events to be marked as sent, which appears to be related to resource
+ * constraints in CI rather than actual functionality issues. The test passes locally and
+ * intermittently in CI. It needs further investigation and stabilization before re-enabling.
  */
 @Disabled("Flaky test - intermittent timeouts in CI environments. See issue for details.")
 @SpringBootTest(classes = RouteBoxServerApplication.class)
@@ -50,8 +49,10 @@ import org.testcontainers.utility.DockerImageName;
 class E2EPollerMultiClusterTest {
 
   // Use unique event types for this test run to avoid cross-test contamination
-  private static final String ORDER_EVENT_TYPE = "OrderCreated-" + TimeBasedUuidGenerator.generate().toString().substring(0, 8);
-  private static final String INVENTORY_EVENT_TYPE = "InventoryAdjusted-" + TimeBasedUuidGenerator.generate().toString().substring(0, 8);
+  private static final String ORDER_EVENT_TYPE =
+      "OrderCreated-" + TimeBasedUuidGenerator.generate().toString().substring(0, 8);
+  private static final String INVENTORY_EVENT_TYPE =
+      "InventoryAdjusted-" + TimeBasedUuidGenerator.generate().toString().substring(0, 8);
 
   @Container
   static final MSSQLServerContainer<?> mssql =
@@ -134,7 +135,7 @@ class E2EPollerMultiClusterTest {
   void setUp() {
     // Use unique consumer group IDs
     String uniqueSuffix = TimeBasedUuidGenerator.generate().toString().substring(0, 8);
-    
+
     // Set up consumers for unique event type topics on each cluster
     // Topic names equal event types
     recordsOrderCreatedA = new LinkedBlockingQueue<>();
@@ -172,7 +173,7 @@ class E2EPollerMultiClusterTest {
             "group-b-inventory-" + uniqueSuffix,
             recordsInventoryAdjustedB);
     containerInventoryAdjustedB.start();
-    
+
     // Wait for all consumers to be assigned partitions
     ContainerTestUtils.waitForAssignment(containerOrderCreatedA, 1);
     ContainerTestUtils.waitForAssignment(containerInventoryAdjustedA, 1);
@@ -222,7 +223,7 @@ class E2EPollerMultiClusterTest {
         new OutboxEvent(
             "Order",
             orderId,
-            ORDER_EVENT_TYPE,  // Use unique event type
+            ORDER_EVENT_TYPE, // Use unique event type
             "{\"orderId\":\"" + orderId + "\",\"customerName\":\"Bob\",\"amount\":199.99}");
     OutboxEvent savedOrderEvent = outboxEventRepository.save(orderEvent);
 
@@ -232,7 +233,7 @@ class E2EPollerMultiClusterTest {
         new OutboxEvent(
             "Inventory",
             itemId,
-            INVENTORY_EVENT_TYPE,  // Use unique event type
+            INVENTORY_EVENT_TYPE, // Use unique event type
             "{\"itemId\":\"" + itemId + "\",\"quantity\":50}");
     OutboxEvent savedInventoryEvent = outboxEventRepository.save(inventoryEvent);
 
@@ -253,7 +254,7 @@ class E2EPollerMultiClusterTest {
     // Assert: OrderCreated should arrive only on cluster-a
     ConsumerRecord<String, String> receivedOrderA = recordsOrderCreatedA.poll(10, TimeUnit.SECONDS);
     assertThat(receivedOrderA).isNotNull();
-    assertThat(receivedOrderA.topic()).isEqualTo(ORDER_EVENT_TYPE);  // Topic equals event type
+    assertThat(receivedOrderA.topic()).isEqualTo(ORDER_EVENT_TYPE); // Topic equals event type
     assertThat(receivedOrderA.key()).isEqualTo(orderId);
     assertThat(receivedOrderA.value()).contains("Bob");
 
@@ -261,7 +262,8 @@ class E2EPollerMultiClusterTest {
     ConsumerRecord<String, String> receivedInventoryB =
         recordsInventoryAdjustedB.poll(10, TimeUnit.SECONDS);
     assertThat(receivedInventoryB).isNotNull();
-    assertThat(receivedInventoryB.topic()).isEqualTo(INVENTORY_EVENT_TYPE);  // Topic equals event type
+    assertThat(receivedInventoryB.topic())
+        .isEqualTo(INVENTORY_EVENT_TYPE); // Topic equals event type
     assertThat(receivedInventoryB.key()).isEqualTo(itemId);
     assertThat(receivedInventoryB.value()).contains(itemId);
 

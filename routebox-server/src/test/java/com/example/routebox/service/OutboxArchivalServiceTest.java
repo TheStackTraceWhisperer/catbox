@@ -43,7 +43,8 @@ class OutboxArchivalServiceTest {
     registry.add("spring.jpa.hibernate.ddl-auto", () -> "update");
     registry.add("spring.threads.virtual.enabled", () -> "true");
   }
-@Autowired OutboxEventRepository outboxEventRepository;
+
+  @Autowired OutboxEventRepository outboxEventRepository;
 
   @Autowired OutboxArchiveEventRepository archiveEventRepository;
 

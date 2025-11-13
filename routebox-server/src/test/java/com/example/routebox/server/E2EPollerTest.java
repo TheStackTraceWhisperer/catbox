@@ -42,7 +42,8 @@ import org.testcontainers.utility.DockerImageName;
 class E2EPollerTest {
 
   // Use a unique event type for this test run to avoid cross-test contamination
-  private static final String EVENT_TYPE = "OrderCreated-" + TimeBasedUuidGenerator.generate().toString().substring(0, 8);
+  private static final String EVENT_TYPE =
+      "OrderCreated-" + TimeBasedUuidGenerator.generate().toString().substring(0, 8);
 
   @Container
   static final MSSQLServerContainer<?> mssql =
@@ -102,12 +103,11 @@ class E2EPollerTest {
   @BeforeEach
   void setUp() {
     // Set up Kafka consumer for unique event type topic with unique group ID
-    String uniqueGroupId = "test-group-" + TimeBasedUuidGenerator.generate().toString().substring(0, 8);
-    
+    String uniqueGroupId =
+        "test-group-" + TimeBasedUuidGenerator.generate().toString().substring(0, 8);
+
     Map<String, Object> consumerProps = new HashMap<>();
-    consumerProps.put(
-        ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG,
-        kafkaA.getBootstrapServers());
+    consumerProps.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, kafkaA.getBootstrapServers());
     consumerProps.put(ConsumerConfig.GROUP_ID_CONFIG, uniqueGroupId);
     consumerProps.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");
     consumerProps.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
@@ -122,7 +122,7 @@ class E2EPollerTest {
     records = new LinkedBlockingQueue<>();
     container.setupMessageListener((MessageListener<String, String>) records::add);
     container.start();
-    
+
     // Wait for consumer to be assigned partitions before proceeding
     ContainerTestUtils.waitForAssignment(container, 1);
   }
@@ -146,7 +146,7 @@ class E2EPollerTest {
         new OutboxEvent(
             "Order",
             orderId,
-            EVENT_TYPE,  // Use unique event type to avoid cross-test contamination
+            EVENT_TYPE, // Use unique event type to avoid cross-test contamination
             "{\"orderId\":\"" + orderId + "\",\"customerName\":\"John Doe\",\"amount\":99.99}");
     OutboxEvent savedEvent = outboxEventRepository.save(event);
     assertThat(savedEvent.getId()).isNotNull();
@@ -171,7 +171,7 @@ class E2EPollerTest {
     // Assert (Kafka): Verify the message was published to Kafka
     ConsumerRecord<String, String> received = records.poll(5, TimeUnit.SECONDS);
     assertThat(received).isNotNull();
-    assertThat(received.topic()).isEqualTo(EVENT_TYPE);  // Topic name equals event type
+    assertThat(received.topic()).isEqualTo(EVENT_TYPE); // Topic name equals event type
     assertThat(received.key()).isEqualTo(orderId);
     assertThat(received.value()).contains("John Doe");
     assertThat(received.value()).contains(orderId);

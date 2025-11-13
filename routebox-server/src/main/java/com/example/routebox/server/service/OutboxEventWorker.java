@@ -80,8 +80,8 @@ public class OutboxEventWorker {
               event.getId(),
               handlerException);
           try {
-            // Add a 1-second delay to prevent a fast, spinning loop
-            Thread.sleep(1000);
+            // Add a configurable delay to prevent a fast, spinning loop
+            Thread.sleep(processingConfig.getFailureHandlerRetryDelayMs());
             eventQueue.put(event); // Put the event back in the queue
 
           } catch (InterruptedException ie) {

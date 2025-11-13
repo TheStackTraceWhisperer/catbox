@@ -50,7 +50,8 @@ class OutboxEventWorkerTest {
     registry.add("spring.jpa.hibernate.ddl-auto", () -> "update");
     registry.add("spring.threads.virtual.enabled", () -> "true");
   }
-@DynamicPropertySource
+
+  @DynamicPropertySource
   static void configureWorkers(DynamicPropertyRegistry registry) {
     // Set test-specific worker configuration
     registry.add("outbox.processing.worker-concurrency", () -> 3);
@@ -254,4 +255,3 @@ class OutboxEventWorkerTest {
     assertThat(eventQueue).isEmpty();
   }
 }
-

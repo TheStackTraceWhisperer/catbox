@@ -49,7 +49,8 @@ class OutboxMetricsServiceTest {
     registry.add("spring.jpa.hibernate.ddl-auto", () -> "update");
     registry.add("spring.threads.virtual.enabled", () -> "true");
   }
-@Autowired OutboxEventRepository outboxEventRepository;
+
+  @Autowired OutboxEventRepository outboxEventRepository;
 
   @Autowired OutboxArchiveEventRepository archiveEventRepository;
 
@@ -101,12 +102,15 @@ class OutboxMetricsServiceTest {
   void updatePendingEventsMetrics_countsCorrectly() {
     // Create pending events
     outboxEventRepository.save(
-        new OutboxEvent("Order", TimeBasedUuidGenerator.generate().toString(), "OrderCreated", "{}"));
+        new OutboxEvent(
+            "Order", TimeBasedUuidGenerator.generate().toString(), "OrderCreated", "{}"));
     outboxEventRepository.save(
-        new OutboxEvent("Order", TimeBasedUuidGenerator.generate().toString(), "OrderStatusChanged", "{}"));
+        new OutboxEvent(
+            "Order", TimeBasedUuidGenerator.generate().toString(), "OrderStatusChanged", "{}"));
     OutboxEvent sent =
         outboxEventRepository.save(
-            new OutboxEvent("Order", TimeBasedUuidGenerator.generate().toString(), "OrderCreated", "{}"));
+            new OutboxEvent(
+                "Order", TimeBasedUuidGenerator.generate().toString(), "OrderCreated", "{}"));
     sent.setSentAt(LocalDateTime.now());
     outboxEventRepository.save(sent);
 
@@ -124,7 +128,8 @@ class OutboxMetricsServiceTest {
     // (This works because we're testing the metric calculation, not the PrePersist behavior)
     OutboxEvent oldEvent =
         outboxEventRepository.save(
-            new OutboxEvent("Order", TimeBasedUuidGenerator.generate().toString(), "OrderCreated", "{}"));
+            new OutboxEvent(
+                "Order", TimeBasedUuidGenerator.generate().toString(), "OrderCreated", "{}"));
 
     // Manually update the createdAt to simulate an old event
     outboxEventRepository.flush();
@@ -139,7 +144,8 @@ class OutboxMetricsServiceTest {
 
     // Create a newer event
     outboxEventRepository.save(
-        new OutboxEvent("Order", TimeBasedUuidGenerator.generate().toString(), "OrderStatusChanged", "{}"));
+        new OutboxEvent(
+            "Order", TimeBasedUuidGenerator.generate().toString(), "OrderStatusChanged", "{}"));
 
     // Update metrics
     metricsService.updatePendingEventsMetrics();
@@ -202,7 +208,8 @@ class OutboxMetricsServiceTest {
   void updateArchivalMetrics_countsCorrectly() {
     // Create and save events first to get IDs
     OutboxEvent event1 =
-        new OutboxEvent("Order", TimeBasedUuidGenerator.generate().toString(), "OrderCreated", "{}");
+        new OutboxEvent(
+            "Order", TimeBasedUuidGenerator.generate().toString(), "OrderCreated", "{}");
     event1.setCreatedAt(LocalDateTime.now());
     event1.setSentAt(LocalDateTime.now());
     event1 = outboxEventRepository.save(event1);
@@ -211,7 +218,8 @@ class OutboxMetricsServiceTest {
     archiveEventRepository.save(archived1);
 
     OutboxEvent event2 =
-        new OutboxEvent("Order", TimeBasedUuidGenerator.generate().toString(), "OrderCreated", "{}");
+        new OutboxEvent(
+            "Order", TimeBasedUuidGenerator.generate().toString(), "OrderCreated", "{}");
     event2.setCreatedAt(LocalDateTime.now());
     event2.setSentAt(LocalDateTime.now());
     event2 = outboxEventRepository.save(event2);
@@ -231,7 +239,8 @@ class OutboxMetricsServiceTest {
   void updateArchivalMetrics_countsDeadLetterCorrectly() {
     // Create and save events first to get IDs
     OutboxEvent event1 =
-        new OutboxEvent("Order", TimeBasedUuidGenerator.generate().toString(), "OrderCreated", "{}");
+        new OutboxEvent(
+            "Order", TimeBasedUuidGenerator.generate().toString(), "OrderCreated", "{}");
     event1.setCreatedAt(LocalDateTime.now());
     event1 = outboxEventRepository.save(event1);
 
@@ -239,7 +248,8 @@ class OutboxMetricsServiceTest {
     deadLetterEventRepository.save(deadLetter1);
 
     OutboxEvent event2 =
-        new OutboxEvent("Order", TimeBasedUuidGenerator.generate().toString(), "OrderCreated", "{}");
+        new OutboxEvent(
+            "Order", TimeBasedUuidGenerator.generate().toString(), "OrderCreated", "{}");
     event2.setCreatedAt(LocalDateTime.now());
     event2 = outboxEventRepository.save(event2);
 
@@ -247,7 +257,8 @@ class OutboxMetricsServiceTest {
     deadLetterEventRepository.save(deadLetter2);
 
     OutboxEvent event3 =
-        new OutboxEvent("Order", TimeBasedUuidGenerator.generate().toString(), "OrderCreated", "{}");
+        new OutboxEvent(
+            "Order", TimeBasedUuidGenerator.generate().toString(), "OrderCreated", "{}");
     event3.setCreatedAt(LocalDateTime.now());
     event3 = outboxEventRepository.save(event3);
 

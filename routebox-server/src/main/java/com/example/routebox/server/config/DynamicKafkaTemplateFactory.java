@@ -42,7 +42,6 @@ public class DynamicKafkaTemplateFactory implements ApplicationContextAware {
   private final KafkaClustersConfig clustersConfig;
   private final SslBundles sslBundles;
   private ConfigurableApplicationContext applicationContext;
-  private volatile DynamicKafkaTemplateFactory self; // The proxied version of this bean
 
   // This is our thread-safe cache: Map<ClusterKey, KafkaTemplate>
   private final Map<String, KafkaTemplate<String, String>> templateCache =
@@ -67,18 +66,9 @@ public class DynamicKafkaTemplateFactory implements ApplicationContextAware {
    * @return A thread-safe, Spring-managed KafkaTemplate bean.
    */
   public KafkaTemplate<String, String> getTemplate(String clusterKey) {
-    // Lazy initialization of self-reference to avoid circular dependency during bean creation
-    // Double-checked locking for thread-safe initialization
-    if (self == null) {
-      synchronized (this) {
-        if (self == null) {
-          self = applicationContext.getBean(DynamicKafkaTemplateFactory.class);
-        }
-      }
-    }
+    // Get the proxied instance for AOP support
+    DynamicKafkaTemplateFactory self = getSelfProxy();
 
-    // We call the proxied 'self' reference, not 'this'.
-    // This ensures any AOP on createAndRegisterTemplate() is triggered.
     // computeIfAbsent is atomic and ensures createAndRegisterTemplate
     // is called only once per key, eliminating the need for manual locking.
     KafkaTemplate<String, String> template =
@@ -87,6 +77,19 @@ public class DynamicKafkaTemplateFactory implements ApplicationContextAware {
     // Update last access time *after* successful retrieval/creation
     lastAccessTime.put(clusterKey, System.currentTimeMillis());
     return template;
+  }
+
+  /**
+   * Gets the proxied instance of this factory to ensure AOP works correctly. Uses lazy
+   * initialization with proper null-checking.
+   */
+  private DynamicKafkaTemplateFactory getSelfProxy() {
+    // Simple null check - applicationContext is set before any bean method is called
+    if (applicationContext != null) {
+      return applicationContext.getBean(DynamicKafkaTemplateFactory.class);
+    }
+    // Fallback to this instance if context is not yet set (should not happen in normal operation)
+    return this;
   }
 
   /**
